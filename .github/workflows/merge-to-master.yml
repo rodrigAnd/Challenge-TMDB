@@ -67,6 +67,15 @@ jobs:
         run: ./gradlew detekt --no-daemon
         continue-on-error: true
 
+      - name: Upload relatório Detekt
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: detekt-report-master
+          path: app/build/reports/detekt/*.html
+          retention-days: 7
+          if-no-files-found: ignore
+
       - name: Build completo
         run: ./gradlew clean build --no-daemon
 
@@ -208,14 +217,6 @@ jobs:
         with:
           name: coverage-report-master
           path: app/build/reports/jacoco/jacocoTestReport/
-
-      - name: Upload relatório Detekt
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: detekt-report-master
-          path: app/build/reports/detekt/*.html
-          retention-days: 7
 
       - name: Comentário final no PR
         uses: actions/github-script@v7

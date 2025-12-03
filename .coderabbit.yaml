@@ -1,0 +1,95 @@
+# 🤖 CodeRabbit Configuration
+# 
+# Este arquivo configura o comportamento do CodeRabbit no repositório
+# Documentação: https://docs.coderabbit.ai
+
+# Idioma principal do projeto
+language: kotlin
+
+# Configurações de Review
+reviews:
+  # Habilitar code review automático
+  enabled: true
+  
+  # Auto-aprovar se não houver problemas (recomendado: false)
+  auto_approve: false
+  
+  # Habilitar sugestões de código
+  suggestions: true
+  
+  # Revisar apenas arquivos modificados (recomendado: true)
+  review_only_changed_files: true
+  
+  # Máximo de arquivos para revisar por PR
+  max_files_to_review: 50
+  
+  # Máximo de comentários de review por PR
+  max_review_comments: 100
+  
+  # Confiança mínima para fazer sugestões (0.0 a 1.0)
+  min_confidence: 0.7
+
+# Configurações de Análise
+analysis:
+  # Habilitar análise de segurança
+  security: true
+  
+  # Habilitar análise de performance
+  performance: true
+  
+  # Habilitar análise de qualidade de código
+  code_quality: true
+  
+  # Habilitar análise de testes
+  tests: true
+
+# Filtros de Arquivos
+path_filters:
+  # Incluir apenas arquivos Kotlin e Java
+  include:
+    - "**/*.kt"
+    - "**/*.java"
+  
+  # Excluir arquivos gerados e de build
+  exclude:
+    - "**/build/**"
+    - "**/.gradle/**"
+    - "**/generated/**"
+    - "**/*.generated.*"
+
+# Configurações de Comentários
+comments:
+  # Criar comentários inline
+  inline: true
+  
+  # Criar comentários gerais no PR
+  general: true
+  
+  # Usar emojis nos comentários
+  use_emojis: true
+  
+  # Idioma dos comentários
+  language: pt-BR
+
+# Configurações de Aprovação
+approval:
+  # Requer aprovação do CodeRabbit para merge
+  required: false
+  
+  # Auto-aprovar se não houver problemas críticos
+  auto_approve_on_no_issues: false
+  
+  # Solicitar mudanças se houver problemas críticos
+  request_changes_on_critical: true
+
+# Configurações de Notificações
+notifications:
+  # Notificar em comentários do PR
+  pr_comments: true
+  
+  # Notificar em reviews
+  reviews: true
+  
+  # Notificar apenas em problemas críticos
+  critical_only: false
+
