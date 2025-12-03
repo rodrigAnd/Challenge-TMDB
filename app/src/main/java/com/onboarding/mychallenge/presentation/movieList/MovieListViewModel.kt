@@ -360,66 +360,79 @@ class MovieListViewModel @Inject constructor(
         Log.d(TAG, "toggleFavorite: Iniciando toggle do filme ${movie.id} - ${movie.title}, isFavorite atual: ${movie.isFavorite}")
         viewModelScope.launch {
             try {
-                Log.d(TAG, "toggleFavorite: Adicionando ${movie.id} à lista de loading")
-                loadingFavoriteIds.update { it + movie.id }
-                Log.d(TAG, "toggleFavorite: loadingFavoriteIds atualizado: ${loadingFavoriteIds.value}")
-                updateFavoriteStates()
-                Log.d(TAG, "toggleFavorite: Verificando se filme ${movie.id} é favorito")
+                markFavoriteAsLoading(movie.id)
                 val isFavoriteResult = isFavoriteUseCase(movie.id)
                 isFavoriteResult.onSuccess { isFavorite ->
-                    Log.d(TAG, "toggleFavorite: Filme ${movie.id} é favorito? $isFavorite")
                     if (isFavorite) {
-                        Log.d(TAG, "toggleFavorite: Removendo filme ${movie.id} dos favoritos")
-                        removeFromFavoritesUseCase(movie.id)
-                            .onSuccess {
-                                Log.d(TAG, "toggleFavorite: Filme ${movie.id} removido dos favoritos com sucesso")
-                            }
-                            .onFailure { exception ->
-                                Log.e(TAG, "toggleFavorite: Erro ao remover favorito", exception)
-                            }
+                        removeFavorite(movie.id)
                     } else {
-                        Log.d(TAG, "toggleFavorite: Adicionando filme ${movie.id} aos favoritos")
-                        Log.d(TAG, "toggleFavorite: Buscando detalhes do filme ${movie.id}")
-                        val detailsResult = getMovieDetailsUseCase(movie.id)
-                        detailsResult.onSuccess { movieDetail ->
-                            Log.d(TAG, "toggleFavorite: Detalhes obtidos, adicionando aos favoritos")
-                            addMovieDetailToFavoritesUseCase(movieDetail)
-                                .onSuccess {
-                                    Log.d(TAG, "toggleFavorite: Filme ${movie.id} adicionado aos favoritos com detalhes")
-                                }
-                                .onFailure { exception ->
-                                    Log.e(TAG, "toggleFavorite: Erro ao adicionar favorito com detalhes", exception)
-                                    Log.d(TAG, "toggleFavorite: Tentando fallback com Movie básico")
-                                    val domainMovie = movie.toDomain()
-                                    addToFavoritesUseCase(domainMovie)
-                                        .onFailure { fallbackException ->
-                                            Log.e(TAG, "toggleFavorite: Erro ao adicionar favorito (fallback)", fallbackException)
-                                        }
-                                }
-                        }.onFailure { exception ->
-                            Log.e(TAG, "toggleFavorite: Erro ao buscar detalhes, usando Movie básico", exception)
-                            Log.d(TAG, "toggleFavorite: Tentando fallback com Movie básico")
-                            val domainMovie = movie.toDomain()
-                            addToFavoritesUseCase(domainMovie)
-                                .onFailure { fallbackException ->
-                                    Log.e(TAG, "toggleFavorite: Erro ao adicionar favorito (fallback)", fallbackException)
-                                }
-                        }
+                        addFavorite(movie)
                     }
                 }.onFailure { exception ->
                     Log.e(TAG, "toggleFavorite: Erro ao verificar se é favorito", exception)
                 }
-                Log.d(TAG, "toggleFavorite: Removendo ${movie.id} da lista de loading")
-                loadingFavoriteIds.update { it - movie.id }
-                Log.d(TAG, "toggleFavorite: loadingFavoriteIds atualizado: ${loadingFavoriteIds.value}")
-                updateFavoriteStates()
-                Log.d(TAG, "toggleFavorite: Toggle concluído para filme ${movie.id}")
+                markFavoriteAsNotLoading(movie.id)
             } catch (e: Exception) {
                 Log.e(TAG, "toggleFavorite: Erro inesperado", e)
-                loadingFavoriteIds.update { it - movie.id }
-                updateFavoriteStates()
+                markFavoriteAsNotLoading(movie.id)
             }
         }
+    }
+    
+    private fun markFavoriteAsLoading(movieId: Int) {
+        Log.d(TAG, "toggleFavorite: Adicionando $movieId à lista de loading")
+        loadingFavoriteIds.update { it + movieId }
+        updateFavoriteStates()
+    }
+    
+    private fun markFavoriteAsNotLoading(movieId: Int) {
+        Log.d(TAG, "toggleFavorite: Removendo $movieId da lista de loading")
+        loadingFavoriteIds.update { it - movieId }
+        updateFavoriteStates()
+        Log.d(TAG, "toggleFavorite: Toggle concluído para filme $movieId")
+    }
+    
+    private suspend fun removeFavorite(movieId: Int) {
+        Log.d(TAG, "toggleFavorite: Removendo filme $movieId dos favoritos")
+        removeFromFavoritesUseCase(movieId)
+            .onSuccess {
+                Log.d(TAG, "toggleFavorite: Filme $movieId removido dos favoritos com sucesso")
+            }
+            .onFailure { exception ->
+                Log.e(TAG, "toggleFavorite: Erro ao remover favorito", exception)
+            }
+    }
+    
+    private suspend fun addFavorite(movie: MovieViewObject) {
+        Log.d(TAG, "toggleFavorite: Adicionando filme ${movie.id} aos favoritos")
+        val detailsResult = getMovieDetailsUseCase(movie.id)
+        detailsResult.onSuccess { movieDetail ->
+            addFavoriteWithDetails(movieDetail, movie)
+        }.onFailure { exception ->
+            Log.e(TAG, "toggleFavorite: Erro ao buscar detalhes, usando Movie básico", exception)
+            addFavoriteBasic(movie)
+        }
+    }
+    
+    private suspend fun addFavoriteWithDetails(movieDetail: com.onboarding.mychallenge.domain.model.MovieDetail, movie: MovieViewObject) {
+        Log.d(TAG, "toggleFavorite: Detalhes obtidos, adicionando aos favoritos")
+        addMovieDetailToFavoritesUseCase(movieDetail)
+            .onSuccess {
+                Log.d(TAG, "toggleFavorite: Filme ${movie.id} adicionado aos favoritos com detalhes")
+            }
+            .onFailure { exception ->
+                Log.e(TAG, "toggleFavorite: Erro ao adicionar favorito com detalhes", exception)
+                addFavoriteBasic(movie)
+            }
+    }
+    
+    private suspend fun addFavoriteBasic(movie: MovieViewObject) {
+        Log.d(TAG, "toggleFavorite: Tentando fallback com Movie básico")
+        val domainMovie = movie.toDomain()
+        addToFavoritesUseCase(domainMovie)
+            .onFailure { fallbackException ->
+                Log.e(TAG, "toggleFavorite: Erro ao adicionar favorito (fallback)", fallbackException)
+            }
     }
     /**
      * Adiciona um filme aos favoritos pelo seu ID.
@@ -482,6 +495,7 @@ class MovieListViewModel @Inject constructor(
         }
     }
 }
+
 private fun MovieViewObject.toDomain(): com.onboarding.mychallenge.domain.model.Movie {
     return com.onboarding.mychallenge.domain.model.Movie(
         id = id,

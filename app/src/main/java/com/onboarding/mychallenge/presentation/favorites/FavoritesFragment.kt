@@ -68,13 +68,17 @@ class FavoritesFragment : Fragment() {
     private fun setupSearch() {
         Log.d(TAG, "setupSearch: Configurando campo de pesquisa")
         binding.searchEditText.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+                // No action needed before text changes
+            }
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                 val query = s?.toString() ?: ""
                 Log.d(TAG, "setupSearch: Texto alterado para: '$query'")
                 viewModel.updateSearchQuery(query)
             }
-            override fun afterTextChanged(s: Editable?) {}
+            override fun afterTextChanged(s: Editable?) {
+                // No action needed after text changes
+            }
         })
         Log.d(TAG, "setupSearch: Campo de pesquisa configurado")
     }

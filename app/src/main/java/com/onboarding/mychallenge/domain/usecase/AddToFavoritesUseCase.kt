@@ -1,4 +1,5 @@
 package com.onboarding.mychallenge.domain.usecase
+import android.database.sqlite.SQLiteException
 import com.onboarding.mychallenge.domain.model.Movie
 import com.onboarding.mychallenge.domain.repository.MovieRepository
 import javax.inject.Inject
@@ -23,6 +24,8 @@ class AddToFavoritesUseCase @Inject constructor(
         return try {
             repository.addToFavorites(movie)
             Result.success(Unit)
+        } catch (e: SQLiteException) {
+            Result.failure(e)
         } catch (e: Exception) {
             Result.failure(e)
         }

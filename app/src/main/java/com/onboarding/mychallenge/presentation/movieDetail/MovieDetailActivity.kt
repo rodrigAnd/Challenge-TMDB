@@ -64,57 +64,85 @@ class MovieDetailActivity : AppCompatActivity() {
     }
     private fun displayMovieDetail(movieDetail: com.onboarding.mychallenge.domain.model.MovieDetail) {
         binding.apply {
-            if (movieDetail.backdropUrl.isNotEmpty()) {
-                backdropImageView.visibility = View.VISIBLE
-                backdropImageView.load(movieDetail.backdropUrl) {
-                    crossfade(300)
-                    placeholder(android.R.drawable.ic_menu_gallery)
-                    error(android.R.drawable.ic_menu_report_image)
-                }
-            } else {
-                backdropImageView.visibility = View.GONE
-            }
+            displayBackdrop(movieDetail)
             detailTitleTextView.text = movieDetail.title
             detailRatingRuntimeTextView.text = "⭐ ${movieDetail.formattedRating} • ${movieDetail.formattedRuntime}"
-            if (movieDetail.releaseDate != null) {
-                detailReleaseDateTextView.text = "${getString(com.onboarding.mychallenge.R.string.lancamento)}: ${movieDetail.releaseDate}"
-                detailReleaseDateTextView.visibility = View.VISIBLE
-            } else {
-                detailReleaseDateTextView.visibility = View.GONE
-            }
-            if (movieDetail.genres.isNotEmpty()) {
-                detailGenresTextView.text = "${getString(com.onboarding.mychallenge.R.string.generos)}: ${movieDetail.genresString}"
-                detailGenresTextView.visibility = View.VISIBLE
-            } else {
-                detailGenresTextView.visibility = View.GONE
-            }
-            if (!movieDetail.tagline.isNullOrBlank()) {
-                detailTaglineTextView.text = "\"${movieDetail.tagline}\""
-                detailTaglineTextView.visibility = View.VISIBLE
-            } else {
-                detailTaglineTextView.visibility = View.GONE
-            }
+            displayReleaseDate(movieDetail)
+            displayGenres(movieDetail)
+            displayTagline(movieDetail)
             detailOverviewTextView.text = movieDetail.overview.ifBlank { "Sinopse não disponível." }
-            if (movieDetail.budget > 0 || movieDetail.revenue > 0) {
-                additionalInfoTitleTextView.visibility = View.VISIBLE
-                infoCardsContainer.visibility = View.VISIBLE
-                if (movieDetail.budget > 0) {
-                    budgetCard.visibility = View.VISIBLE
-                    detailBudgetTextView.text = formatCurrency(movieDetail.budget)
-                } else {
-                    budgetCard.visibility = View.GONE
-                }
-                if (movieDetail.revenue > 0) {
-                    revenueCard.visibility = View.VISIBLE
-                    detailRevenueTextView.text = formatCurrency(movieDetail.revenue)
-                } else {
-                    revenueCard.visibility = View.GONE
-                }
-            } else {
-                additionalInfoTitleTextView.visibility = View.GONE
-                infoCardsContainer.visibility = View.GONE
-            }
+            displayFinancialInfo(movieDetail)
             detailStatusTextView.text = movieDetail.status
+        }
+    }
+    
+    private fun displayBackdrop(movieDetail: com.onboarding.mychallenge.domain.model.MovieDetail) {
+        if (movieDetail.backdropUrl.isNotEmpty()) {
+            binding.backdropImageView.visibility = View.VISIBLE
+            binding.backdropImageView.load(movieDetail.backdropUrl) {
+                crossfade(300)
+                placeholder(android.R.drawable.ic_menu_gallery)
+                error(android.R.drawable.ic_menu_report_image)
+            }
+        } else {
+            binding.backdropImageView.visibility = View.GONE
+        }
+    }
+    
+    private fun displayReleaseDate(movieDetail: com.onboarding.mychallenge.domain.model.MovieDetail) {
+        if (movieDetail.releaseDate != null) {
+            binding.detailReleaseDateTextView.text = "${getString(com.onboarding.mychallenge.R.string.lancamento)}: ${movieDetail.releaseDate}"
+            binding.detailReleaseDateTextView.visibility = View.VISIBLE
+        } else {
+            binding.detailReleaseDateTextView.visibility = View.GONE
+        }
+    }
+    
+    private fun displayGenres(movieDetail: com.onboarding.mychallenge.domain.model.MovieDetail) {
+        if (movieDetail.genres.isNotEmpty()) {
+            binding.detailGenresTextView.text = "${getString(com.onboarding.mychallenge.R.string.generos)}: ${movieDetail.genresString}"
+            binding.detailGenresTextView.visibility = View.VISIBLE
+        } else {
+            binding.detailGenresTextView.visibility = View.GONE
+        }
+    }
+    
+    private fun displayTagline(movieDetail: com.onboarding.mychallenge.domain.model.MovieDetail) {
+        if (!movieDetail.tagline.isNullOrBlank()) {
+            binding.detailTaglineTextView.text = "\"${movieDetail.tagline}\""
+            binding.detailTaglineTextView.visibility = View.VISIBLE
+        } else {
+            binding.detailTaglineTextView.visibility = View.GONE
+        }
+    }
+    
+    private fun displayFinancialInfo(movieDetail: com.onboarding.mychallenge.domain.model.MovieDetail) {
+        if (movieDetail.budget > 0 || movieDetail.revenue > 0) {
+            binding.additionalInfoTitleTextView.visibility = View.VISIBLE
+            binding.infoCardsContainer.visibility = View.VISIBLE
+            displayBudget(movieDetail.budget)
+            displayRevenue(movieDetail.revenue)
+        } else {
+            binding.additionalInfoTitleTextView.visibility = View.GONE
+            binding.infoCardsContainer.visibility = View.GONE
+        }
+    }
+    
+    private fun displayBudget(budget: Long) {
+        if (budget > 0) {
+            binding.budgetCard.visibility = View.VISIBLE
+            binding.detailBudgetTextView.text = formatCurrency(budget)
+        } else {
+            binding.budgetCard.visibility = View.GONE
+        }
+    }
+    
+    private fun displayRevenue(revenue: Long) {
+        if (revenue > 0) {
+            binding.revenueCard.visibility = View.VISIBLE
+            binding.detailRevenueTextView.text = formatCurrency(revenue)
+        } else {
+            binding.revenueCard.visibility = View.GONE
         }
     }
     private fun formatCurrency(amount: Long): String {

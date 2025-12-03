@@ -45,6 +45,7 @@ fun FavoriteMovieEntity.toMovieDetail(): MovieDetail {
             val adapter = moshi.adapter<List<Genre>>(listType)
             adapter.fromJson(json) ?: emptyList()
         } catch (e: Exception) {
+            android.util.Log.e("MovieMapper", "Error parsing genres JSON: $json", e)
             emptyList()
         }
     } ?: emptyList()
@@ -89,6 +90,7 @@ fun MovieDetail.toEntity(): FavoriteMovieEntity {
         val adapter = moshi.adapter<List<Genre>>(listType)
         adapter.toJson(genres)
     } catch (e: Exception) {
+        android.util.Log.e("MovieMapper", "Error converting genres to JSON", e)
         null
     }
     return FavoriteMovieEntity(

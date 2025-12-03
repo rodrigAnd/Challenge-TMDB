@@ -12,6 +12,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.onboarding.mychallenge.databinding.FragmentMovieListBinding
+import com.onboarding.mychallenge.presentation.movieList.MovieViewObject
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -93,11 +94,15 @@ class MovieListFragment : Fragment() {
     }
     private fun setupSearch() {
         binding.searchEditText.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+                // No action needed before text changes
+            }
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                 viewModel.updateSearchQuery(s?.toString() ?: "")
             }
-            override fun afterTextChanged(s: Editable?) {}
+            override fun afterTextChanged(s: Editable?) {
+                // No action needed after text changes
+            }
         })
     }
     private fun observeUiState() {
@@ -109,49 +114,69 @@ class MovieListFragment : Fragment() {
                     Log.w(TAG, "observeUiState: Binding é null, ignorando atualização")
                     return@collectLatest
                 }
-                when (state) {
-                    is MovieListUiState.Loading -> {
-                        hideShimmer()
-                        hideError()
-                        hideEmpty()
-                    }
-                    is MovieListUiState.Success -> {
-                        Log.d(TAG, "observeUiState: Success - ${state.movies.size} filmes, isLoadingMore: ${state.isLoadingMore}, canLoadMore: ${state.canLoadMore}")
-                        hideError()
-                        hideEmpty()
-                        if (state.isLoadingMore) {
-                            Log.d(TAG, "observeUiState: Carregando mais páginas, atualizando lista")
-                            movieAdapter.submitList(state.movies)
-                            return@collectLatest
-                        }
-                        totalMoviesCount = state.movies.size
-                        Log.d(TAG, "observeUiState: Total de filmes: $totalMoviesCount")
-                        if (_binding?.shimmerRecyclerView?.visibility == View.VISIBLE) {
-                            imagesLoadedCount = 0
-                            Log.d(TAG, "observeUiState: Shimmer visível, resetando contador de imagens")
-                        }
-                        Log.d(TAG, "observeUiState: Atualizando adapter com ${state.movies.size} filmes")
-                        movieAdapter.submitList(state.movies)
-                    }
-                    is MovieListUiState.Error -> {
-                        hideShimmer()
-                        val isConnectionError = state.message.contains("conexão", ignoreCase = true) ||
-                                                state.message.contains("internet", ignoreCase = true) ||
-                                                state.message.contains("conexão com a internet", ignoreCase = true)
-                        if (isConnectionError) {
-                            navigateToErrorConnection()
-                        } else {
-                            navigateToError(state.message)
-                        }
-                    }
-                    is MovieListUiState.Empty -> {
-                        hideShimmer()
-                        hideError()
-                        showEmpty()
-                    }
-                }
+                handleUiState(state)
             }
         }
+    }
+    
+    private fun handleUiState(state: MovieListUiState) {
+        when (state) {
+            is MovieListUiState.Loading -> handleLoadingState()
+            is MovieListUiState.Success -> handleSuccessState(state)
+            is MovieListUiState.Error -> handleErrorState(state)
+            is MovieListUiState.Empty -> handleEmptyState()
+        }
+    }
+    
+    private fun handleLoadingState() {
+        hideShimmer()
+        hideError()
+        hideEmpty()
+    }
+    
+    private fun handleSuccessState(state: MovieListUiState.Success) {
+        Log.d(TAG, "observeUiState: Success - ${state.movies.size} filmes, isLoadingMore: ${state.isLoadingMore}, canLoadMore: ${state.canLoadMore}")
+        hideError()
+        hideEmpty()
+        if (state.isLoadingMore) {
+            Log.d(TAG, "observeUiState: Carregando mais páginas, atualizando lista")
+            movieAdapter.submitList(state.movies)
+            return
+        }
+        updateMoviesList(state.movies)
+    }
+    
+    private fun updateMoviesList(movies: List<MovieViewObject>) {
+        totalMoviesCount = movies.size
+        Log.d(TAG, "observeUiState: Total de filmes: $totalMoviesCount")
+        if (_binding?.shimmerRecyclerView?.visibility == View.VISIBLE) {
+            imagesLoadedCount = 0
+            Log.d(TAG, "observeUiState: Shimmer visível, resetando contador de imagens")
+        }
+        Log.d(TAG, "observeUiState: Atualizando adapter com ${movies.size} filmes")
+        movieAdapter.submitList(movies)
+    }
+    
+    private fun handleErrorState(state: MovieListUiState.Error) {
+        hideShimmer()
+        val isConnectionError = isConnectionError(state.message)
+        if (isConnectionError) {
+            navigateToErrorConnection()
+        } else {
+            navigateToError(state.message)
+        }
+    }
+    
+    private fun isConnectionError(message: String): Boolean {
+        return message.contains("conexão", ignoreCase = true) ||
+               message.contains("internet", ignoreCase = true) ||
+               message.contains("conexão com a internet", ignoreCase = true)
+    }
+    
+    private fun handleEmptyState() {
+        hideShimmer()
+        hideError()
+        showEmpty()
     }
     private fun hideShimmer() {
         _binding?.let {

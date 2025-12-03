@@ -129,4 +129,11 @@ detekt {
     if (baselineFile.exists()) {
         baseline = baselineFile
     }
+    
+    // Configurar JVM target para evitar erro com Java 24
+    // O Detekt usa o jvmTarget do Kotlin, que já está configurado como "17" em kotlinOptions
+    tasks.withType<io.gitlab.arturbosch.detekt.Detekt>().configureEach {
+        // Forçar uso do JVM target do Kotlin (17)
+        setProperty("jvmTarget", "17")
+    }
 }

@@ -1,4 +1,5 @@
 package com.onboarding.mychallenge.data.repository
+import android.database.sqlite.SQLiteException
 import android.util.Log
 import com.onboarding.mychallenge.data.local.dao.FavoriteMovieDao
 import com.onboarding.mychallenge.data.mapper.toDomain
@@ -52,36 +53,55 @@ class MovieRepositoryImpl @Inject constructor(
             if (response.results.isEmpty() && page == 1) {
                 Log.w(TAG, "getPopularMovies: Nenhum filme encontrado na primeira página")
             }
-            val movies = response.results.mapNotNull { dto ->
-                try {
-                    dto.toDomain()
-                } catch (e: Exception) {
-                    Log.e(TAG, "getPopularMovies: Erro ao converter DTO para Domain", e)
-                    null
-                }
-            }
+            val movies = convertDtosToMovies(response.results)
             Log.d(TAG, "getPopularMovies: Sucesso, ${movies.size} filmes recebidos.")
             Result.success(movies)
         } catch (e: java.net.UnknownHostException) {
-            Log.e(TAG, "getPopularMovies: Sem conexão com a internet", e)
-            Result.failure(Exception("Sem conexão com a internet. Verifique sua conexão e tente novamente.", e))
+            handleNetworkError("getPopularMovies", e)
         } catch (e: java.net.SocketTimeoutException) {
-            Log.e(TAG, "getPopularMovies: Timeout na requisição", e)
-            Result.failure(Exception("Tempo de espera esgotado. Tente novamente.", e))
+            handleTimeoutError("getPopularMovies", e)
         } catch (e: retrofit2.HttpException) {
-            val errorMessage = when (e.code()) {
-                401 -> "Não autorizado. Verifique suas credenciais."
-                404 -> "Recurso não encontrado."
-                429 -> "Muitas requisições. Aguarde um momento e tente novamente."
-                500 -> "Erro no servidor. Tente novamente mais tarde."
-                else -> "Erro ao buscar filmes: ${e.message()}"
-            }
-            Log.e(TAG, "getPopularMovies: Erro HTTP ${e.code()}", e)
-            Result.failure(Exception(errorMessage, e))
+            handleHttpError("getPopularMovies", e)
         } catch (e: Exception) {
             Log.e(TAG, "getPopularMovies: Erro ao buscar filmes populares", e)
             Result.failure(Exception("Erro ao carregar filmes. Tente novamente.", e))
         }
+    }
+    
+    private fun convertDtosToMovies(dtos: List<com.onboarding.mychallenge.data.remote.dto.MovieDto>): List<Movie> {
+        return dtos.mapNotNull { dto ->
+            try {
+                dto.toDomain()
+            } catch (e: IllegalArgumentException) {
+                Log.e(TAG, "convertDtosToMovies: Erro de validação ao converter DTO para Domain", e)
+                null
+            } catch (e: Exception) {
+                Log.e(TAG, "convertDtosToMovies: Erro inesperado ao converter DTO para Domain", e)
+                null
+            }
+        }
+    }
+    
+    private fun handleNetworkError(operation: String, e: java.net.UnknownHostException): Result<List<Movie>> {
+        Log.e(TAG, "$operation: Sem conexão com a internet", e)
+        return Result.failure(Exception("Sem conexão com a internet. Verifique sua conexão e tente novamente.", e))
+    }
+    
+    private fun handleTimeoutError(operation: String, e: java.net.SocketTimeoutException): Result<List<Movie>> {
+        Log.e(TAG, "$operation: Timeout na requisição", e)
+        return Result.failure(Exception("Tempo de espera esgotado. Tente novamente.", e))
+    }
+    
+    private fun handleHttpError(operation: String, e: retrofit2.HttpException): Result<List<Movie>> {
+        val errorMessage = when (e.code()) {
+            401 -> "Não autorizado. Verifique suas credenciais."
+            404 -> "Recurso não encontrado."
+            429 -> "Muitas requisições. Aguarde um momento e tente novamente."
+            500 -> "Erro no servidor. Tente novamente mais tarde."
+            else -> "Erro ao buscar filmes: ${e.message()}"
+        }
+        Log.e(TAG, "$operation: Erro HTTP ${e.code()}", e)
+        return Result.failure(Exception(errorMessage, e))
     }
     /**
      * Busca filmes da API com base em um termo de pesquisa.
@@ -105,32 +125,15 @@ class MovieRepositoryImpl @Inject constructor(
                 return Result.failure(IllegalArgumentException("Page number must be greater than 0"))
             }
             val response = apiService.searchMovies(query.trim(), page)
-            val movies = response.results.mapNotNull { dto ->
-                try {
-                    dto.toDomain()
-                } catch (e: Exception) {
-                    Log.e(TAG, "searchMovies: Erro ao converter DTO para Domain", e)
-                    null
-                }
-            }
+            val movies = convertDtosToMovies(response.results)
             Log.d(TAG, "searchMovies: Sucesso, ${movies.size} filmes encontrados para '$query'.")
             Result.success(movies)
         } catch (e: java.net.UnknownHostException) {
-            Log.e(TAG, "searchMovies: Sem conexão com a internet", e)
-            Result.failure(Exception("Sem conexão com a internet. Verifique sua conexão e tente novamente.", e))
+            handleNetworkError("searchMovies", e)
         } catch (e: java.net.SocketTimeoutException) {
-            Log.e(TAG, "searchMovies: Timeout na requisição", e)
-            Result.failure(Exception("Tempo de espera esgotado. Tente novamente.", e))
+            handleTimeoutError("searchMovies", e)
         } catch (e: retrofit2.HttpException) {
-            val errorMessage = when (e.code()) {
-                401 -> "Não autorizado. Verifique suas credenciais."
-                404 -> "Nenhum resultado encontrado para '$query'."
-                429 -> "Muitas requisições. Aguarde um momento e tente novamente."
-                500 -> "Erro no servidor. Tente novamente mais tarde."
-                else -> "Erro ao buscar filmes: ${e.message()}"
-            }
-            Log.e(TAG, "searchMovies: Erro HTTP ${e.code()}", e)
-            Result.failure(Exception(errorMessage, e))
+            handleHttpError("searchMovies", e)
         } catch (e: Exception) {
             Log.e(TAG, "searchMovies: Erro ao buscar filmes para '$query'", e)
             Result.failure(Exception("Erro ao buscar filmes. Tente novamente.", e))
@@ -146,8 +149,11 @@ class MovieRepositoryImpl @Inject constructor(
         Log.d(TAG, "addToFavorites: Adicionando filme ${movie.id} aos favoritos")
         try {
             favoriteDao.insertFavorite(movie.toEntity())
+        } catch (e: SQLiteException) {
+            Log.e(TAG, "addToFavorites: Erro de banco de dados ao adicionar filme ${movie.id} aos favoritos", e)
+            throw e
         } catch (e: Exception) {
-            Log.e(TAG, "addToFavorites: Erro ao adicionar filme ${movie.id} aos favoritos", e)
+            Log.e(TAG, "addToFavorites: Erro inesperado ao adicionar filme ${movie.id} aos favoritos", e)
             throw e
         }
     }
@@ -161,8 +167,11 @@ class MovieRepositoryImpl @Inject constructor(
         Log.d(TAG, "addMovieDetailToFavorites: Adicionando filme ${movieDetail.id} aos favoritos com detalhes completos")
         try {
             favoriteDao.insertFavorite(movieDetail.toEntity())
+        } catch (e: SQLiteException) {
+            Log.e(TAG, "addMovieDetailToFavorites: Erro de banco de dados ao adicionar filme ${movieDetail.id} aos favoritos", e)
+            throw e
         } catch (e: Exception) {
-            Log.e(TAG, "addMovieDetailToFavorites: Erro ao adicionar filme ${movieDetail.id} aos favoritos", e)
+            Log.e(TAG, "addMovieDetailToFavorites: Erro inesperado ao adicionar filme ${movieDetail.id} aos favoritos", e)
             throw e
         }
     }
@@ -177,8 +186,11 @@ class MovieRepositoryImpl @Inject constructor(
         try {
             favoriteDao.deleteFavorite(movieId)
             Log.d(TAG, "removeFromFavorites: Filme $movieId removido do banco de dados com sucesso")
+        } catch (e: SQLiteException) {
+            Log.e(TAG, "removeFromFavorites: Erro de banco de dados ao remover filme $movieId dos favoritos", e)
+            throw e
         } catch (e: Exception) {
-            Log.e(TAG, "removeFromFavorites: Erro ao remover filme $movieId dos favoritos", e)
+            Log.e(TAG, "removeFromFavorites: Erro inesperado ao remover filme $movieId dos favoritos", e)
             throw e
         }
     }
@@ -194,8 +206,11 @@ class MovieRepositoryImpl @Inject constructor(
             val isFav = favoriteDao.isFavorite(movieId)
             Log.d(TAG, "isFavorite: Filme $movieId é favorito? $isFav")
             isFav
+        } catch (e: SQLiteException) {
+            Log.e(TAG, "isFavorite: Erro de banco de dados ao verificar se filme $movieId é favorito", e)
+            throw e
         } catch (e: Exception) {
-            Log.e(TAG, "isFavorite: Erro ao verificar se filme $movieId é favorito", e)
+            Log.e(TAG, "isFavorite: Erro inesperado ao verificar se filme $movieId é favorito", e)
             throw e
         }
     }
@@ -217,8 +232,11 @@ class MovieRepositoryImpl @Inject constructor(
                     Log.d(TAG, "getFavoriteMovies: Convertidas ${movies.size} entidades para Movie, IDs: ${movies.map { it.id }}")
                     movies
                 }
+        } catch (e: SQLiteException) {
+            Log.e(TAG, "getFavoriteMovies: Erro de banco de dados ao obter filmes favoritos", e)
+            throw e
         } catch (e: Exception) {
-            Log.e(TAG, "getFavoriteMovies: Erro ao obter filmes favoritos", e)
+            Log.e(TAG, "getFavoriteMovies: Erro inesperado ao obter filmes favoritos", e)
             throw e
         }
     }
@@ -283,8 +301,11 @@ class MovieRepositoryImpl @Inject constructor(
                 Log.w(TAG, "getFavoriteMovieDetails: Filme favorito $movieId não encontrado")
                 Result.failure(Exception("Filme favorito não encontrado"))
             }
+        } catch (e: SQLiteException) {
+            Log.e(TAG, "getFavoriteMovieDetails: Erro de banco de dados ao buscar detalhes do filme favorito $movieId", e)
+            Result.failure(Exception("Erro ao carregar detalhes do filme favorito. Tente novamente.", e))
         } catch (e: Exception) {
-            Log.e(TAG, "getFavoriteMovieDetails: Erro ao buscar detalhes do filme favorito $movieId", e)
+            Log.e(TAG, "getFavoriteMovieDetails: Erro inesperado ao buscar detalhes do filme favorito $movieId", e)
             Result.failure(Exception("Erro ao carregar detalhes do filme favorito. Tente novamente.", e))
         }
     }

@@ -1,4 +1,5 @@
 package com.onboarding.mychallenge.domain.usecase
+import android.database.sqlite.SQLiteException
 import com.onboarding.mychallenge.domain.repository.MovieRepository
 import javax.inject.Inject
 
@@ -27,6 +28,8 @@ class RemoveFromFavoritesUseCase @Inject constructor(
             try {
                 repository.removeFromFavorites(movieId)
                 Result.success(Unit)
+            } catch (e: SQLiteException) {
+                Result.failure(e)
             } catch (e: Exception) {
                 Result.failure(e)
             }
