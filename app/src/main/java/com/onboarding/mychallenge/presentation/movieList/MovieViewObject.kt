@@ -1,4 +1,5 @@
 package com.onboarding.mychallenge.presentation.movieList
+
 data class MovieViewObject(
     val id: Int,
     val title: String,
@@ -12,7 +13,7 @@ data class MovieViewObject(
     val voteCount: Int,
     val popularity: Double,
     val isFavorite: Boolean = false,
-    val isLoadingFavorite: Boolean = false
+    val isLoadingFavorite: Boolean = false,
 ) {
     val releaseYear: String
         get() = releaseDate?.take(4) ?: "N/A"

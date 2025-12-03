@@ -32,16 +32,17 @@ object DatabaseModule {
     @Provides
     @Singleton
     fun provideAppDatabase(
-        @ApplicationContext context: Context
+        @ApplicationContext context: Context,
     ): AppDatabase {
         return Room.databaseBuilder(
             context,
             AppDatabase::class.java,
-            AppDatabase.DATABASE_NAME
+            AppDatabase.DATABASE_NAME,
         )
             .fallbackToDestructiveMigration()
             .build()
     }
+
     /**
      * Fornece uma instância de [FavoriteMovieDao] a partir do [AppDatabase].
      *

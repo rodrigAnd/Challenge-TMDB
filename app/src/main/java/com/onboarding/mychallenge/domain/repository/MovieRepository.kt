@@ -25,7 +25,10 @@ interface MovieRepository {
      * @param page O número da página a ser carregada. Padrão é 1.
      * @return Um [Result] contendo uma lista de [Movie] em caso de sucesso, ou um [Throwable] em caso de falha.
      */
-    suspend fun searchMovies(query: String, page: Int = 1): Result<List<Movie>>
+    suspend fun searchMovies(
+        query: String,
+        page: Int = 1,
+    ): Result<List<Movie>>
 
     /**
      * Adiciona um filme aos favoritos.

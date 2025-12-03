@@ -4,14 +4,17 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.onboarding.mychallenge.MainActivity
 import com.onboarding.mychallenge.databinding.ActivityErrorConnectionBinding
+
 class ErrorConnectionActivity : AppCompatActivity() {
     private lateinit var binding: ActivityErrorConnectionBinding
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityErrorConnectionBinding.inflate(layoutInflater)
         setContentView(binding.root)
         setupRetryButton()
     }
+
     private fun setupRetryButton() {
         binding.retryButton.setOnClickListener {
             val intent = Intent(this, MainActivity::class.java)

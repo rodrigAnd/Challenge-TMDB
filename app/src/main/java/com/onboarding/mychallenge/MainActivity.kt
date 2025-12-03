@@ -18,7 +18,6 @@ import dagger.hilt.android.AndroidEntryPoint
  */
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
-
     private lateinit var binding: ActivityMainBinding
 
     /**
@@ -40,8 +39,9 @@ class MainActivity : AppCompatActivity() {
      * ao [NavHostFragment] para permitir navegação entre fragmentos.
      */
     private fun setupBottomNavigation() {
-        val navHostFragment = supportFragmentManager
-            .findFragmentById(R.id.navHostFragment) as NavHostFragment
+        val navHostFragment =
+            supportFragmentManager
+                .findFragmentById(R.id.navHostFragment) as NavHostFragment
         val navController = navHostFragment.navController
 
         binding.bottomNavigationView.setupWithNavController(navController)

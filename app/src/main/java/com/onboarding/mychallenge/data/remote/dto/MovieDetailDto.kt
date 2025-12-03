@@ -1,6 +1,7 @@
 package com.onboarding.mychallenge.data.remote.dto
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
+
 @JsonClass(generateAdapter = true)
 data class MovieDetailDto(
     val adult: Boolean,
@@ -26,28 +27,32 @@ data class MovieDetailDto(
     val title: String,
     val video: Boolean,
     @Json(name = "vote_average") val voteAverage: Double,
-    @Json(name = "vote_count") val voteCount: Int
+    @Json(name = "vote_count") val voteCount: Int,
 )
+
 @JsonClass(generateAdapter = true)
 data class GenreDto(
     val id: Int,
-    val name: String
+    val name: String,
 )
+
 @JsonClass(generateAdapter = true)
 data class ProductionCompanyDto(
     val id: Int,
     @Json(name = "logo_path") val logoPath: String?,
     val name: String,
-    @Json(name = "origin_country") val originCountry: String
+    @Json(name = "origin_country") val originCountry: String,
 )
+
 @JsonClass(generateAdapter = true)
 data class ProductionCountryDto(
     @Json(name = "iso_3166_1") val iso31661: String,
-    val name: String
+    val name: String,
 )
+
 @JsonClass(generateAdapter = true)
 data class SpokenLanguageDto(
     @Json(name = "english_name") val englishName: String,
     @Json(name = "iso_639_1") val iso6391: String,
-    val name: String
+    val name: String,
 )
