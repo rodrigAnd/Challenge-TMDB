@@ -177,8 +177,8 @@ app/src/main/java/com/onboarding/mychallenge/
 
 1. Clone o repositório:
 ```bash
-git clone https://github.com/seu-usuario/my-challenge.git
-cd my-challenge
+git clone https://github.com/rodrigAnd/Challenge-TMDB.git
+cd Challenge-TMDB
 ```
 
 2. Abra o projeto no Android Studio
@@ -312,9 +312,9 @@ Desenvolvido como parte do processo seletivo.
 
 ## 📊 Status da Entrega
 
-### Conformidade: 95%
+### Conformidade: 97%
 
-O projeto atende a **todos os requisitos obrigatórios** do desafio. Os 5% restantes referem-se a melhorias opcionais:
+O projeto atende a **todos os requisitos obrigatórios** do desafio. Os 3% restantes referem-se a melhorias opcionais:
 
 #### ✅ 100% - Requisitos Obrigatórios Atendidos
 - ✅ Todas as funcionalidades implementadas
@@ -323,7 +323,7 @@ O projeto atende a **todos os requisitos obrigatórios** do desafio. Os 5% resta
 - ✅ Documentação completa
 - ✅ Código limpo e bem estruturado
 
-#### ⚠️ 5% - Melhorias Opcionais Pendentes
+#### ⚠️ 3% - Melhorias Opcionais Pendentes
 
 1. **Documentação KDoc Completa (2%)**
    - **Status**: Estrutura pronta, comentários ainda presentes
@@ -331,9 +331,9 @@ O projeto atende a **todos os requisitos obrigatórios** do desafio. Os 5% resta
    - **Justificativa**: Comentários inline ainda presentes em alguns arquivos. A estrutura está pronta para documentação KDoc completa, mas não impede a avaliação do projeto.
 
 2. **Repositório GitHub Público (2%)**
-   - **Status**: Pendente (se necessário)
-   - **Impacto**: Baixo - depende dos requisitos específicos do processo seletivo
-   - **Justificativa**: O código está pronto para ser publicado, apenas aguardando criação do repositório público.
+   - **Status**: ✅ Concluído
+   - **Repositório**: [https://github.com/rodrigAnd/Challenge-TMDB](https://github.com/rodrigAnd/Challenge-TMDB)
+   - **Justificativa**: Repositório público criado e código publicado com sucesso.
 
 3. **Ajustes Menores em Testes (1%)**
    - **Status**: Alguns testes podem precisar de ajustes de configuração
@@ -342,7 +342,32 @@ O projeto atende a **todos os requisitos obrigatórios** do desafio. Os 5% resta
 
 ### Conclusão
 
-O projeto está **100% funcional** e **pronto para apresentação**. Os 5% pendentes são melhorias opcionais que não afetam a funcionalidade ou a avaliação do projeto. Todos os requisitos obrigatórios do desafio foram atendidos com qualidade profissional.
+O projeto está **100% funcional** e **pronto para apresentação**. Os 3% pendentes são melhorias opcionais que não afetam a funcionalidade ou a avaliação do projeto. Todos os requisitos obrigatórios do desafio foram atendidos com qualidade profissional.
+
+## 🔗 Links
+
+- **Repositório GitHub**: [https://github.com/rodrigAnd/Challenge-TMDB](https://github.com/rodrigAnd/Challenge-TMDB)
+
+## 🔄 CI/CD e GitHub Actions
+
+Este projeto utiliza GitHub Actions para automação de CI/CD, code review e validações de qualidade.
+
+### Workflows Disponíveis
+
+- **PR para Develop**: Validação completa com code review automatizado e testes
+- **Merge para Master**: Validação rigorosa com cobertura mínima obrigatória de 90%
+- **Push para Develop**: Validação contínua
+
+### Requisitos de Cobertura
+
+- **Develop**: Recomendado 90% (não bloqueia)
+- **Master**: Obrigatório 90% (bloqueia merge se não atingir)
+
+### Documentação Completa
+
+Consulte [`.github/workflows/README.md`](.github/workflows/README.md) para detalhes completos sobre os workflows.
+
+Consulte [`.github/BRANCH_PROTECTION.md`](.github/BRANCH_PROTECTION.md) para configuração de proteções de branch.
 
 ## 📄 Licença
 

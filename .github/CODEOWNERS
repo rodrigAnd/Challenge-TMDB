@@ -1,0 +1,21 @@
+# Code Owners
+# Este arquivo define quem é responsável por revisar mudanças em diferentes partes do código
+
+# Padrão global - todos os arquivos Kotlin requerem aprovação
+*.kt @your-username
+
+# Arquivos de configuração críticos
+/.github/ @your-username
+/build.gradle.kts @your-username
+/app/build.gradle.kts @your-username
+/gradle/ @your-username
+
+# Documentação
+*.md @your-username
+
+# Workflows do GitHub Actions
+/.github/workflows/ @your-username
+
+# Substitua @your-username pelo seu username do GitHub ou por uma equipe
+# Exemplo: @your-org/backend-team
+

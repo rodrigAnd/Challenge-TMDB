@@ -14,8 +14,16 @@ import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 /**
- * Implementação do repositório de filmes
- * Combina dados remotos (API via Retrofit) e locais (Room)
+ * Implementação do repositório de filmes.
+ * 
+ * Combina dados remotos (API do TMDb via Retrofit) e locais (Room) para fornecer
+ * uma única fonte de dados para a camada de domínio. Gerencia operações de busca
+ * na API, armazenamento local de favoritos e tratamento de erros de rede.
+ * 
+ * @property apiService Serviço da API do TMDb para requisições remotas.
+ * @property favoriteDao DAO para operações com filmes favoritos no banco de dados local.
+ * 
+ * @constructor Cria uma nova instância do [MovieRepositoryImpl] com as dependências injetadas.
  */
 class MovieRepositoryImpl @Inject constructor(
     private val apiService: TmdbApiService,

@@ -12,16 +12,40 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
- * Estado da UI para detalhes do filme
+ * Estado da UI para detalhes do filme.
+ * 
+ * Representa os diferentes estados que a tela de detalhes do filme pode ter.
  */
 sealed class MovieDetailUiState {
+    /**
+     * Estado de carregamento inicial.
+     */
     data object Loading : MovieDetailUiState()
+    
+    /**
+     * Estado de sucesso com detalhes do filme carregados.
+     * 
+     * @property movieDetail Detalhes completos do filme.
+     */
     data class Success(val movieDetail: com.onboarding.mychallenge.domain.model.MovieDetail) : MovieDetailUiState()
+    
+    /**
+     * Estado de erro com mensagem de erro.
+     * 
+     * @property message Mensagem de erro a ser exibida.
+     */
     data class Error(val message: String) : MovieDetailUiState()
 }
 
 /**
- * ViewModel para detalhes do filme
+ * ViewModel para detalhes do filme.
+ * 
+ * Gerencia o estado da UI da tela de detalhes do filme, carregando informações
+ * completas do filme através do use case.
+ * 
+ * @property getMovieDetailsUseCase UseCase para buscar detalhes do filme.
+ * 
+ * @constructor Cria uma nova instância do [MovieDetailViewModel] com o use case injetado.
  */
 @HiltViewModel
 class MovieDetailViewModel @Inject constructor(

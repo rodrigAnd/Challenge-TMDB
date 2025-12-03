@@ -24,10 +24,26 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
- * Estado da UI para lista de filmes
+ * Estado da UI para lista de filmes.
+ * 
+ * Representa os diferentes estados que a tela de lista de filmes pode ter,
+ * seguindo o padrão de UI State Management.
  */
 sealed class MovieListUiState {
+    /**
+     * Estado de carregamento inicial.
+     */
     data object Loading : MovieListUiState()
+    
+    /**
+     * Estado de sucesso com lista de filmes carregada.
+     * 
+     * @property movies Lista de filmes a serem exibidos.
+     * @property isSearch Indica se os filmes são resultado de uma busca (padrão: false).
+     * @property currentPage Número da página atual (padrão: 1).
+     * @property canLoadMore Indica se há mais páginas disponíveis (padrão: true).
+     * @property isLoadingMore Indica se está carregando mais páginas (padrão: false).
+     */
     data class Success(
         val movies: List<MovieViewObject>,
         val isSearch: Boolean = false,
@@ -35,13 +51,37 @@ sealed class MovieListUiState {
         val canLoadMore: Boolean = true,
         val isLoadingMore: Boolean = false
     ) : MovieListUiState()
+    
+    /**
+     * Estado de erro com mensagem de erro.
+     * 
+     * @property message Mensagem de erro a ser exibida.
+     */
     data class Error(val message: String) : MovieListUiState()
+    
+    /**
+     * Estado quando não há filmes para exibir.
+     */
     data object Empty : MovieListUiState()
 }
 
 /**
- * ViewModel para a lista de filmes com debounce na pesquisa
- * Implementa Single Source of Truth e tratamento robusto de erros
+ * ViewModel para a lista de filmes com debounce na pesquisa.
+ * 
+ * Gerencia o estado da UI da lista de filmes, incluindo busca, paginação e
+ * gerenciamento de favoritos. Implementa Single Source of Truth e tratamento
+ * robusto de erros. Utiliza debounce na pesquisa para evitar requisições excessivas.
+ * 
+ * @property getPopularMoviesUseCase UseCase para buscar filmes populares.
+ * @property searchMoviesUseCase UseCase para buscar filmes por termo.
+ * @property addToFavoritesUseCase UseCase para adicionar filme aos favoritos.
+ * @property addMovieDetailToFavoritesUseCase UseCase para adicionar filme com detalhes aos favoritos.
+ * @property removeFromFavoritesUseCase UseCase para remover filme dos favoritos.
+ * @property isFavoriteUseCase UseCase para verificar se filme é favorito.
+ * @property getFavoriteMoviesUseCase UseCase para obter lista de favoritos.
+ * @property getMovieDetailsUseCase UseCase para obter detalhes de um filme.
+ * 
+ * @constructor Cria uma nova instância do [MovieListViewModel] com os use cases injetados.
  */
 @HiltViewModel
 class MovieListViewModel @Inject constructor(

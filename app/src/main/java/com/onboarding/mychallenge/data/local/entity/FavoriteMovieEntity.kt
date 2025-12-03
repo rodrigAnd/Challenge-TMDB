@@ -6,7 +6,32 @@ import androidx.room.TypeConverters
 import com.onboarding.mychallenge.data.local.converter.GenreListConverter
 
 /**
- * Entidade Room para armazenar filmes favoritos localmente com detalhes completos
+ * Entidade Room para armazenar filmes favoritos localmente com detalhes completos.
+ * 
+ * Representa a estrutura de dados para armazenar filmes favoritos no banco de dados local.
+ * Inclui campos básicos de [Movie] e campos adicionais de [MovieDetail] para permitir
+ * acesso offline aos detalhes completos dos filmes favoritos.
+ * 
+ * @property id Identificador único do filme (chave primária).
+ * @property title Título do filme.
+ * @property overview Sinopse ou descrição do filme.
+ * @property posterPath Caminho relativo da imagem do pôster (pode ser null).
+ * @property backdropPath Caminho relativo da imagem de fundo (pode ser null).
+ * @property releaseDate Data de lançamento no formato YYYY-MM-DD (pode ser null).
+ * @property voteAverage Média de avaliações (0.0 a 10.0).
+ * @property voteCount Número total de avaliações recebidas.
+ * @property popularity Pontuação de popularidade do filme.
+ * @property runtime Duração do filme em minutos (pode ser null).
+ * @property genresJson String JSON contendo a lista de gêneros serializados (pode ser null).
+ * @property tagline Slogan ou frase de efeito do filme (pode ser null).
+ * @property budget Orçamento do filme em dólares (padrão: 0L).
+ * @property revenue Receita do filme em dólares (padrão: 0L).
+ * @property status Status de lançamento do filme (pode ser null).
+ * @property homepage URL da página oficial do filme (pode ser null).
+ * @property addedAt Timestamp de quando o filme foi adicionado aos favoritos (padrão: tempo atual).
+ *                    Usado para ordenar os favoritos por data de adição.
+ * 
+ * @constructor Cria uma nova instância de [FavoriteMovieEntity] com os parâmetros especificados.
  */
 @Entity(tableName = "favorite_movies")
 @TypeConverters(GenreListConverter::class)

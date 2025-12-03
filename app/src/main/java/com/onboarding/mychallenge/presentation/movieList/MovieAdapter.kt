@@ -13,7 +13,17 @@ import coil.load
 import com.onboarding.mychallenge.databinding.ItemMovieBinding
 
 /**
- * Adapter para RecyclerView de filmes
+ * Adapter para RecyclerView de filmes.
+ * 
+ * Gerencia a exibição de uma lista de filmes em um RecyclerView, incluindo
+ * carregamento de imagens, exibição de informações e interação com favoritos.
+ * Utiliza DiffUtil para otimizar atualizações da lista.
+ * 
+ * @property onItemClick Callback chamado quando um item da lista é clicado.
+ * @property onFavoriteClick Callback chamado quando o botão de favorito é clicado (opcional).
+ * @property onImageLoaded Callback chamado quando uma imagem é carregada (opcional).
+ * 
+ * @constructor Cria uma nova instância do [MovieAdapter] com os callbacks especificados.
  */
 class MovieAdapter(
     private val onItemClick: (MovieViewObject) -> Unit,
@@ -158,11 +168,31 @@ class MovieAdapter(
         }
     }
 
+    /**
+     * Callback do DiffUtil para comparar itens da lista.
+     * 
+     * Otimiza as atualizações do RecyclerView comparando apenas os itens que mudaram,
+     * evitando re-renderizações desnecessárias.
+     */
     class MovieDiffCallback : DiffUtil.ItemCallback<MovieViewObject>() {
+        /**
+         * Verifica se dois itens representam o mesmo filme.
+         * 
+         * @param oldItem Item antigo.
+         * @param newItem Item novo.
+         * @return `true` se os itens têm o mesmo ID, `false` caso contrário.
+         */
         override fun areItemsTheSame(oldItem: MovieViewObject, newItem: MovieViewObject): Boolean {
             return oldItem.id == newItem.id
         }
 
+        /**
+         * Verifica se o conteúdo de dois itens é o mesmo.
+         * 
+         * @param oldItem Item antigo.
+         * @param newItem Item novo.
+         * @return `true` se os itens são iguais, `false` caso contrário.
+         */
         override fun areContentsTheSame(oldItem: MovieViewObject, newItem: MovieViewObject): Boolean {
             return oldItem == newItem
         }
