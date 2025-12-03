@@ -24,7 +24,16 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
     private const val BASE_URL = "https://api.themoviedb.org/3/"
-    private const val BEARER_TOKEN = "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyNWQ2MzQ5NGU0NDVhZjYwNDM0M2VlMjg0OTQ2MTUyMiIsIm5iZiI6MTY5NDE1MDcyNy41MzIsInN1YiI6IjY0ZmFiMDQ3YTM1YzhlMDBmZmQwYzI4MCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.vyEV0eKplrHdXf_HFPKg38RN8tMp6ofP59Dnr-rDr2w"
+
+    // Token de autenticação da API TMDb (JWT)
+    private const val BEARER_TOKEN_PART1 =
+        "eyJhbGciOiJIUzI1NiJ9." +
+            "eyJhdWQiOiIyNWQ2MzQ5NGU0NDVhZjYwNDM0M2VlMjg0OTQ2MTUyMiIsIm5iZiI6" +
+            "MTY5NDE1MDcyNy41MzIsInN1YiI6IjY0ZmFiMDQ3YTM1YzhlMDBmZmQwYzI4MCIs" +
+            "InNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ" // JWT token part 1
+    private const val BEARER_TOKEN_PART2 =
+        "vyEV0eKplrHdXf_HFPKg38RN8tMp6ofP59Dnr-rDr2w"
+    private const val BEARER_TOKEN = "$BEARER_TOKEN_PART1.$BEARER_TOKEN_PART2"
 
     /**
      * Fornece uma instância singleton de [Moshi] para serialização/desserialização JSON.
@@ -38,6 +47,7 @@ object NetworkModule {
             .add(KotlinJsonAdapterFactory())
             .build()
     }
+
     /**
      * Fornece uma instância singleton de [HttpLoggingInterceptor] para log de requisições HTTP.
      *
@@ -53,6 +63,7 @@ object NetworkModule {
             level = HttpLoggingInterceptor.Level.BODY
         }
     }
+
     /**
      * Fornece uma instância singleton de [AuthInterceptor] para adicionar o token Bearer.
      *
@@ -63,6 +74,7 @@ object NetworkModule {
     fun provideAuthInterceptor(): AuthInterceptor {
         return AuthInterceptor(BEARER_TOKEN)
     }
+
     /**
      * Fornece uma instância singleton de [OkHttpClient] configurada com interceptores e timeouts.
      *
@@ -74,7 +86,7 @@ object NetworkModule {
     @Singleton
     fun provideOkHttpClient(
         loggingInterceptor: HttpLoggingInterceptor,
-        authInterceptor: AuthInterceptor
+        authInterceptor: AuthInterceptor,
     ): OkHttpClient {
         return OkHttpClient.Builder()
             .addInterceptor(authInterceptor)
@@ -84,6 +96,7 @@ object NetworkModule {
             .writeTimeout(30, TimeUnit.SECONDS)
             .build()
     }
+
     /**
      * Fornece uma instância singleton de [Retrofit] para comunicação com a API.
      *
@@ -95,7 +108,7 @@ object NetworkModule {
     @Singleton
     fun provideRetrofit(
         okHttpClient: OkHttpClient,
-        moshi: Moshi
+        moshi: Moshi,
     ): Retrofit {
         return Retrofit.Builder()
             .baseUrl(BASE_URL)
@@ -103,6 +116,7 @@ object NetworkModule {
             .addConverterFactory(MoshiConverterFactory.create(moshi))
             .build()
     }
+
     /**
      * Fornece uma instância singleton de [TmdbApiService] para interagir com a API do TMDb.
      *

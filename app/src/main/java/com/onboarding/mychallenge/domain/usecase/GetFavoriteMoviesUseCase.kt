@@ -12,15 +12,17 @@ import javax.inject.Inject
  *
  * @param repository O repositório de filmes para acessar os dados.
  */
-class GetFavoriteMoviesUseCase @Inject constructor(
-    private val repository: MovieRepository
-) {
-    /**
-     * Obtém todos os filmes favoritos como um [Flow].
-     *
-     * @return Um [Flow] que emite uma lista de [Movie] favoritos sempre que houver uma mudança.
-     */
-    operator fun invoke(): Flow<List<Movie>> {
-        return repository.getFavoriteMovies()
+class GetFavoriteMoviesUseCase
+    @Inject
+    constructor(
+        private val repository: MovieRepository,
+    ) {
+        /**
+         * Obtém todos os filmes favoritos como um [Flow].
+         *
+         * @return Um [Flow] que emite uma lista de [Movie] favoritos sempre que houver uma mudança.
+         */
+        operator fun invoke(): Flow<List<Movie>> {
+            return repository.getFavoriteMovies()
+        }
     }
-}

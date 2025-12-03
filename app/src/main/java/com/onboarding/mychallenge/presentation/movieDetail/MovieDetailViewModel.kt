@@ -44,53 +44,54 @@ sealed class MovieDetailUiState {
  * @param getMovieDetailsUseCase UseCase para buscar detalhes completos de um filme.
  */
 @HiltViewModel
-class MovieDetailViewModel @Inject constructor(
-    private val getMovieDetailsUseCase: GetMovieDetailsUseCase
-) : ViewModel() {
-    companion object {
-        private const val TAG = "MovieDetailViewModel"
-    }
+class MovieDetailViewModel
+    @Inject
+    constructor(
+        private val getMovieDetailsUseCase: GetMovieDetailsUseCase,
+    ) : ViewModel() {
+        companion object {
+            private const val TAG = "MovieDetailViewModel"
+        }
 
-    private val _uiState = MutableStateFlow<MovieDetailUiState>(MovieDetailUiState.Loading)
+        private val _uiState = MutableStateFlow<MovieDetailUiState>(MovieDetailUiState.Loading)
 
-    /**
-     * O [StateFlow] que representa o estado atual da UI dos detalhes do filme.
-     * Os coletores devem observar este Flow para reagir às mudanças de estado.
-     */
-    val uiState: StateFlow<MovieDetailUiState> = _uiState.asStateFlow()
+        /**
+         * O [StateFlow] que representa o estado atual da UI dos detalhes do filme.
+         * Os coletores devem observar este Flow para reagir às mudanças de estado.
+         */
+        val uiState: StateFlow<MovieDetailUiState> = _uiState.asStateFlow()
 
-    /**
-     * Carrega os detalhes de um filme específico.
-     *
-     * Atualiza o [uiState] para [MovieDetailUiState.Loading] e, em seguida, para
-     * [MovieDetailUiState.Success] com os detalhes do filme ou [MovieDetailUiState.Error]
-     * em caso de falha.
-     *
-     * @param movieId O ID do filme para o qual carregar os detalhes.
-     */
-    fun loadMovieDetails(movieId: Int) {
-        Log.d(TAG, "loadMovieDetails: Carregando detalhes do filme $movieId")
-        viewModelScope.launch {
+        /**
+         * Carrega os detalhes de um filme específico.
+         *
+         * Atualiza o [uiState] para [MovieDetailUiState.Loading] e, em seguida, para
+         * [MovieDetailUiState.Success] com os detalhes do filme ou [MovieDetailUiState.Error]
+         * em caso de falha.
+         *
+         * @param movieId O ID do filme para o qual carregar os detalhes.
+         */
+        fun loadMovieDetails(movieId: Int) {
+            viewModelScope.launch {
+                _uiState.value = MovieDetailUiState.Loading
+                getMovieDetailsUseCase(movieId)
+                    .onSuccess { movieDetail ->
+                        _uiState.value = MovieDetailUiState.Success(movieDetail)
+                    }
+                    .onFailure { exception ->
+                        Log.e(TAG, "loadMovieDetails: Erro - ${exception.message}", exception)
+                        _uiState.value =
+                            MovieDetailUiState.Error(
+                                exception.message ?: "Erro ao carregar detalhes do filme",
+                            )
+                    }
+            }
+        }
+
+        /**
+         * Reseta o estado da UI para [MovieDetailUiState.Loading].
+         * Útil para preparar a ViewModel para um novo carregamento ou para limpar o estado.
+         */
+        fun resetState() {
             _uiState.value = MovieDetailUiState.Loading
-            getMovieDetailsUseCase(movieId)
-                .onSuccess { movieDetail ->
-                    Log.d(TAG, "loadMovieDetails: Sucesso ao carregar detalhes")
-                    _uiState.value = MovieDetailUiState.Success(movieDetail)
-                }
-                .onFailure { exception ->
-                    Log.e(TAG, "loadMovieDetails: Erro - ${exception.message}", exception)
-                    _uiState.value = MovieDetailUiState.Error(
-                        exception.message ?: "Erro ao carregar detalhes do filme"
-                    )
-                }
         }
     }
-
-    /**
-     * Reseta o estado da UI para [MovieDetailUiState.Loading].
-     * Útil para preparar a ViewModel para um novo carregamento ou para limpar o estado.
-     */
-    fun resetState() {
-        _uiState.value = MovieDetailUiState.Loading
-    }
-}

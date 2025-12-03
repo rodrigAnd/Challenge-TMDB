@@ -1,6 +1,7 @@
 package com.onboarding.mychallenge.data.remote.dto
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
+
 @JsonClass(generateAdapter = true)
 data class MovieDto(
     val adult: Boolean,
@@ -16,5 +17,5 @@ data class MovieDto(
     val title: String,
     val video: Boolean,
     @Json(name = "vote_average") val voteAverage: Double,
-    @Json(name = "vote_count") val voteCount: Int
+    @Json(name = "vote_count") val voteCount: Int,
 )

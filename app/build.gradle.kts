@@ -6,6 +6,11 @@ plugins {
     id("kotlin-parcelize")
     alias(libs.plugins.ktlint)
     alias(libs.plugins.detekt)
+    // Firebase Crashlytics - descomente quando adicionar google-services.json
+    // alias(libs.plugins.google.services)
+    // alias(libs.plugins.firebase.crashlytics)
+    // JaCoCo temporariamente desabilitado devido a conflito com AGP 8.7.3
+    // id("org.gradle.jacoco")
 }
 
 android {
@@ -27,7 +32,7 @@ android {
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
+                "proguard-rules.pro",
             )
         }
     }
@@ -37,9 +42,10 @@ android {
     }
     kotlinOptions {
         jvmTarget = "17"
-        freeCompilerArgs += listOf(
-            "-opt-in=kotlin.RequiresOptIn"
-        )
+        freeCompilerArgs +=
+            listOf(
+                "-opt-in=kotlin.RequiresOptIn",
+            )
     }
     buildFeatures {
         viewBinding = true
@@ -49,7 +55,7 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
-    
+
     testOptions {
         unitTests {
             isIncludeAndroidResources = true
@@ -57,6 +63,10 @@ android {
     }
 }
 
+// Configuração do JaCoCo - temporariamente desabilitado devido a conflito com AGP 8.7.3
+// jacoco {
+//     toolVersion = "0.8.12"
+// }
 
 dependencies {
 
@@ -73,11 +83,11 @@ dependencies {
     implementation(libs.androidx.material)
     implementation(libs.coil)
     implementation(libs.shimmer)
-    
+
     implementation(libs.hilt.android)
     kapt(libs.hilt.compiler)
     kapt(libs.hilt.androidx.compiler)
-    
+
     implementation(libs.retrofit)
     implementation(libs.retrofit.moshi)
     implementation(libs.okhttp)
@@ -85,13 +95,17 @@ dependencies {
     implementation(libs.moshi)
     implementation(libs.moshi.kotlin)
     kapt(libs.moshi.kotlin.codegen)
-    
+
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
     kapt(libs.room.compiler)
-    
+
     implementation(libs.kotlinx.coroutines.android)
-    
+
+    // Firebase Crashlytics - descomente quando adicionar google-services.json
+    // implementation(platform(libs.firebase.bom))
+    // implementation(libs.firebase.crashlytics.ktx)
+
     testImplementation(libs.junit)
     testImplementation(libs.mockk)
     testImplementation(libs.turbine)
@@ -119,17 +133,17 @@ ktlint {
 detekt {
     buildUponDefaultConfig = true
     allRules = false
-    
+
     val detektConfigFile = file("$projectDir/../config/detekt/detekt.yml")
     if (detektConfigFile.exists()) {
         config.setFrom(detektConfigFile)
     }
-    
+
     val baselineFile = file("$projectDir/../config/detekt/baseline.xml")
     if (baselineFile.exists()) {
         baseline = baselineFile
     }
-    
+
     // Configurar JVM target para evitar erro com Java 24
     // O Detekt usa o jvmTarget do Kotlin, que já está configurado como "17" em kotlinOptions
     tasks.withType<io.gitlab.arturbosch.detekt.Detekt>().configureEach {

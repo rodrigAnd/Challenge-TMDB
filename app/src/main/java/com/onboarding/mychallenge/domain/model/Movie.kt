@@ -25,7 +25,7 @@ data class Movie(
     val releaseDate: String?,
     val voteAverage: Double,
     val voteCount: Int,
-    val popularity: Double
+    val popularity: Double,
 ) {
     /**
      * URL completa da imagem do pôster.
@@ -33,11 +33,12 @@ data class Movie(
      * Retorna uma string vazia se [posterPath] for nulo.
      */
     val posterUrl: String
-        get() = if (posterPath != null) {
-            "https://image.tmdb.org/t/p/w500$posterPath"
-        } else {
-            ""
-        }
+        get() =
+            if (posterPath != null) {
+                "https://image.tmdb.org/t/p/w500$posterPath"
+            } else {
+                ""
+            }
 
     /**
      * URL completa da imagem de backdrop.
@@ -45,11 +46,12 @@ data class Movie(
      * Retorna uma string vazia se [backdropPath] for nulo.
      */
     val backdropUrl: String
-        get() = if (backdropPath != null) {
-            "https://image.tmdb.org/t/p/w1280$backdropPath"
-        } else {
-            ""
-        }
+        get() =
+            if (backdropPath != null) {
+                "https://image.tmdb.org/t/p/w1280$backdropPath"
+            } else {
+                ""
+            }
 
     /**
      * Formata a avaliação para exibição (ex: "8.5").

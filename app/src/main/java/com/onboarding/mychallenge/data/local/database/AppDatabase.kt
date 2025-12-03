@@ -18,7 +18,7 @@ import com.onboarding.mychallenge.data.local.entity.FavoriteMovieEntity
 @Database(
     entities = [FavoriteMovieEntity::class],
     version = 2,
-    exportSchema = false
+    exportSchema = false,
 )
 @TypeConverters(com.onboarding.mychallenge.data.local.converter.GenreListConverter::class)
 abstract class AppDatabase : RoomDatabase() {

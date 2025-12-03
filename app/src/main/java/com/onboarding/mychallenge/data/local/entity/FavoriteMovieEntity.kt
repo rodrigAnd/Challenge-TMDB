@@ -3,6 +3,7 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import androidx.room.TypeConverters
 import com.onboarding.mychallenge.data.local.converter.GenreListConverter
+
 @Entity(tableName = "favorite_movies")
 @TypeConverters(GenreListConverter::class)
 data class FavoriteMovieEntity(
@@ -22,5 +23,5 @@ data class FavoriteMovieEntity(
     val revenue: Long = 0L,
     val status: String? = null,
     val homepage: String? = null,
-    val addedAt: Long = System.currentTimeMillis()
+    val addedAt: Long = System.currentTimeMillis(),
 )

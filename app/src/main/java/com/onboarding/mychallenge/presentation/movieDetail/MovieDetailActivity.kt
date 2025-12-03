@@ -10,10 +10,12 @@ import com.onboarding.mychallenge.databinding.ActivityMovieDetailBinding
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+
 @AndroidEntryPoint
 class MovieDetailActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMovieDetailBinding
     private val viewModel: MovieDetailViewModel by viewModels()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMovieDetailBinding.inflate(layoutInflater)
@@ -28,6 +30,7 @@ class MovieDetailActivity : AppCompatActivity() {
         observeUiState()
         viewModel.loadMovieDetails(movieId)
     }
+
     private fun setupToolbar() {
         setSupportActionBar(binding.toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
@@ -36,6 +39,7 @@ class MovieDetailActivity : AppCompatActivity() {
             finish()
         }
     }
+
     private fun observeUiState() {
         lifecycleScope.launch {
             viewModel.uiState.collectLatest { state ->
@@ -54,7 +58,7 @@ class MovieDetailActivity : AppCompatActivity() {
                         Toast.makeText(
                             this@MovieDetailActivity,
                             state.message,
-                            Toast.LENGTH_LONG
+                            Toast.LENGTH_LONG,
                         ).show()
                         finish()
                     }
@@ -62,6 +66,7 @@ class MovieDetailActivity : AppCompatActivity() {
             }
         }
     }
+
     private fun displayMovieDetail(movieDetail: com.onboarding.mychallenge.domain.model.MovieDetail) {
         binding.apply {
             displayBackdrop(movieDetail)
@@ -75,7 +80,7 @@ class MovieDetailActivity : AppCompatActivity() {
             detailStatusTextView.text = movieDetail.status
         }
     }
-    
+
     private fun displayBackdrop(movieDetail: com.onboarding.mychallenge.domain.model.MovieDetail) {
         if (movieDetail.backdropUrl.isNotEmpty()) {
             binding.backdropImageView.visibility = View.VISIBLE
@@ -88,25 +93,27 @@ class MovieDetailActivity : AppCompatActivity() {
             binding.backdropImageView.visibility = View.GONE
         }
     }
-    
+
     private fun displayReleaseDate(movieDetail: com.onboarding.mychallenge.domain.model.MovieDetail) {
         if (movieDetail.releaseDate != null) {
-            binding.detailReleaseDateTextView.text = "${getString(com.onboarding.mychallenge.R.string.lancamento)}: ${movieDetail.releaseDate}"
+            binding.detailReleaseDateTextView.text =
+                "${getString(com.onboarding.mychallenge.R.string.lancamento)}: ${movieDetail.releaseDate}"
             binding.detailReleaseDateTextView.visibility = View.VISIBLE
         } else {
             binding.detailReleaseDateTextView.visibility = View.GONE
         }
     }
-    
+
     private fun displayGenres(movieDetail: com.onboarding.mychallenge.domain.model.MovieDetail) {
         if (movieDetail.genres.isNotEmpty()) {
-            binding.detailGenresTextView.text = "${getString(com.onboarding.mychallenge.R.string.generos)}: ${movieDetail.genresString}"
+            binding.detailGenresTextView.text =
+                "${getString(com.onboarding.mychallenge.R.string.generos)}: ${movieDetail.genresString}"
             binding.detailGenresTextView.visibility = View.VISIBLE
         } else {
             binding.detailGenresTextView.visibility = View.GONE
         }
     }
-    
+
     private fun displayTagline(movieDetail: com.onboarding.mychallenge.domain.model.MovieDetail) {
         if (!movieDetail.tagline.isNullOrBlank()) {
             binding.detailTaglineTextView.text = "\"${movieDetail.tagline}\""
@@ -115,7 +122,7 @@ class MovieDetailActivity : AppCompatActivity() {
             binding.detailTaglineTextView.visibility = View.GONE
         }
     }
-    
+
     private fun displayFinancialInfo(movieDetail: com.onboarding.mychallenge.domain.model.MovieDetail) {
         if (movieDetail.budget > 0 || movieDetail.revenue > 0) {
             binding.additionalInfoTitleTextView.visibility = View.VISIBLE
@@ -127,7 +134,7 @@ class MovieDetailActivity : AppCompatActivity() {
             binding.infoCardsContainer.visibility = View.GONE
         }
     }
-    
+
     private fun displayBudget(budget: Long) {
         if (budget > 0) {
             binding.budgetCard.visibility = View.VISIBLE
@@ -136,7 +143,7 @@ class MovieDetailActivity : AppCompatActivity() {
             binding.budgetCard.visibility = View.GONE
         }
     }
-    
+
     private fun displayRevenue(revenue: Long) {
         if (revenue > 0) {
             binding.revenueCard.visibility = View.VISIBLE
@@ -145,6 +152,7 @@ class MovieDetailActivity : AppCompatActivity() {
             binding.revenueCard.visibility = View.GONE
         }
     }
+
     private fun formatCurrency(amount: Long): String {
         return if (amount >= 1_000_000) {
             String.format("$%.1fM", amount / 1_000_000.0)
