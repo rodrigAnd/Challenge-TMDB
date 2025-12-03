@@ -244,18 +244,29 @@ jobs:
             ~/.gradle/caches
             ~/.gradle/wrapper
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
 
       - name: Dar permissão de execução ao gradlew
         run: chmod +x gradlew
 
-      - name: Verificar lint
-        run: ./gradlew lintDebug --no-daemon || true
+      - name: Executar KTLint Check
+        run: ./gradlew ktlintCheck --no-daemon
 
-      - name: Verificar formatação de código
-        run: |
-          echo "Verificando formatação de código Kotlin..."
-          # Verifica se há arquivos não formatados (básico)
-          find app/src -name "*.kt" -exec echo "Verificando: {}" \;
+      - name: Executar Detekt
+        run: ./gradlew detekt --no-daemon
+        continue-on-error: true
+
+      - name: Upload relatório Detekt
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: detekt-report
+          path: app/build/reports/detekt/*.html
+          retention-days: 7
+
+      - name: Verificar lint Android
+        run: ./gradlew lintDebug --no-daemon || true
 
   # Job de Aprovação Final
   approval-check:

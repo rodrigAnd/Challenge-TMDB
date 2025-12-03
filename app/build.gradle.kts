@@ -5,6 +5,8 @@ plugins {
     alias(libs.plugins.kotlin.kapt)
     id("kotlin-parcelize")
     id("jacoco")
+    alias(libs.plugins.ktlint)
+    alias(libs.plugins.detekt)
 }
 
 android {
@@ -169,4 +171,52 @@ dependencies {
     testImplementation(libs.kotlinx.coroutines.test)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+}
+
+ktlint {
+    version.set("1.0.1")
+    debug.set(false)
+    verbose.set(true)
+    android.set(true)
+    outputToConsole.set(true)
+    outputColorName.set("RED")
+    ignoreFailures.set(false)
+    enableExperimentalRules.set(true)
+    filter {
+        exclude("**/generated/**")
+        exclude("**/build/**")
+        include("**/kotlin/**")
+    }
+}
+
+detekt {
+    buildUponDefaultConfig = true
+    allRules = false
+    
+    val detektConfigFile = file("$projectDir/../config/detekt/detekt.yml")
+    if (detektConfigFile.exists()) {
+        config.setFrom(detektConfigFile)
+    }
+    
+    val baselineFile = file("$projectDir/../config/detekt/baseline.xml")
+    if (baselineFile.exists()) {
+        baseline = baselineFile
+    }
+    
+    reports {
+        html {
+            enabled = true
+            destination = file("$buildDir/reports/detekt/detekt.html")
+        }
+        xml {
+            enabled = true
+            destination = file("$buildDir/reports/detekt/detekt.xml")
+        }
+        txt {
+            enabled = false
+        }
+        sarif {
+            enabled = false
+        }
+    }
 }

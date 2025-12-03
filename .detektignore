@@ -1,0 +1,6 @@
+build/
+.gradle/
+**/generated/
+**/build/
+**/test/
+

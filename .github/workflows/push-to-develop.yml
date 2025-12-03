@@ -69,6 +69,13 @@ jobs:
             echo "⚠️ Cobertura abaixo de 90%, mas não bloqueando push para develop"
           fi
 
+      - name: Executar KTLint Check
+        run: ./gradlew ktlintCheck --no-daemon
+
+      - name: Executar Detekt
+        run: ./gradlew detekt --no-daemon
+        continue-on-error: true
+
       - name: Upload relatório de cobertura
         uses: codecov/codecov-action@v4
         if: always()

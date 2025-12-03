@@ -56,6 +56,13 @@ jobs:
       - name: Dar permissão de execução ao gradlew
         run: chmod +x gradlew
 
+      - name: Executar KTLint Check
+        run: ./gradlew ktlintCheck --no-daemon
+
+      - name: Executar Detekt
+        run: ./gradlew detekt --no-daemon
+        continue-on-error: true
+
       - name: Build completo
         run: ./gradlew clean build --no-daemon
 
@@ -197,6 +204,14 @@ jobs:
         with:
           name: coverage-report-master
           path: app/build/reports/jacoco/jacocoTestReport/
+
+      - name: Upload relatório Detekt
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: detekt-report-master
+          path: app/build/reports/detekt/*.html
+          retention-days: 7
 
       - name: Comentário final no PR
         uses: actions/github-script@v7
