@@ -56,6 +56,12 @@ android {
             isIncludeAndroidResources = true
         }
     }
+    
+    afterEvaluate {
+        tasks.findByName("testDebugUnitTest")?.let {
+            // Configuração da tarefa de teste será feita aqui se necessário
+        }
+    }
 }
 
 jacoco {
@@ -70,7 +76,10 @@ tasks.withType<Test> {
 }
 
 tasks.register("jacocoTestReport", JacocoReport::class) {
-    dependsOn("testDebugUnitTest")
+    val testTask = tasks.findByName("testDebugUnitTest")
+    if (testTask != null) {
+        dependsOn(testTask)
+    }
     
     reports {
         xml.required.set(true)
@@ -95,19 +104,19 @@ tasks.register("jacocoTestReport", JacocoReport::class) {
         "**/*_MembersInjector$*.class"
     )
     
-    val debugTree = fileTree("${project.buildDir}/intermediates/javac/debug") {
+    val debugTree = fileTree("${layout.buildDirectory.get().asFile}/intermediates/javac/debug") {
         exclude(fileFilter)
     }
     val mainSrc = "${project.projectDir}/src/main/java"
     
     sourceDirectories.setFrom(files(mainSrc))
     classDirectories.setFrom(files(debugTree))
-    executionData.setFrom(fileTree("${project.buildDir}") {
+    executionData.setFrom(fileTree("${layout.buildDirectory.get().asFile}") {
         include("jacoco/testDebugUnitTest.exec")
     })
     
     doLast {
-        val report = file("${project.buildDir}/reports/jacoco/jacocoTestReport/jacocoTestReport.xml")
+        val report = file("${layout.buildDirectory.get().asFile}/reports/jacoco/jacocoTestReport/jacocoTestReport.xml")
         if (report.exists()) {
             val coverage = report.readText()
             val regex = """<counter type="INSTRUCTION" missed="(\d+)" covered="(\d+)"/>""".toRegex()
@@ -201,22 +210,5 @@ detekt {
     val baselineFile = file("$projectDir/../config/detekt/baseline.xml")
     if (baselineFile.exists()) {
         baseline = baselineFile
-    }
-    
-    reports {
-        html {
-            enabled = true
-            destination = file("$buildDir/reports/detekt/detekt.html")
-        }
-        xml {
-            enabled = true
-            destination = file("$buildDir/reports/detekt/detekt.xml")
-        }
-        txt {
-            enabled = false
-        }
-        sarif {
-            enabled = false
-        }
     }
 }
