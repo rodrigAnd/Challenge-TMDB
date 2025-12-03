@@ -9,6 +9,16 @@ on:
     branches:
       - develop
       - master
+  workflow_dispatch:
+    inputs:
+      test_mode:
+        description: 'Modo de teste (normal ou verbose)'
+        required: false
+        default: 'normal'
+        type: choice
+        options:
+          - normal
+          - verbose
 
 jobs:
   ktlint:

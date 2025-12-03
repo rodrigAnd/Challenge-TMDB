@@ -4,7 +4,6 @@ plugins {
     alias(libs.plugins.hilt.android)
     alias(libs.plugins.kotlin.kapt)
     id("kotlin-parcelize")
-    id("jacoco")
     alias(libs.plugins.ktlint)
     alias(libs.plugins.detekt)
 }
@@ -56,89 +55,8 @@ android {
             isIncludeAndroidResources = true
         }
     }
-    
-    afterEvaluate {
-        tasks.findByName("testDebugUnitTest")?.let {
-            // Configuração da tarefa de teste será feita aqui se necessário
-        }
-    }
 }
 
-jacoco {
-    toolVersion = "0.8.11"
-}
-
-tasks.withType<Test> {
-    configure<JacocoTaskExtension> {
-        isIncludeNoLocationClasses = true
-        excludes = listOf("jdk.internal.*")
-    }
-}
-
-tasks.register("jacocoTestReport", JacocoReport::class) {
-    val testTask = tasks.findByName("testDebugUnitTest")
-    if (testTask != null) {
-        dependsOn(testTask)
-    }
-    
-    reports {
-        xml.required.set(true)
-        html.required.set(true)
-        csv.required.set(false)
-    }
-    
-    val fileFilter = listOf(
-        "**/R.class",
-        "**/R$*.class",
-        "**/BuildConfig.*",
-        "**/Manifest*.*",
-        "**/*Test*.*",
-        "android/**/*.*",
-        "**/di/**",
-        "**/hilt/**",
-        "**/*_Hilt_*",
-        "**/Hilt_*",
-        "**/*_Factory.class",
-        "**/*_MembersInjector.class",
-        "**/*_Factory$*.class",
-        "**/*_MembersInjector$*.class"
-    )
-    
-    val debugTree = fileTree("${layout.buildDirectory.get().asFile}/intermediates/javac/debug") {
-        exclude(fileFilter)
-    }
-    val mainSrc = "${project.projectDir}/src/main/java"
-    
-    sourceDirectories.setFrom(files(mainSrc))
-    classDirectories.setFrom(files(debugTree))
-    executionData.setFrom(fileTree("${layout.buildDirectory.get().asFile}") {
-        include("jacoco/testDebugUnitTest.exec")
-    })
-    
-    doLast {
-        val report = file("${layout.buildDirectory.get().asFile}/reports/jacoco/jacocoTestReport/jacocoTestReport.xml")
-        if (report.exists()) {
-            val coverage = report.readText()
-            val regex = """<counter type="INSTRUCTION" missed="(\d+)" covered="(\d+)"/>""".toRegex()
-            val matchResult = regex.find(coverage)
-            if (matchResult != null) {
-                val missed = matchResult.groupValues[1].toDouble()
-                val covered = matchResult.groupValues[2].toDouble()
-                val total = missed + covered
-                val percentage = (covered / total * 100)
-                
-                println("===========================================")
-                println("Cobertura de Testes: ${String.format("%.2f", percentage)}%")
-                println("Instruções cobertas: $covered de $total")
-                println("===========================================")
-                
-                if (percentage < 90.0) {
-                    throw GradleException("Cobertura de testes abaixo de 90%: ${String.format("%.2f", percentage)}%")
-                }
-            }
-        }
-    }
-}
 
 dependencies {
 

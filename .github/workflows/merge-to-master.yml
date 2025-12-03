@@ -32,10 +32,14 @@ jobs:
           fi
           
           if [ "$HEAD_BRANCH" != "develop" ]; then
-            echo "⚠️ Aviso: Este PR não vem da branch develop. Certifique-se de que é isso que deseja."
+            echo "❌ ERRO: Este PR não vem da branch develop!"
+            echo "   A branch master só aceita merges da develop."
+            echo "   Branch atual: $HEAD_BRANCH"
+            echo "   Branch esperada: develop"
+            exit 1
           fi
           
-          echo "✅ Validação de branch OK"
+          echo "✅ Validação de branch OK - PR vem de develop"
 
       - name: Configurar JDK 17
         uses: actions/setup-java@v4
