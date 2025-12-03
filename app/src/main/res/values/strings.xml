@@ -1,0 +1,26 @@
+<resources>
+    <string name="app_name">My Challenge</string>
+    <string name="movie_poster">Poster do filme</string>
+    <string name="movie_backdrop">Imagem de fundo do filme</string>
+    <string name="search_hint">Pesquisar filmes...</string>
+    <string name="no_movies_found">Nenhum filme encontrado</string>
+    <string name="error_loading_movies">Erro ao carregar filmes</string>
+    <string name="retry">Tentar Novamente</string>
+    <string name="sinopse">Sinopse</string>
+    <string name="informacoes">Informações</string>
+    <string name="status">Status</string>
+    <string name="orcamento">Orçamento</string>
+    <string name="bilheteria">Bilheteria</string>
+    <string name="lancamento">Lançamento</string>
+    <string name="generos">Gêneros</string>
+    <string name="close">Fechar</string>
+    <string name="favorite">Favorito</string>
+    <string name="movies">Filmes</string>
+    <string name="favorites">Favoritos</string>
+    <string name="movie_details">Detalhes do Filme</string>
+    <string name="no_favorites">Você ainda não adicionou nenhum favorito a sua lista</string>
+    <string name="no_internet_connection">Sem Conexão com a Internet</string>
+    <string name="no_internet_message">Verifique sua conexão com a internet e tente novamente.</string>
+    <string name="error_occurred">Ops! Algo deu errado</string>
+    <string name="max_retries_reached">Número máximo de tentativas atingido</string>
+</resources>
