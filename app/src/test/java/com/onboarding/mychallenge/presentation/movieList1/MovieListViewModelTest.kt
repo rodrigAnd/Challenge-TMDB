@@ -1,5 +1,4 @@
 package com.onboarding.mychallenge.presentation.movieList1
-
 import app.cash.turbine.test
 import com.onboarding.mychallenge.domain.model.Movie
 import com.onboarding.mychallenge.domain.usecase.AddToFavoritesUseCase
@@ -19,9 +18,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-
 class MovieListViewModelTest {
-
     private lateinit var getPopularMoviesUseCase: GetPopularMoviesUseCase
     private lateinit var searchMoviesUseCase: SearchMoviesUseCase
     private lateinit var addToFavoritesUseCase: AddToFavoritesUseCase
@@ -29,7 +26,6 @@ class MovieListViewModelTest {
     private lateinit var isFavoriteUseCase: IsFavoriteUseCase
     private lateinit var getFavoriteMoviesUseCase: GetFavoriteMoviesUseCase
     private lateinit var viewModel: MovieListViewModel
-
     @Before
     fun setup() {
         getPopularMoviesUseCase = mockk()
@@ -38,17 +34,12 @@ class MovieListViewModelTest {
         removeFromFavoritesUseCase = mockk()
         isFavoriteUseCase = mockk()
         getFavoriteMoviesUseCase = mockk()
-        
         every { getFavoriteMoviesUseCase() } returns flowOf(emptyList())
     }
-
     @Test
     fun `initial state should be Loading`() = runTest {
-        // Given
         val movies = listOf(createMockMovie(1, "Movie 1"))
         coEvery { getPopularMoviesUseCase(1) } returns Result.success(movies)
-
-        // When
         viewModel = MovieListViewModel(
             getPopularMoviesUseCase,
             searchMoviesUseCase,
@@ -57,27 +48,19 @@ class MovieListViewModelTest {
             isFavoriteUseCase,
             getFavoriteMoviesUseCase
         )
-
-        // Then
         viewModel.uiState.test {
             val initialState = awaitItem()
             assertTrue(initialState is MovieListUiState.Loading)
         }
     }
-
     @Test
     fun `loadPopularMovies should update state to Success when movies are loaded`() = runTest {
-        // Given
         val movies = listOf(createMockMovie(1, "Movie 1"))
         coEvery { getPopularMoviesUseCase(1) } returns Result.success(movies)
         viewModel = createViewModel()
-
-        // When
         viewModel.loadPopularMovies()
-
-        // Then
         viewModel.uiState.test {
-            skipItems(1) // Skip Loading state
+            skipItems(1)
             val successState = awaitItem() as MovieListUiState.Success
             assertEquals(1, successState.movies.size)
             assertEquals("Movie 1", successState.movies[0].title)
@@ -86,144 +69,93 @@ class MovieListViewModelTest {
         }
         coVerify(exactly = 1) { getPopularMoviesUseCase(1) }
     }
-
     @Test
     fun `loadPopularMovies should update state to Empty when no movies are returned`() = runTest {
-        // Given
         coEvery { getPopularMoviesUseCase(1) } returns Result.success(emptyList())
         viewModel = createViewModel()
-
-        // When
         viewModel.loadPopularMovies()
-
-        // Then
         viewModel.uiState.test {
-            skipItems(1) // Skip Loading state
+            skipItems(1)
             val emptyState = awaitItem()
             assertTrue(emptyState is MovieListUiState.Empty)
         }
     }
-
     @Test
     fun `loadPopularMovies should update state to Error when useCase fails`() = runTest {
-        // Given
         val error = Exception("Network error")
         coEvery { getPopularMoviesUseCase(1) } returns Result.failure(error)
         viewModel = createViewModel()
-
-        // When
         viewModel.loadPopularMovies()
-
-        // Then
         viewModel.uiState.test {
-            skipItems(1) // Skip Loading state
+            skipItems(1)
             val errorState = awaitItem() as MovieListUiState.Error
             assertTrue(errorState.message.contains("Network error"))
         }
     }
-
     @Test
     fun `updateSearchQuery should update search query`() = runTest {
-        // Given
         val query = "batman"
         viewModel = createViewModel()
-
-        // When
         viewModel.updateSearchQuery(query)
-
-        // Then
         assertEquals(query, viewModel.searchQuery.value)
     }
-
     @Test
     fun `loadNextPage should append new movies to existing list`() = runTest {
-        // Given
         val page1Movies = listOf(createMockMovie(1, "Movie 1"))
         val page2Movies = listOf(createMockMovie(2, "Movie 2"))
         coEvery { getPopularMoviesUseCase(1) } returns Result.success(page1Movies)
         coEvery { getPopularMoviesUseCase(2) } returns Result.success(page2Movies)
         viewModel = createViewModel()
-        
-        // Load first page
         viewModel.loadPopularMovies()
-
-        // When
         viewModel.loadNextPage()
-
-        // Then
         viewModel.uiState.test {
-            skipItems(2) // Skip Loading and first Success
+            skipItems(2)
             val successState = awaitItem() as MovieListUiState.Success
             assertEquals(2, successState.movies.size)
             assertEquals(2, successState.currentPage)
         }
     }
-
     @Test
     fun `loadNextPage should not load when already loading`() = runTest {
-        // Given
         val movies = listOf(createMockMovie(1, "Movie 1"))
         coEvery { getPopularMoviesUseCase(1) } returns Result.success(movies)
         viewModel = createViewModel()
         viewModel.loadPopularMovies()
-
-        // When - Set loading state manually
         val currentState = viewModel.uiState.value as MovieListUiState.Success
         viewModel.uiState.value = currentState.copy(isLoadingMore = true)
         viewModel.loadNextPage()
-
-        // Then
         coVerify(exactly = 0) { getPopularMoviesUseCase(2) }
     }
-
     @Test
     fun `toggleFavorite should add to favorites when not favorite`() = runTest {
-        // Given
         val movie = createMockMovieViewObject(1, "Movie 1", isFavorite = false)
         coEvery { isFavoriteUseCase(1) } returns Result.success(false)
         coEvery { addToFavoritesUseCase(any()) } returns Result.success(Unit)
         viewModel = createViewModel()
-
-        // When
         viewModel.toggleFavorite(movie)
-
-        // Then
         coVerify(exactly = 1) { isFavoriteUseCase(1) }
         coVerify(exactly = 1) { addToFavoritesUseCase(any()) }
         coVerify(exactly = 0) { removeFromFavoritesUseCase(any()) }
     }
-
     @Test
     fun `toggleFavorite should remove from favorites when favorite`() = runTest {
-        // Given
         val movie = createMockMovieViewObject(1, "Movie 1", isFavorite = true)
         coEvery { isFavoriteUseCase(1) } returns Result.success(true)
         coEvery { removeFromFavoritesUseCase(1) } returns Result.success(Unit)
         viewModel = createViewModel()
-
-        // When
         viewModel.toggleFavorite(movie)
-
-        // Then
         coVerify(exactly = 1) { isFavoriteUseCase(1) }
         coVerify(exactly = 1) { removeFromFavoritesUseCase(1) }
         coVerify(exactly = 0) { addToFavoritesUseCase(any()) }
     }
-
     @Test
     fun `retry should reload popular movies when query is empty`() = runTest {
-        // Given
         val movies = listOf(createMockMovie(1, "Movie 1"))
         coEvery { getPopularMoviesUseCase(1) } returns Result.success(movies)
         viewModel = createViewModel()
-
-        // When
         viewModel.retry()
-
-        // Then
         coVerify(atLeast = 1) { getPopularMoviesUseCase(1) }
     }
-
     private fun createViewModel(): MovieListViewModel {
         return MovieListViewModel(
             getPopularMoviesUseCase,
@@ -234,7 +166,6 @@ class MovieListViewModelTest {
             getFavoriteMoviesUseCase
         )
     }
-
     private fun createMockMovie(id: Int, title: String): Movie {
         return Movie(
             id = id,
@@ -248,14 +179,13 @@ class MovieListViewModelTest {
             popularity = 100.0
         )
     }
-
     private fun createMockMovieViewObject(id: Int, title: String, isFavorite: Boolean = false): MovieViewObject {
         return MovieViewObject(
             id = id,
             title = title,
             overview = "Overview",
-            posterUrl = "https://image.tmdb.org/t/p/w500/poster.jpg",
-            backdropUrl = "https://image.tmdb.org/t/p/w1280/backdrop.jpg",
+            posterUrl = "https:
+            backdropUrl = "https:
             releaseDate = "2024-01-01",
             formattedReleaseDate = "01/01/2024",
             rating = 8.5,
@@ -266,4 +196,3 @@ class MovieListViewModelTest {
         )
     }
 }
-

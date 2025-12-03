@@ -1,5 +1,4 @@
 package com.onboarding.mychallenge.domain.usecase
-
 import com.onboarding.mychallenge.domain.model.Movie
 import com.onboarding.mychallenge.domain.repository.MovieRepository
 import io.mockk.coEvery
@@ -10,48 +9,32 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-
 class AddToFavoritesUseCaseTest {
-
     private lateinit var repository: MovieRepository
     private lateinit var useCase: AddToFavoritesUseCase
-
     @Before
     fun setup() {
         repository = mockk()
         useCase = AddToFavoritesUseCase(repository)
     }
-
     @Test
     fun `invoke should return success when movie is added`() = runTest {
-        // Given
         val movie = createMockMovie(1, "Movie 1")
         coEvery { repository.addToFavorites(movie) } returns Unit
-
-        // When
         val result = useCase(movie)
-
-        // Then
         assertTrue(result.isSuccess)
         coVerify(exactly = 1) { repository.addToFavorites(movie) }
     }
-
     @Test
     fun `invoke should return failure when repository throws exception`() = runTest {
-        // Given
         val movie = createMockMovie(1, "Movie 1")
         val error = Exception("Database error")
         coEvery { repository.addToFavorites(movie) } throws error
-
-        // When
         val result = useCase(movie)
-
-        // Then
         assertTrue(result.isFailure)
         assertEquals(error, result.exceptionOrNull())
         coVerify(exactly = 1) { repository.addToFavorites(movie) }
     }
-
     private fun createMockMovie(id: Int, title: String): Movie {
         return Movie(
             id = id,
@@ -66,4 +49,3 @@ class AddToFavoritesUseCaseTest {
         )
     }
 }
-

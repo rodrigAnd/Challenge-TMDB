@@ -1,5 +1,4 @@
 package com.onboarding.mychallenge.data.remote.api
-
 import com.onboarding.mychallenge.data.remote.dto.MovieDetailDto
 import com.onboarding.mychallenge.data.remote.dto.MoviesResponseDto
 import retrofit2.http.GET
@@ -7,40 +6,31 @@ import retrofit2.http.Path
 import retrofit2.http.Query
 
 /**
- * Interface do Retrofit para comunicação com a API do TMDb (The Movie Database).
- * 
- * Define os endpoints da API do TMDb usando anotações Retrofit para realizar
- * requisições HTTP. Todas as requisições são autenticadas através do
- * [AuthInterceptor] que adiciona o Bearer token automaticamente.
+ * Interface do Retrofit para comunicação com a API do TMDb.
+ *
+ * Define os endpoints para buscar filmes populares, pesquisar filmes e obter detalhes de filmes.
  */
 interface TmdbApiService {
-    
     /**
      * Busca filmes populares com paginação.
-     * 
-     * Realiza uma requisição GET para o endpoint `/movie/popular` da API do TMDb
-     * para obter a lista de filmes populares.
-     * 
-     * @param page Número da página a ser buscada (padrão: 1).
-     * @param language Código do idioma para a resposta (padrão: "pt-BR").
-     * @return [MoviesResponseDto] contendo a lista de filmes e metadados de paginação.
+     *
+     * @param page O número da página a ser carregada. Padrão é 1.
+     * @param language O idioma da resposta. Padrão é "pt-BR".
+     * @return Um [MoviesResponseDto] contendo a lista de filmes populares.
      */
     @GET("movie/popular")
     suspend fun getPopularMovies(
         @Query("page") page: Int = 1,
         @Query("language") language: String = "pt-BR"
     ): MoviesResponseDto
-    
+
     /**
-     * Busca filmes por termo de pesquisa com paginação.
-     * 
-     * Realiza uma requisição GET para o endpoint `/search/movie` da API do TMDb
-     * para buscar filmes que correspondam ao termo fornecido.
-     * 
-     * @param query Termo de busca para pesquisar filmes.
-     * @param page Número da página a ser buscada (padrão: 1).
-     * @param language Código do idioma para a resposta (padrão: "pt-BR").
-     * @return [MoviesResponseDto] contendo a lista de filmes encontrados e metadados de paginação.
+     * Busca filmes por um termo de pesquisa com paginação.
+     *
+     * @param query O termo de busca.
+     * @param page O número da página a ser carregada. Padrão é 1.
+     * @param language O idioma da resposta. Padrão é "pt-BR".
+     * @return Um [MoviesResponseDto] contendo a lista de filmes que correspondem à pesquisa.
      */
     @GET("search/movie")
     suspend fun searchMovies(
@@ -48,16 +38,13 @@ interface TmdbApiService {
         @Query("page") page: Int = 1,
         @Query("language") language: String = "pt-BR"
     ): MoviesResponseDto
-    
+
     /**
-     * Busca detalhes completos de um filme específico.
-     * 
-     * Realiza uma requisição GET para o endpoint `/movie/{movie_id}` da API do TMDb
-     * para obter informações detalhadas de um filme específico.
-     * 
-     * @param movieId ID único do filme cujos detalhes devem ser buscados.
-     * @param language Código do idioma para a resposta (padrão: "pt-BR").
-     * @return [MovieDetailDto] contendo todos os detalhes do filme.
+     * Busca detalhes de um filme específico.
+     *
+     * @param movieId O ID do filme.
+     * @param language O idioma da resposta. Padrão é "pt-BR".
+     * @return Um [MovieDetailDto] contendo os detalhes completos do filme.
      */
     @GET("movie/{movie_id}")
     suspend fun getMovieDetails(
@@ -65,4 +52,3 @@ interface TmdbApiService {
         @Query("language") language: String = "pt-BR"
     ): MovieDetailDto
 }
-

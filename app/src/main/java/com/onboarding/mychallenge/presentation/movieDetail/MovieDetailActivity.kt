@@ -1,5 +1,4 @@
 package com.onboarding.mychallenge.presentation.movieDetail
-
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
@@ -11,30 +10,24 @@ import com.onboarding.mychallenge.databinding.ActivityMovieDetailBinding
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-
 @AndroidEntryPoint
 class MovieDetailActivity : AppCompatActivity() {
-
     private lateinit var binding: ActivityMovieDetailBinding
     private val viewModel: MovieDetailViewModel by viewModels()
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMovieDetailBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
         val movieId = intent.getIntExtra("movie_id", 0)
         if (movieId == 0) {
             Toast.makeText(this, "ID do filme inválido", Toast.LENGTH_SHORT).show()
             finish()
             return
         }
-
         setupToolbar()
         observeUiState()
         viewModel.loadMovieDetails(movieId)
     }
-
     private fun setupToolbar() {
         setSupportActionBar(binding.toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
@@ -43,7 +36,6 @@ class MovieDetailActivity : AppCompatActivity() {
             finish()
         }
     }
-
     private fun observeUiState() {
         lifecycleScope.launch {
             viewModel.uiState.collectLatest { state ->
@@ -52,13 +44,11 @@ class MovieDetailActivity : AppCompatActivity() {
                         binding.progressBar.visibility = View.VISIBLE
                         binding.scrollView.visibility = View.GONE
                     }
-
                     is MovieDetailUiState.Success -> {
                         binding.progressBar.visibility = View.GONE
                         binding.scrollView.visibility = View.VISIBLE
                         displayMovieDetail(state.movieDetail)
                     }
-
                     is MovieDetailUiState.Error -> {
                         binding.progressBar.visibility = View.GONE
                         Toast.makeText(
@@ -72,10 +62,8 @@ class MovieDetailActivity : AppCompatActivity() {
             }
         }
     }
-
     private fun displayMovieDetail(movieDetail: com.onboarding.mychallenge.domain.model.MovieDetail) {
         binding.apply {
-            // Backdrop
             if (movieDetail.backdropUrl.isNotEmpty()) {
                 backdropImageView.visibility = View.VISIBLE
                 backdropImageView.load(movieDetail.backdropUrl) {
@@ -86,52 +74,36 @@ class MovieDetailActivity : AppCompatActivity() {
             } else {
                 backdropImageView.visibility = View.GONE
             }
-
-            // Título
             detailTitleTextView.text = movieDetail.title
-
-            // Rating e Runtime
             detailRatingRuntimeTextView.text = "⭐ ${movieDetail.formattedRating} • ${movieDetail.formattedRuntime}"
-
-            // Data de lançamento
             if (movieDetail.releaseDate != null) {
                 detailReleaseDateTextView.text = "${getString(com.onboarding.mychallenge.R.string.lancamento)}: ${movieDetail.releaseDate}"
                 detailReleaseDateTextView.visibility = View.VISIBLE
             } else {
                 detailReleaseDateTextView.visibility = View.GONE
             }
-
-            // Gêneros
             if (movieDetail.genres.isNotEmpty()) {
                 detailGenresTextView.text = "${getString(com.onboarding.mychallenge.R.string.generos)}: ${movieDetail.genresString}"
                 detailGenresTextView.visibility = View.VISIBLE
             } else {
                 detailGenresTextView.visibility = View.GONE
             }
-
-            // Tagline
             if (!movieDetail.tagline.isNullOrBlank()) {
                 detailTaglineTextView.text = "\"${movieDetail.tagline}\""
                 detailTaglineTextView.visibility = View.VISIBLE
             } else {
                 detailTaglineTextView.visibility = View.GONE
             }
-
-            // Sinopse
             detailOverviewTextView.text = movieDetail.overview.ifBlank { "Sinopse não disponível." }
-
-            // Informações adicionais
             if (movieDetail.budget > 0 || movieDetail.revenue > 0) {
                 additionalInfoTitleTextView.visibility = View.VISIBLE
                 infoCardsContainer.visibility = View.VISIBLE
-
                 if (movieDetail.budget > 0) {
                     budgetCard.visibility = View.VISIBLE
                     detailBudgetTextView.text = formatCurrency(movieDetail.budget)
                 } else {
                     budgetCard.visibility = View.GONE
                 }
-
                 if (movieDetail.revenue > 0) {
                     revenueCard.visibility = View.VISIBLE
                     detailRevenueTextView.text = formatCurrency(movieDetail.revenue)
@@ -142,12 +114,9 @@ class MovieDetailActivity : AppCompatActivity() {
                 additionalInfoTitleTextView.visibility = View.GONE
                 infoCardsContainer.visibility = View.GONE
             }
-
-            // Status
             detailStatusTextView.text = movieDetail.status
         }
     }
-
     private fun formatCurrency(amount: Long): String {
         return if (amount >= 1_000_000) {
             String.format("$%.1fM", amount / 1_000_000.0)
@@ -158,4 +127,3 @@ class MovieDetailActivity : AppCompatActivity() {
         }
     }
 }
-

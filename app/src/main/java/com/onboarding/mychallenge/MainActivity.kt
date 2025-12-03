@@ -8,12 +8,12 @@ import com.onboarding.mychallenge.databinding.ActivityMainBinding
 import dagger.hilt.android.AndroidEntryPoint
 
 /**
- * Activity principal do aplicativo.
- * 
- * Gerencia a navegação principal através de um [NavHostFragment] e configura
- * a navegação inferior (bottom navigation) para alternar entre as diferentes
- * telas do aplicativo.
- * 
+ * Activity principal do aplicativo que gerencia a navegação entre fragmentos.
+ *
+ * Esta activity configura a navegação inferior (bottom navigation) conectando
+ * o [NavHostFragment] ao [BottomNavigationView] para permitir navegação entre
+ * as diferentes telas do aplicativo.
+ *
  * @constructor Cria uma nova instância da MainActivity.
  */
 @AndroidEntryPoint
@@ -23,8 +23,9 @@ class MainActivity : AppCompatActivity() {
 
     /**
      * Inicializa a activity e configura a navegação.
-     * 
-     * @param savedInstanceState Estado anterior da instância, se houver.
+     *
+     * @param savedInstanceState Se a activity está sendo recriada a partir de um estado salvo anteriormente,
+     * este é o estado.
      */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

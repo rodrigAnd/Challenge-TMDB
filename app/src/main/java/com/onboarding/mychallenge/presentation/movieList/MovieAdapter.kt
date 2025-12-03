@@ -1,5 +1,4 @@
 package com.onboarding.mychallenge.presentation.movieList
-
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.util.Log
@@ -11,30 +10,14 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import coil.load
 import com.onboarding.mychallenge.databinding.ItemMovieBinding
-
-/**
- * Adapter para RecyclerView de filmes.
- * 
- * Gerencia a exibição de uma lista de filmes em um RecyclerView, incluindo
- * carregamento de imagens, exibição de informações e interação com favoritos.
- * Utiliza DiffUtil para otimizar atualizações da lista.
- * 
- * @property onItemClick Callback chamado quando um item da lista é clicado.
- * @property onFavoriteClick Callback chamado quando o botão de favorito é clicado (opcional).
- * @property onImageLoaded Callback chamado quando uma imagem é carregada (opcional).
- * 
- * @constructor Cria uma nova instância do [MovieAdapter] com os callbacks especificados.
- */
 class MovieAdapter(
     private val onItemClick: (MovieViewObject) -> Unit,
     private val onFavoriteClick: ((MovieViewObject) -> Unit)? = null,
     private val onImageLoaded: (() -> Unit)? = null
 ) : ListAdapter<MovieViewObject, MovieAdapter.MovieViewHolder>(MovieDiffCallback()) {
-
     companion object {
         private const val TAG = "MovieAdapter"
     }
-
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MovieViewHolder {
         val binding = ItemMovieBinding.inflate(
             LayoutInflater.from(parent.context),
@@ -43,44 +26,35 @@ class MovieAdapter(
         )
         return MovieViewHolder(binding, onItemClick, onFavoriteClick, onImageLoaded)
     }
-
     override fun onBindViewHolder(holder: MovieViewHolder, position: Int) {
         val movie = getItem(position)
         Log.d(TAG, "onBindViewHolder: Binding filme na posição $position - ID: ${movie.id}, Title: ${movie.title}, isFavorite: ${movie.isFavorite}, isLoadingFavorite: ${movie.isLoadingFavorite}")
         holder.bind(movie)
     }
-    
     override fun submitList(list: List<MovieViewObject>?) {
         Log.d(TAG, "submitList: Submetendo lista com ${list?.size ?: 0} filmes")
         super.submitList(list)
     }
-
     class MovieViewHolder(
         private val binding: ItemMovieBinding,
         private val onItemClick: (MovieViewObject) -> Unit,
         private val onFavoriteClick: ((MovieViewObject) -> Unit)? = null,
         private val onImageLoaded: (() -> Unit)? = null
     ) : RecyclerView.ViewHolder(binding.root) {
-
         fun bind(movie: MovieViewObject) {
             binding.apply {
-                // Carrega imagem do pôster
                 if (movie.hasPoster) {
                     posterImageView.visibility = android.view.View.VISIBLE
-                    // Inicia invisível para não mostrar até carregar
                     posterImageView.alpha = 0f
                     posterImageView.load(movie.posterUrl) {
                         crossfade(300)
-                        // Não usa placeholder para evitar mostrar imagem padrão
                         error(android.R.drawable.ic_menu_report_image)
                         listener(
                             onSuccess = { _, _ ->
-                                // Imagem carregada com sucesso - torna visível e notifica
                                 posterImageView.alpha = 1f
                                 onImageLoaded?.invoke()
                             },
                             onError = { _, _ ->
-                                // Erro ao carregar - torna visível mesmo assim e notifica
                                 posterImageView.alpha = 1f
                                 onImageLoaded?.invoke()
                             }
@@ -88,33 +62,18 @@ class MovieAdapter(
                     }
                 } else {
                     posterImageView.visibility = android.view.View.GONE
-                    // Se não tem poster, também notifica para remover shimmer
                     onImageLoaded?.invoke()
                 }
-
-                // Título
                 titleTextView.text = movie.title
-
-                // Data de lançamento
                 releaseDateTextView.text = movie.formattedReleaseDate
-
-                // Rating - apenas número com estrela
                 ratingTextView.text = "⭐ ${movie.formattedRating}"
-
-                // Vote Count
                 voteCountTextView.text = "• ${movie.voteCount} votos"
-
-                // Sinopse
                 overviewTextView.text = movie.overview
-
-                // Favorito - mostra shimmer ou ícone do botão
                 if (movie.isLoadingFavorite) {
-                    // Mostra Shimmer e esconde o botão
                     binding.favoriteButton.visibility = android.view.View.INVISIBLE
                     binding.favoriteShimmerLayout.visibility = android.view.View.VISIBLE
                     binding.favoriteButton.isEnabled = false
                 } else {
-                    // Mostra o botão e esconde o Shimmer
                     binding.favoriteButton.visibility = android.view.View.VISIBLE
                     binding.favoriteShimmerLayout.visibility = android.view.View.GONE
                     binding.favoriteButton.isEnabled = true
@@ -126,11 +85,9 @@ class MovieAdapter(
                         }
                     )
                     binding.favoriteButton.contentDescription = if (movie.isFavorite) "Remover dos favoritos" else "Adicionar aos favoritos"
-                    // Garante contraste visual - cor dourada quando favorito, cor primária (#FB8C00) quando não
                     val tintColor = if (movie.isFavorite) {
-                        Color.parseColor("#FFD700") // Dourado quando favorito
+                        Color.parseColor("#FFD700")
                     } else {
-                        // Usa a cor primária do tema (#FB8C00)
                         try {
                             val typedValue = TypedValue()
                             val theme = binding.root.context.theme
@@ -141,16 +98,14 @@ class MovieAdapter(
                                 )) {
                                 typedValue.data
                             } else {
-                                Color.parseColor("#FB8C00") // Fallback com a cor primária laranja
+                                Color.parseColor("#FB8C00")
                             }
                         } catch (e: Exception) {
-                            Color.parseColor("#FB8C00") // Fallback com a cor primária laranja
+                            Color.parseColor("#FB8C00")
                         }
                     }
                     binding.favoriteButton.imageTintList = ColorStateList.valueOf(tintColor)
                 }
-                
-                // Clique no botão de favorito (só funciona se não estiver loading)
                 binding.favoriteButton.setOnClickListener {
                     if (!movie.isLoadingFavorite) {
                         Log.d(TAG, "bind: Clique no favorito do filme ${movie.id} - ${movie.title}, isFavorite: ${movie.isFavorite}")
@@ -159,43 +114,18 @@ class MovieAdapter(
                         Log.d(TAG, "bind: Clique ignorado - filme ${movie.id} está em loading")
                     }
                 }
-
-                // Clique no item
                 root.setOnClickListener {
                     onItemClick(movie)
                 }
             }
         }
     }
-
-    /**
-     * Callback do DiffUtil para comparar itens da lista.
-     * 
-     * Otimiza as atualizações do RecyclerView comparando apenas os itens que mudaram,
-     * evitando re-renderizações desnecessárias.
-     */
     class MovieDiffCallback : DiffUtil.ItemCallback<MovieViewObject>() {
-        /**
-         * Verifica se dois itens representam o mesmo filme.
-         * 
-         * @param oldItem Item antigo.
-         * @param newItem Item novo.
-         * @return `true` se os itens têm o mesmo ID, `false` caso contrário.
-         */
         override fun areItemsTheSame(oldItem: MovieViewObject, newItem: MovieViewObject): Boolean {
             return oldItem.id == newItem.id
         }
-
-        /**
-         * Verifica se o conteúdo de dois itens é o mesmo.
-         * 
-         * @param oldItem Item antigo.
-         * @param newItem Item novo.
-         * @return `true` se os itens são iguais, `false` caso contrário.
-         */
         override fun areContentsTheSame(oldItem: MovieViewObject, newItem: MovieViewObject): Boolean {
             return oldItem == newItem
         }
     }
 }
-

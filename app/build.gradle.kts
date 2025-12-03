@@ -56,7 +56,6 @@ android {
     }
 }
 
-// Configuração do JaCoCo para cobertura de testes
 jacoco {
     toolVersion = "0.8.11"
 }
@@ -146,12 +145,10 @@ dependencies {
     implementation(libs.coil)
     implementation(libs.shimmer)
     
-    // Hilt
     implementation(libs.hilt.android)
     kapt(libs.hilt.compiler)
     kapt(libs.hilt.androidx.compiler)
     
-    // Retrofit + OkHttp + Moshi
     implementation(libs.retrofit)
     implementation(libs.retrofit.moshi)
     implementation(libs.okhttp)
@@ -160,15 +157,12 @@ dependencies {
     implementation(libs.moshi.kotlin)
     kapt(libs.moshi.kotlin.codegen)
     
-    // Room
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
     kapt(libs.room.compiler)
     
-    // Coroutines
     implementation(libs.kotlinx.coroutines.android)
     
-    // Testing
     testImplementation(libs.junit)
     testImplementation(libs.mockk)
     testImplementation(libs.turbine)

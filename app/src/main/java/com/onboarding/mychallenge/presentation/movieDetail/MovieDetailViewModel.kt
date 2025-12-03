@@ -1,5 +1,4 @@
 package com.onboarding.mychallenge.presentation.movieDetail
-
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -12,62 +11,67 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
- * Estado da UI para detalhes do filme.
- * 
- * Representa os diferentes estados que a tela de detalhes do filme pode ter.
+ * Estados possíveis da UI da tela de detalhes do filme.
  */
 sealed class MovieDetailUiState {
     /**
-     * Estado de carregamento inicial.
+     * Estado de carregamento inicial ou de recarregamento.
      */
     data object Loading : MovieDetailUiState()
-    
+
     /**
-     * Estado de sucesso com detalhes do filme carregados.
-     * 
-     * @property movieDetail Detalhes completos do filme.
+     * Estado de sucesso, contendo os detalhes completos do filme para exibição.
+     *
+     * @property movieDetail O [com.onboarding.mychallenge.domain.model.MovieDetail] a ser exibido.
      */
     data class Success(val movieDetail: com.onboarding.mychallenge.domain.model.MovieDetail) : MovieDetailUiState()
-    
+
     /**
-     * Estado de erro com mensagem de erro.
-     * 
-     * @property message Mensagem de erro a ser exibida.
+     * Estado de erro, contendo uma mensagem para o usuário.
+     *
+     * @property message A mensagem de erro a ser exibida.
      */
     data class Error(val message: String) : MovieDetailUiState()
 }
 
 /**
- * ViewModel para detalhes do filme.
- * 
- * Gerencia o estado da UI da tela de detalhes do filme, carregando informações
- * completas do filme através do use case.
- * 
- * @property getMovieDetailsUseCase UseCase para buscar detalhes do filme.
- * 
- * @constructor Cria uma nova instância do [MovieDetailViewModel] com o use case injetado.
+ * ViewModel para a tela de detalhes do filme.
+ *
+ * Gerencia o estado da UI para a tela de detalhes de um filme específico,
+ * incluindo o carregamento dos detalhes e o tratamento de estados de carregamento,
+ * sucesso e erro.
+ *
+ * @param getMovieDetailsUseCase UseCase para buscar detalhes completos de um filme.
  */
 @HiltViewModel
 class MovieDetailViewModel @Inject constructor(
     private val getMovieDetailsUseCase: GetMovieDetailsUseCase
 ) : ViewModel() {
-    
     companion object {
         private const val TAG = "MovieDetailViewModel"
     }
-    
+
     private val _uiState = MutableStateFlow<MovieDetailUiState>(MovieDetailUiState.Loading)
-    val uiState: StateFlow<MovieDetailUiState> = _uiState.asStateFlow()
-    
+
     /**
-     * Carrega os detalhes do filme
-     * Busca da API (os favoritos são salvos com detalhes completos no Room)
+     * O [StateFlow] que representa o estado atual da UI dos detalhes do filme.
+     * Os coletores devem observar este Flow para reagir às mudanças de estado.
+     */
+    val uiState: StateFlow<MovieDetailUiState> = _uiState.asStateFlow()
+
+    /**
+     * Carrega os detalhes de um filme específico.
+     *
+     * Atualiza o [uiState] para [MovieDetailUiState.Loading] e, em seguida, para
+     * [MovieDetailUiState.Success] com os detalhes do filme ou [MovieDetailUiState.Error]
+     * em caso de falha.
+     *
+     * @param movieId O ID do filme para o qual carregar os detalhes.
      */
     fun loadMovieDetails(movieId: Int) {
         Log.d(TAG, "loadMovieDetails: Carregando detalhes do filme $movieId")
         viewModelScope.launch {
             _uiState.value = MovieDetailUiState.Loading
-            
             getMovieDetailsUseCase(movieId)
                 .onSuccess { movieDetail ->
                     Log.d(TAG, "loadMovieDetails: Sucesso ao carregar detalhes")
@@ -81,12 +85,12 @@ class MovieDetailViewModel @Inject constructor(
                 }
         }
     }
-    
+
     /**
-     * Reseta o estado
+     * Reseta o estado da UI para [MovieDetailUiState.Loading].
+     * Útil para preparar a ViewModel para um novo carregamento ou para limpar o estado.
      */
     fun resetState() {
         _uiState.value = MovieDetailUiState.Loading
     }
 }
-
