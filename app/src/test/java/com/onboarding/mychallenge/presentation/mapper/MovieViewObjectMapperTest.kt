@@ -33,8 +33,8 @@ class MovieViewObjectMapperTest {
         assertEquals("https://image.tmdb.org/t/p/w1280/backdrop.jpg", viewObject.backdropUrl)
         assertEquals("2024-07-26", viewObject.releaseDate)
         assertEquals("26/07/2024", viewObject.formattedReleaseDate) // Verifica a formatação da data
-        assertEquals(8.5, viewObject.rating, 0.0) // O terceiro parâmetro é uma tolerância para floats/doubles
-        assertEquals("8,5", viewObject.formattedRating)
+        assertEquals(8.5, viewObject.voteAverage, 0.0) // O terceiro parâmetro é uma tolerância para floats/doubles
+        assertEquals("8.5", viewObject.formattedRating)
         assertEquals(100, viewObject.voteCount)
         assertEquals(100.0, viewObject.popularity, 0.0)
         assertEquals(false, viewObject.isFavorite) // Verifica o valor padrão

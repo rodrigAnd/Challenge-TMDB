@@ -1,9 +1,10 @@
 package com.onboarding.mychallenge.domain.model
 
+import java.util.Locale
+
 /**
  * Modelo de domínio para detalhes completos de um filme.
- *
- * Esta classe estende as informações básicas de [Movie] com detalhes adicionais
+ * * Esta classe estende as informações básicas de [Movie] com detalhes adicionais
  * obtidos da API, como tempo de duração, gêneros, orçamento, etc.
  *
  * @property id O identificador único do filme.
@@ -71,7 +72,11 @@ data class MovieDetail(
      * Formata a avaliação para exibição (ex: "8.5").
      */
     val formattedRating: String
-        get() = String.format("%.1f", voteAverage)
+        // --- INÍCIO DA CORREÇÃO ---
+        // Usamos Locale.US para garantir que o separador decimal seja sempre um PONTO (.),
+        // evitando problemas de localização em diferentes sistemas (local vs. CI/CD).
+        get() = String.format(Locale.US, "%.1f", voteAverage)
+    // --- FIM DA CORREÇÃO ---
 
     /**
      * Formata o runtime em horas e minutos (ex: "2h 30min").

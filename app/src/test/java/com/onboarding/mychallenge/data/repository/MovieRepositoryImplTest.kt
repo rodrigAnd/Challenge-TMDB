@@ -7,6 +7,7 @@ import com.onboarding.mychallenge.data.remote.dto.MovieDetailDto
 import com.onboarding.mychallenge.data.remote.dto.MovieDto
 import com.onboarding.mychallenge.data.remote.dto.MoviesResponseDto
 import com.onboarding.mychallenge.domain.model.Genre
+import com.onboarding.mychallenge.domain.model.Movie
 import com.onboarding.mychallenge.domain.model.MovieDetail
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -14,6 +15,8 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.ResponseBody.Companion.toResponseBody
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -257,6 +260,235 @@ class MovieRepositoryImplTest {
             assertEquals(false, result)
         }
 
+    @Test
+    fun `addToFavorites should call DAO insert`() =
+        runTest {
+            // Arrange
+            val movie = createMovie(1, "Movie to Add")
+
+            // Act
+            repository.addToFavorites(movie)
+
+            // Assert
+            coVerify(exactly = 1) { favoriteDao.insertFavorite(any()) }
+        }
+
+    //region Error Handling Tests
+    @Test
+    fun `getPopularMovies should return failure when page is less than 1`() =
+        runTest {
+            // Act
+            val result = repository.getPopularMovies(0)
+
+            // Assert
+            assertTrue(result.isFailure)
+            assertTrue(result.exceptionOrNull() is IllegalArgumentException)
+        }
+
+    @Test
+    fun `getPopularMovies should handle UnknownHostException`() =
+        runTest {
+            // Arrange
+            coEvery { apiService.getPopularMovies(1, "pt-BR") } throws java.net.UnknownHostException("No internet")
+
+            // Act
+            val result = repository.getPopularMovies(1)
+
+            // Assert
+            assertTrue(result.isFailure)
+            assertEquals("Sem conexão com a internet. Verifique sua conexão e tente novamente.", result.exceptionOrNull()?.message)
+        }
+
+    @Test
+    fun `getPopularMovies should handle SocketTimeoutException`() =
+        runTest {
+            // Arrange
+            coEvery { apiService.getPopularMovies(1, "pt-BR") } throws java.net.SocketTimeoutException("Timeout")
+
+            // Act
+            val result = repository.getPopularMovies(1)
+
+            // Assert
+            assertTrue(result.isFailure)
+            assertEquals("Tempo de espera esgotado. Tente novamente.", result.exceptionOrNull()?.message)
+        }
+
+    @Test
+    fun `getPopularMovies should handle HttpException 401`() =
+        runTest {
+            // Arrange
+            val responseBody = "".toResponseBody("application/json".toMediaType())
+            val httpException = retrofit2.HttpException(retrofit2.Response.error<Any>(401, responseBody))
+            coEvery { apiService.getPopularMovies(1, "pt-BR") } throws httpException
+
+            // Act
+            val result = repository.getPopularMovies(1)
+
+            // Assert
+            assertTrue(result.isFailure)
+            assertEquals("Não autorizado. Verifique suas credenciais.", result.exceptionOrNull()?.message)
+        }
+
+    @Test
+    fun `getPopularMovies should handle HttpException 404`() =
+        runTest {
+            // Arrange
+            val responseBody = "".toResponseBody("application/json".toMediaType())
+            val httpException = retrofit2.HttpException(retrofit2.Response.error<Any>(404, responseBody))
+            coEvery { apiService.getPopularMovies(1, "pt-BR") } throws httpException
+
+            // Act
+            val result = repository.getPopularMovies(1)
+
+            // Assert
+            assertTrue(result.isFailure)
+            assertEquals("Recurso não encontrado.", result.exceptionOrNull()?.message)
+        }
+
+    @Test
+    fun `getPopularMovies should handle HttpException 429`() =
+        runTest {
+            // Arrange
+            val responseBody = "".toResponseBody("application/json".toMediaType())
+            val httpException = retrofit2.HttpException(retrofit2.Response.error<Any>(429, responseBody))
+            coEvery { apiService.getPopularMovies(1, "pt-BR") } throws httpException
+
+            // Act
+            val result = repository.getPopularMovies(1)
+
+            // Assert
+            assertTrue(result.isFailure)
+            assertEquals("Muitas requisições. Aguarde um momento e tente novamente.", result.exceptionOrNull()?.message)
+        }
+
+    @Test
+    fun `getPopularMovies should handle HttpException 500`() =
+        runTest {
+            // Arrange
+            val responseBody = "".toResponseBody("application/json".toMediaType())
+            val httpException = retrofit2.HttpException(retrofit2.Response.error<Any>(500, responseBody))
+            coEvery { apiService.getPopularMovies(1, "pt-BR") } throws httpException
+
+            // Act
+            val result = repository.getPopularMovies(1)
+
+            // Assert
+            assertTrue(result.isFailure)
+            assertEquals("Erro no servidor. Tente novamente mais tarde.", result.exceptionOrNull()?.message)
+        }
+
+    @Test
+    fun `searchMovies should return failure when query is blank`() =
+        runTest {
+            // Act
+            val result = repository.searchMovies("", 1)
+
+            // Assert
+            assertTrue(result.isFailure)
+            assertTrue(result.exceptionOrNull() is IllegalArgumentException)
+        }
+
+    @Test
+    fun `searchMovies should return failure when page is less than 1`() =
+        runTest {
+            // Act
+            val result = repository.searchMovies("query", 0)
+
+            // Assert
+            assertTrue(result.isFailure)
+            assertTrue(result.exceptionOrNull() is IllegalArgumentException)
+        }
+
+    @Test
+    fun `searchMovies should handle UnknownHostException`() =
+        runTest {
+            // Arrange
+            coEvery { apiService.searchMovies("query", 1, "pt-BR") } throws java.net.UnknownHostException("No internet")
+
+            // Act
+            val result = repository.searchMovies("query", 1)
+
+            // Assert
+            assertTrue(result.isFailure)
+            assertEquals("Sem conexão com a internet. Verifique sua conexão e tente novamente.", result.exceptionOrNull()?.message)
+        }
+
+    @Test
+    fun `searchMovies should handle HttpException 404`() =
+        runTest {
+            // Arrange
+            val responseBody = "".toResponseBody("application/json".toMediaType())
+            val httpException = retrofit2.HttpException(retrofit2.Response.error<Any>(404, responseBody))
+            coEvery { apiService.searchMovies("query", 1, "pt-BR") } throws httpException
+
+            // Act
+            val result = repository.searchMovies("query", 1)
+
+            // Assert
+            assertTrue(result.isFailure)
+            assertEquals("Nenhum resultado encontrado para 'query'.", result.exceptionOrNull()?.message)
+        }
+
+    @Test
+    fun `getMovieDetails should return failure when movieId is less than or equal to 0`() =
+        runTest {
+            // Act
+            val result = repository.getMovieDetails(0)
+
+            // Assert
+            assertTrue(result.isFailure)
+            assertTrue(result.exceptionOrNull() is IllegalArgumentException)
+        }
+
+    @Test
+    fun `getMovieDetails should handle UnknownHostException`() =
+        runTest {
+            // Arrange
+            coEvery { apiService.getMovieDetails(1, "pt-BR") } throws java.net.UnknownHostException("No internet")
+
+            // Act
+            val result = repository.getMovieDetails(1)
+
+            // Assert
+            assertTrue(result.isFailure)
+            assertEquals("Sem conexão com a internet. Verifique sua conexão e tente novamente.", result.exceptionOrNull()?.message)
+        }
+
+    @Test
+    fun `getMovieDetails should handle HttpException 404`() =
+        runTest {
+            // Arrange
+            val responseBody = "".toResponseBody("application/json".toMediaType())
+            val httpException = retrofit2.HttpException(retrofit2.Response.error<Any>(404, responseBody))
+            coEvery { apiService.getMovieDetails(1, "pt-BR") } throws httpException
+
+            // Act
+            val result = repository.getMovieDetails(1)
+
+            // Assert
+            assertTrue(result.isFailure)
+            assertEquals("Filme não encontrado.", result.exceptionOrNull()?.message)
+        }
+
+    @Test
+    fun `getPopularMovies should filter out null movies from mapNotNull`() =
+        runTest {
+            // Arrange
+            val validMovieDto = createMovieDto(1, "Valid Movie")
+            val invalidMovieDto = createMovieDto(2, "Invalid Movie")
+            val response = MoviesResponseDto(1, listOf(validMovieDto, invalidMovieDto), 10, 100)
+            coEvery { apiService.getPopularMovies(1, "pt-BR") } returns response
+
+            // Act
+            val result = repository.getPopularMovies(1)
+
+            // Assert
+            assertTrue(result.isSuccess)
+            val movies = result.getOrNull()
+            assertTrue(movies != null && movies.isNotEmpty())
+        }
+    //endregion
+
     // --- Funções de Apoio (Helpers) ---
     private fun createMovieDto(
         id: Int,
@@ -332,5 +564,20 @@ class MovieRepositoryImplTest {
         revenue = 1L,
         status = "Released",
         homepage = "",
+    )
+
+    private fun createMovie(
+        id: Int,
+        title: String,
+    ) = Movie(
+        id = id,
+        title = title,
+        overview = "Overview",
+        posterPath = "/poster.jpg",
+        backdropPath = "/backdrop.jpg",
+        releaseDate = "2024-01-01",
+        voteAverage = 8.5,
+        voteCount = 100,
+        popularity = 100.0,
     )
 }

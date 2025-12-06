@@ -1,3 +1,9 @@
+import org.gradle.api.tasks.testing.Test
+import org.gradle.api.tasks.testing.logging.TestLogEvent
+import org.gradle.testing.jacoco.plugins.JacocoTaskExtension
+import org.gradle.testing.jacoco.tasks.JacocoCoverageVerification
+import org.gradle.testing.jacoco.tasks.JacocoReport
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -6,6 +12,7 @@ plugins {
     alias(libs.plugins.detekt)
     alias(libs.plugins.ktlint)
     id("kotlin-parcelize")
+    id("jacoco")
 }
 
 android {
@@ -23,6 +30,9 @@ android {
     }
 
     buildTypes {
+        debug {
+            isTestCoverageEnabled = true
+        }
         release {
             isMinifyEnabled = false
             proguardFiles(
@@ -94,6 +104,7 @@ dependencies {
     testImplementation(libs.mockk)
     testImplementation(libs.turbine)
     testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.okhttp.mockwebserver)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     testImplementation(libs.kotlin.test)
@@ -117,4 +128,128 @@ detekt {
     tasks.withType<io.gitlab.arturbosch.detekt.Detekt>().configureEach {
         jvmTarget = "17"
     }
+}
+
+jacoco {
+    toolVersion = "0.8.11"
+}
+
+tasks.withType<Test> {
+    configure<JacocoTaskExtension> {
+        isIncludeNoLocationClasses = true
+        excludes = listOf("jdk.internal.*")
+    }
+    testLogging {
+        events = setOf(TestLogEvent.PASSED, TestLogEvent.SKIPPED, TestLogEvent.FAILED)
+    }
+}
+
+val jacocoFileFilter =
+    listOf(
+        // Arquivos gerados pelo Android/AGP
+        "**/R.class",
+        "**/R$*.class",
+        "**/BuildConfig.*",
+        "**/Manifest*.*",
+        "**/*Test*.*",
+        "android/**/*.*",
+        // Activities e Fragments (não testáveis unitariamente)
+        "**/*Activity*",
+        "**/*Fragment*",
+        // Hilt
+        "**/di/**",
+        "**/hilt/**",
+        "**/Hilt_*",
+        "**/*_Hilt*",
+        "**/*_Factory*",
+        "**/*_MembersInjector*",
+        "**/*_Provide*Factory*",
+        // Data Binding / View Binding
+        "**/databinding/**",
+        "**/binding/**",
+        "**/*_ViewBinding.class",
+        // Classes de modelo que geralmente não têm lógica
+        "**/models/**",
+        // Mappers
+        "**/*Mapper*",
+        "**/*MapperImpl*",
+        // ViewObjects
+        "**/*ViewObject*",
+        "**/*ViewObjectMapper*",
+        // Application
+        "**/*Application*",
+    )
+
+val jacocoDebugTree =
+    fileTree("$buildDir/tmp/kotlin-classes/debug") {
+        exclude(jacocoFileFilter)
+    }
+
+val jacocoMainSrc = files("$projectDir/src/main/java", "$projectDir/src/main/kotlin")
+
+val jacocoExecData =
+    fileTree(buildDir) {
+        include("**/testDebugUnitTest.exec")
+    }
+
+tasks.register("jacocoTestReport", JacocoReport::class) {
+    dependsOn("testDebugUnitTest")
+    group = "verification"
+    description = "Generates Jacoco code coverage reports for the debug build."
+
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+    }
+
+    sourceDirectories.setFrom(jacocoMainSrc)
+    classDirectories.setFrom(files(jacocoDebugTree))
+    executionData.setFrom(files(jacocoExecData))
+}
+
+tasks.register("jacocoTestCoverageVerification", JacocoCoverageVerification::class) {
+    dependsOn("jacocoTestReport")
+    group = "verification"
+    description = "Verifies Jacoco code coverage for the debug build."
+    // Desabilitado inicialmente - não falha o build se a cobertura não atingir o mínimo
+    // Para habilitar, descomente as regras abaixo e ajuste o mínimo conforme necessário
+    enabled = false
+
+    violationRules {
+        rule {
+            limit {
+                // Mínimo de 70% de cobertura de instruções para aprovação
+                // Descomente quando quiser habilitar a verificação
+                // minimum = "0.70".toBigDecimal()
+            }
+        }
+        rule {
+            element = "CLASS"
+            excludes =
+                listOf(
+                    "*.BuildConfig",
+                    "*.R",
+                    "*.R\$*",
+                    "*.Manifest*",
+                    "*.*_Factory",
+                    "*.*_Hilt*",
+                    "*.*_MembersInjector*",
+                    "*.*_Provide*Factory*",
+                    "*.*ViewBinding",
+                    "*.*ViewBinding\$*",
+                    "*.*Activity",
+                    "*.*Fragment",
+                    "*.*Application",
+                )
+            limit {
+                counter = "INSTRUCTION"
+                // Descomente quando quiser habilitar a verificação
+                // minimum = "0.70".toBigDecimal()
+            }
+        }
+    }
+
+    sourceDirectories.setFrom(jacocoMainSrc)
+    classDirectories.setFrom(files(jacocoDebugTree))
+    executionData.setFrom(files(jacocoExecData))
 }
