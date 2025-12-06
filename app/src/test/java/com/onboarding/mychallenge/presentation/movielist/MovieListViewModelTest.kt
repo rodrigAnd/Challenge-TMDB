@@ -91,7 +91,9 @@ class MovieListViewModelTest {
         runTest {
             // Arrange
             val movies = listOf(createMovie(1))
-            coEvery { getPopularMoviesUseCase(1) } returns Result.success(movies)
+            coEvery {
+                getPopularMoviesUseCase(1)
+            } returns Result.success(movies)
 
             // Act
             // A ViewModel é criada e sua lógica de init é executada de forma síncrona.
@@ -118,9 +120,9 @@ class MovieListViewModelTest {
     fun `init should emit Empty when popular movies are empty`() =
         runTest {
             // Arrange
-            coEvery { getPopularMoviesUseCase(1) } returns Result.success(emptyList())
-
-            // Act
+            coEvery {
+                getPopularMoviesUseCase(1)
+            } returns Result.success(emptyList())
             // A ViewModel é criada e sua lógica de init é executada imediatamente
             // devido ao UnconfinedTestDispatcher.
             createViewModel()
@@ -147,8 +149,9 @@ class MovieListViewModelTest {
         runTest {
             // Arrange
             val error = RuntimeException("Network Error")
-            coEvery { getPopularMoviesUseCase(1) } returns Result.failure(error)
-
+            coEvery {
+                getPopularMoviesUseCase(1)
+            } returns Result.failure(error)
             // Act
             // A ViewModel é criada e sua lógica de init é executada de forma síncrona.
             createViewModel()
@@ -174,22 +177,30 @@ class MovieListViewModelTest {
     fun `retry should reload popular movies when not in search mode`() =
         runTest {
             // Arrange
-            coEvery { getPopularMoviesUseCase(1) } returns Result.success(emptyList())
+            coEvery {
+                getPopularMoviesUseCase(1)
+            } returns Result.success(emptyList())
             createViewModel()
 
             // Act
             viewModel.retry()
 
             // Assert
-            coVerify(exactly = 2) { getPopularMoviesUseCase(1) }
+            coVerify(exactly = 2) {
+                getPopularMoviesUseCase(1)
+            }
         }
 
     @Test
     fun `retry should re-run search when in search mode`() =
         runTest {
             // Arrange
-            coEvery { getPopularMoviesUseCase(1) } returns Result.success(emptyList())
-            coEvery { searchMoviesUseCase(any(), any()) } returns Result.success(emptyList())
+            coEvery {
+                getPopularMoviesUseCase(1)
+            } returns Result.success(emptyList())
+            coEvery {
+                searchMoviesUseCase(any(), any())
+            } returns Result.success(emptyList())
             createViewModel()
             viewModel.updateSearchQuery("test")
             advanceTimeBy(501)
@@ -198,7 +209,9 @@ class MovieListViewModelTest {
             viewModel.retry()
 
             // Assert
-            coVerify(exactly = 2) { searchMoviesUseCase("test", 1) }
+            coVerify(exactly = 2) {
+                searchMoviesUseCase("test", 1)
+            }
         }
     //endregion
 
@@ -208,9 +221,13 @@ class MovieListViewModelTest {
         runTest {
             // Arrange
             // A carga inicial resulta em um estado 'Empty'.
-            coEvery { getPopularMoviesUseCase(any()) } returns Result.success(emptyList())
+            coEvery {
+                getPopularMoviesUseCase(any())
+            } returns Result.success(emptyList())
             val searchResults = listOf(createMovie(1, "Searched Movie"))
-            coEvery { searchMoviesUseCase("test", 1) } returns Result.success(searchResults)
+            coEvery {
+                searchMoviesUseCase("test", 1)
+            } returns Result.success(searchResults)
             createViewModel()
 
             // Act & Assert
@@ -240,8 +257,12 @@ class MovieListViewModelTest {
     fun `clearing search query should reload popular movies`() =
         runTest {
             // Arrange
-            coEvery { getPopularMoviesUseCase(any()) } returns Result.success(listOf(createMovie(1, "Popular")))
-            coEvery { searchMoviesUseCase(any(), any()) } returns Result.success(emptyList())
+            coEvery {
+                getPopularMoviesUseCase(any())
+            } returns Result.success(listOf(createMovie(1, "Popular")))
+            coEvery {
+                searchMoviesUseCase(any(), any())
+            } returns Result.success(emptyList())
             createViewModel()
 
             // Act
@@ -251,7 +272,9 @@ class MovieListViewModelTest {
             advanceTimeBy(501)
 
             // Assert
-            coVerify(exactly = 2) { getPopularMoviesUseCase(1) }
+            coVerify(exactly = 2) {
+                getPopularMoviesUseCase(1)
+            }
         }
     //endregion
 
@@ -260,8 +283,12 @@ class MovieListViewModelTest {
     fun `loadNextPage should load more popular movies and append`() =
         runTest {
             // Arrange
-            coEvery { getPopularMoviesUseCase(1) } returns Result.success(listOf(createMovie(1, "Page 1")))
-            coEvery { getPopularMoviesUseCase(2) } returns Result.success(listOf(createMovie(2, "Page 2")))
+            coEvery {
+                getPopularMoviesUseCase(1)
+            } returns Result.success(listOf(createMovie(1, "Page 1")))
+            coEvery {
+                getPopularMoviesUseCase(2)
+            } returns Result.success(listOf(createMovie(2, "Page 2")))
             createViewModel()
 
             // Act & Assert
@@ -299,9 +326,15 @@ class MovieListViewModelTest {
     fun `loadNextPage should load more search results and append`() =
         runTest {
             // Arrange
-            coEvery { getPopularMoviesUseCase(any()) } returns Result.success(emptyList())
-            coEvery { searchMoviesUseCase("test", 1) } returns Result.success(listOf(createMovie(1, "Search P1")))
-            coEvery { searchMoviesUseCase("test", 2) } returns Result.success(listOf(createMovie(2, "Search P2")))
+            coEvery {
+                getPopularMoviesUseCase(any())
+            } returns Result.success(emptyList())
+            coEvery {
+                searchMoviesUseCase("test", 1)
+            } returns Result.success(listOf(createMovie(1, "Search P1")))
+            coEvery {
+                searchMoviesUseCase("test", 2)
+            } returns Result.success(listOf(createMovie(2, "Search P2")))
             createViewModel()
 
             // Act
@@ -311,7 +344,6 @@ class MovieListViewModelTest {
             // Assert
             viewModel.uiState.test {
                 // --- INÍCIO DA CORREÇÃO ---
-
                 // 1. O estado atual da ViewModel é o resultado da busca pela página 1. Vamos consumir e verificar.
                 val initialState = awaitItem()
                 assertIs<MovieListUiState.Success>(initialState)
@@ -337,7 +369,6 @@ class MovieListViewModelTest {
 
                 // 5. Garante que não há mais emissões.
                 cancelAndIgnoreRemainingEvents()
-
                 // --- FIM DA CORREÇÃO ---
             }
         }
@@ -346,15 +377,18 @@ class MovieListViewModelTest {
     fun `loadNextPage should handle failure gracefully`() =
         runTest {
             // Arrange
-            coEvery { getPopularMoviesUseCase(1) } returns Result.success(listOf(createMovie(1)))
+            coEvery {
+                getPopularMoviesUseCase(1)
+            } returns Result.success(listOf(createMovie(1)))
             // A paginação para a página 2 vai falhar
-            coEvery { getPopularMoviesUseCase(2) } returns Result.failure(RuntimeException("Network Error on Page 2"))
+            coEvery {
+                getPopularMoviesUseCase(2)
+            } returns Result.failure(RuntimeException("Network Error on Page 2"))
             createViewModel()
 
             // Act & Assert
             viewModel.uiState.test {
                 // --- INÍCIO DA CORREÇÃO ---
-
                 // 1. O estado inicial que a Turbine observa já é o resultado da carga da página 1.
                 val initialState = awaitItem()
                 assertIs<MovieListUiState.Success>(initialState)
@@ -376,7 +410,6 @@ class MovieListViewModelTest {
                 assertIs<MovieListUiState.Success>(finalState)
                 assertEquals(1, finalState.movies.size) // A lista não deve ter mudado.
                 assertFalse(finalState.isLoadingMore) // O loading foi resetado.
-
                 // 5. Garante que não há mais emissões.
                 cancelAndIgnoreRemainingEvents()
                 // --- FIM DA CORREÇÃO ---
@@ -388,14 +421,19 @@ class MovieListViewModelTest {
     fun `loadNextPage should not load if already loading`() =
         runTest {
             // Arrange
-            coEvery { getPopularMoviesUseCase(1) } returns Result.success(listOf(createMovie(1)))
+            coEvery {
+                getPopularMoviesUseCase(1)
+            } returns Result.success(listOf(createMovie(1)))
             // Simula uma chamada de rede que nunca termina para manter o estado de loading
-            coEvery { getPopularMoviesUseCase(2) } coAnswers {
+            coEvery {
+                getPopularMoviesUseCase(2)
+            } coAnswers {
                 delay(Long.MAX_VALUE)
                 Result.success(emptyList())
             }
             createViewModel()
-            testScheduler.advanceUntilIdle() // Garante que a carga inicial termine
+            // Garante que a carga inicial termine
+            testDispatcher.scheduler.advanceUntilIdle()
 
             // Act
             // A primeira chamada vai iniciar o carregamento e travar o estado em 'isLoadingMore = true'
@@ -405,7 +443,9 @@ class MovieListViewModelTest {
 
             // Assert
             // Verificamos que a chamada para a página 2 foi feita apenas UMA vez.
-            coVerify(exactly = 1) { getPopularMoviesUseCase(2) }
+            coVerify(exactly = 1) {
+                getPopularMoviesUseCase(2)
+            }
         }
 
     // --- TESTE CORRIGIDO ---
@@ -413,16 +453,20 @@ class MovieListViewModelTest {
     fun `loadNextPage should not load if canLoadMore is false`() =
         runTest {
             // Arrange
-            coEvery { getPopularMoviesUseCase(1) } returns Result.success(listOf(createMovie(1)))
+            coEvery {
+                getPopularMoviesUseCase(1)
+            } returns Result.success(listOf(createMovie(1)))
             // A paginação para a página 2 retorna uma lista vazia, o que deve setar canLoadMore = false
-            coEvery { getPopularMoviesUseCase(2) } returns Result.success(emptyList())
+            coEvery {
+                getPopularMoviesUseCase(2)
+            } returns Result.success(emptyList())
             createViewModel()
-            testScheduler.advanceUntilIdle()
+            testDispatcher.scheduler.advanceUntilIdle()
 
             // Act
             // Carrega a página 2, o que fará a ViewModel setar 'canLoadMore' para false.
             viewModel.loadNextPage()
-            testScheduler.advanceUntilIdle()
+            testDispatcher.scheduler.advanceUntilIdle()
 
             // Confirma que o estado está correto
             val state = viewModel.uiState.value as MovieListUiState.Success
@@ -433,7 +477,9 @@ class MovieListViewModelTest {
 
             // Assert
             // Verifica que a chamada para a página 3 nunca aconteceu.
-            coVerify(exactly = 0) { getPopularMoviesUseCase(3) }
+            coVerify(exactly = 0) {
+                getPopularMoviesUseCase(3)
+            }
         }
     //endregion
 
@@ -443,21 +489,28 @@ class MovieListViewModelTest {
             // Arrange
             val movie = createMovie(1)
             val movieDetail = createMovieDetail(1)
-            coEvery { getPopularMoviesUseCase(1) } returns Result.success(listOf(movie))
-            coEvery { getMovieDetailsUseCase(1) } returns Result.success(movieDetail)
+            coEvery {
+                getPopularMoviesUseCase(1)
+            } returns Result.success(listOf(movie))
+            coEvery {
+                getMovieDetailsUseCase(1)
+            } returns Result.success(movieDetail)
             createViewModel()
 
             // Act
             viewModel.addToFavorites(1)
 
             // Assert
-            coVerify(exactly = 1) { addMovieDetailToFavoritesUseCase(movieDetail) }
+            coVerify(exactly = 1) {
+                addMovieDetailToFavoritesUseCase(movieDetail)
+            }
         }
 
     @Test
     fun `addToFavorites should use fallback when details fail`() =
         runTest {
-            // Arrange        // --- INÍCIO DA CORREÇÃO ---
+            // Arrange
+            // --- INÍCIO DA CORREÇÃO ---
             // Cria o objeto Movie exatamente como a função `toDomain()` o criaria
             // a partir de um MovieViewObject. Note que os paths não têm a barra inicial.
             val movieFromDomainLogic =
@@ -468,34 +521,45 @@ class MovieListViewModelTest {
 
             // O UseCase de populares retorna o objeto original com a barra.
             val movieFromApi = createMovie(1)
-            coEvery { getPopularMoviesUseCase(1) } returns Result.success(listOf(movieFromApi))
+            coEvery {
+                getPopularMoviesUseCase(1)
+            } returns Result.success(listOf(movieFromApi))
             // --- FIM DA CORREÇÃO ---
-
-            coEvery { getMovieDetailsUseCase(1) } returns Result.failure(RuntimeException())
+            coEvery {
+                getMovieDetailsUseCase(1)
+            } returns Result.failure(RuntimeException())
             createViewModel()
-            testScheduler.advanceUntilIdle()
+            testDispatcher.scheduler.advanceUntilIdle()
 
             // Act
             viewModel.addToFavorites(1)
 
             // Assert
             // A verificação agora usa o objeto que reflete a lógica de `toDomain()`.
-            coVerify(exactly = 1) { addToFavoritesUseCase(movieFromDomainLogic) }
+            coVerify(exactly = 1) {
+                addToFavoritesUseCase(movieFromDomainLogic)
+            }
         }
 
     @Test
     fun `addToFavorites does nothing if movie not in current state on fallback`() =
         runTest {
             // Arrange
-            coEvery { getPopularMoviesUseCase(1) } returns Result.success(emptyList())
-            coEvery { getMovieDetailsUseCase(1) } returns Result.failure(RuntimeException())
+            coEvery {
+                getPopularMoviesUseCase(1)
+            } returns Result.success(emptyList())
+            coEvery {
+                getMovieDetailsUseCase(1)
+            } returns Result.failure(RuntimeException())
             createViewModel()
 
             // Act
             viewModel.addToFavorites(1)
 
             // Assert
-            coVerify(exactly = 0) { addToFavoritesUseCase(any()) }
+            coVerify(exactly = 0) {
+                addToFavoritesUseCase(any())
+            }
         }
     //endregion
 
@@ -503,7 +567,17 @@ class MovieListViewModelTest {
     private fun createMovie(
         id: Int,
         title: String = "Movie",
-    ) = Movie(id = id, title = title, overview = "O", posterPath = "/p", backdropPath = "/b", releaseDate = "d", voteAverage = 1.0, voteCount = 1, popularity = 1.0)
+    ) = Movie(
+        id = id,
+        title = title,
+        overview = "O",
+        posterPath = "/p",
+        backdropPath = "/b",
+        releaseDate = "d",
+        voteAverage = 1.0,
+        voteCount = 1,
+        popularity = 1.0,
+    )
 
     private fun createMovieDetail(
         id: Int,
