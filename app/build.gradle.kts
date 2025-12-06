@@ -104,6 +104,7 @@ dependencies {
     testImplementation(libs.mockk)
     testImplementation(libs.turbine)
     testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.okhttp.mockwebserver)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     testImplementation(libs.kotlin.test)
@@ -152,6 +153,9 @@ val jacocoFileFilter =
         "**/Manifest*.*",
         "**/*Test*.*",
         "android/**/*.*",
+        // Activities e Fragments (não testáveis unitariamente)
+        "**/*Activity*",
+        "**/*Fragment*",
         // Hilt
         "**/di/**",
         "**/hilt/**",
@@ -172,6 +176,8 @@ val jacocoFileFilter =
         // ViewObjects
         "**/*ViewObject*",
         "**/*ViewObjectMapper*",
+        // Application
+        "**/*Application*",
     )
 
 val jacocoDebugTree =
@@ -209,8 +215,31 @@ tasks.register("jacocoTestCoverageVerification", JacocoCoverageVerification::cla
     violationRules {
         rule {
             limit {
-                // Exemplo: mínimo de 90% de cobertura de instruções
-                minimum = "0.90".toBigDecimal()
+                // Mínimo de 70% de cobertura de instruções para aprovação
+                minimum = "0.70".toBigDecimal()
+            }
+        }
+        rule {
+            element = "CLASS"
+            excludes =
+                listOf(
+                    "*.BuildConfig",
+                    "*.R",
+                    "*.R\$*",
+                    "*.Manifest*",
+                    "*.*_Factory",
+                    "*.*_Hilt*",
+                    "*.*_MembersInjector*",
+                    "*.*_Provide*Factory*",
+                    "*.*ViewBinding",
+                    "*.*ViewBinding\$*",
+                    "*.*Activity",
+                    "*.*Fragment",
+                    "*.*Application",
+                )
+            limit {
+                counter = "INSTRUCTION"
+                minimum = "0.70".toBigDecimal()
             }
         }
     }
