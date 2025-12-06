@@ -1,6 +1,5 @@
 package com.onboarding.mychallenge.presentation.movieList
 
-import android.util.Log
 import app.cash.turbine.test
 import com.onboarding.mychallenge.domain.model.Movie
 import com.onboarding.mychallenge.domain.model.MovieDetail
@@ -16,7 +15,6 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.mockkStatic
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
@@ -53,9 +51,6 @@ class MovieListViewModelTest {
     @Before
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
-        mockkStatic(Log::class)
-        every { Log.d(any(), any()) } returns 0
-        every { Log.e(any(), any(), any()) } returns 0
 
         // Inicialização dos mocks
         getPopularMoviesUseCase = mockk()

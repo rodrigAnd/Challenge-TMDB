@@ -24,7 +24,6 @@ class GenreListConverter {
             try {
                 adapter.fromJson(it)
             } catch (e: Exception) {
-                android.util.Log.e("GenreListConverter", "Error parsing genres JSON", e)
                 null
             }
         }

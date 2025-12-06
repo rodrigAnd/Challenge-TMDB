@@ -1,5 +1,4 @@
 package com.onboarding.mychallenge.presentation.movieList
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.onboarding.mychallenge.domain.usecase.AddMovieDetailToFavoritesUseCase
@@ -58,10 +57,6 @@ class MovieListViewModel
         private val getFavoriteMoviesUseCase: GetFavoriteMoviesUseCase,
         private val getMovieDetailsUseCase: GetMovieDetailsUseCase,
     ) : ViewModel() {
-        companion object {
-            private const val TAG = "MovieListViewModel"
-        }
-
         private val _uiState = MutableStateFlow<MovieListUiState>(MovieListUiState.Loading)
         val uiState: StateFlow<MovieListUiState> = _uiState.asStateFlow()
         private val _searchQuery = MutableStateFlow("")
@@ -72,7 +67,6 @@ class MovieListViewModel
         private var isSearchMode = false
 
         init {
-            Log.d(TAG, "init: ViewModel inicializado")
             loadPopularMovies()
             observeSearchQuery()
             observeFavorites()
@@ -106,27 +100,18 @@ class MovieListViewModel
          * Observa os favoritos para atualizar o estado isFavorite na lista
          */
         private fun observeFavorites() {
-            Log.d(TAG, "observeFavorites: Iniciando observação de favoritos")
             viewModelScope.launch {
                 try {
                     getFavoriteMoviesUseCase()
                         .collect { favorites ->
                             val newFavoriteIds = favorites.map { it.id }.toSet()
-                            Log.d(TAG, "observeFavorites: Recebidos ${favorites.size} favoritos, IDs: $newFavoriteIds")
                             val oldFavoriteIds = favoriteIds.value
                             favoriteIds.value = newFavoriteIds
                             if (oldFavoriteIds != newFavoriteIds) {
-                                Log.d(
-                                    TAG,
-                                    "observeFavorites: IDs de favoritos mudaram: $oldFavoriteIds -> $newFavoriteIds",
-                                )
                                 updateFavoriteStates()
-                            } else {
-                                Log.d(TAG, "observeFavorites: IDs de favoritos não mudaram, ignorando atualização")
                             }
                         }
                 } catch (e: Exception) {
-                    Log.e(TAG, "observeFavorites: Erro ao observar favoritos", e)
                 }
             }
         }
@@ -135,13 +120,10 @@ class MovieListViewModel
          * Atualiza os estados de favorito na lista atual
          */
         private fun updateFavoriteStates() {
-            Log.d(TAG, "updateFavoriteStates: Verificando se precisa atualizar estados")
             val currentState = _uiState.value
             if (currentState is MovieListUiState.Success) {
                 val favoriteIdsSet = favoriteIds.value
                 val loadingIdsSet = loadingFavoriteIds.value
-                Log.d(TAG, "updateFavoriteStates: Estado atual é Success com ${currentState.movies.size} filmes")
-                Log.d(TAG, "updateFavoriteStates: favoriteIds: $favoriteIdsSet, loadingIds: $loadingIdsSet")
                 val updatedMovies =
                     currentState.movies.map { movie ->
                         val isFavorite = favoriteIdsSet.contains(movie.id)
@@ -156,17 +138,8 @@ class MovieListViewModel
                         old.isFavorite != new.isFavorite || old.isLoadingFavorite != new.isLoadingFavorite
                     }
                 if (hasChanged) {
-                    Log.d(TAG, "updateFavoriteStates: Estado mudou, atualizando UI")
                     _uiState.value = currentState.copy(movies = updatedMovies)
-                    Log.d(TAG, "updateFavoriteStates: Estado atualizado com sucesso")
-                } else {
-                    Log.d(TAG, "updateFavoriteStates: Nenhuma mudança detectada, ignorando atualização")
                 }
-            } else {
-                Log.d(
-                    TAG,
-                    "updateFavoriteStates: Estado atual não é Success (é ${currentState::class.simpleName}), ignorando",
-                )
             }
         }
 
@@ -182,20 +155,15 @@ class MovieListViewModel
          * Carrega filmes populares
          */
         fun loadPopularMovies(page: Int = 1) {
-            Log.d(TAG, "loadPopularMovies: Carregando página $page")
             viewModelScope.launch {
                 _uiState.update { MovieListUiState.Loading }
-                Log.d(TAG, "loadPopularMovies: Estado atualizado para Loading")
                 getPopularMoviesUseCase(page)
                     .onSuccess { movies ->
-                        Log.d(TAG, "loadPopularMovies: Sucesso - ${movies.size} filmes recebidos")
                         currentPage = page
                         if (movies.isEmpty()) {
-                            Log.d(TAG, "loadPopularMovies: Lista vazia")
                             _uiState.update { MovieListUiState.Empty }
                         } else {
                             val viewObjects = movies.toViewObjectList(favoriteIds.value, loadingFavoriteIds.value)
-                            Log.d(TAG, "loadPopularMovies: ${viewObjects.size} ViewObjects criados")
                             _uiState.update {
                                 MovieListUiState.Success(
                                     movies = viewObjects,
@@ -205,11 +173,9 @@ class MovieListViewModel
                                     isLoadingMore = false,
                                 )
                             }
-                            Log.d(TAG, "loadPopularMovies: Estado atualizado para Success")
                         }
                     }
                     .onFailure { exception ->
-                        Log.e(TAG, "loadPopularMovies: Erro - ${exception.message}", exception)
                         _uiState.update {
                             MovieListUiState.Error(
                                 exception.message ?: "Erro ao carregar filmes populares",
@@ -288,10 +254,8 @@ class MovieListViewModel
                                 canLoadMore = newMovies.isNotEmpty() && nextPage < 500,
                             )
                         }
-                        Log.d(TAG, "loadNextPage: Página $nextPage carregada, ${newViewObjects.size} novos filmes")
                     }
                     .onFailure { exception ->
-                        Log.e(TAG, "loadNextPage: Erro ao carregar página $nextPage", exception)
                         _uiState.update {
                             currentState.copy(isLoadingMore = false)
                         }
@@ -318,79 +282,39 @@ class MovieListViewModel
          * Mostra loading durante o processo
          */
         fun toggleFavorite(movie: MovieViewObject) {
-            Log.d(
-                TAG,
-                "toggleFavorite: Iniciando toggle do filme ${movie.id} - ${movie.title}, isFavorite atual: ${movie.isFavorite}",
-            )
             viewModelScope.launch {
                 try {
-                    Log.d(TAG, "toggleFavorite: Adicionando ${movie.id} à lista de loading")
                     loadingFavoriteIds.update { it + movie.id }
-                    Log.d(TAG, "toggleFavorite: loadingFavoriteIds atualizado: ${loadingFavoriteIds.value}")
                     updateFavoriteStates()
-                    Log.d(TAG, "toggleFavorite: Verificando se filme ${movie.id} é favorito")
                     val isFavoriteResult = isFavoriteUseCase(movie.id)
                     isFavoriteResult.onSuccess { isFavorite ->
-                        Log.d(TAG, "toggleFavorite: Filme ${movie.id} é favorito? $isFavorite")
                         if (isFavorite) {
-                            Log.d(TAG, "toggleFavorite: Removendo filme ${movie.id} dos favoritos")
                             removeFromFavoritesUseCase(movie.id)
                                 .onSuccess {
-                                    Log.d(TAG, "toggleFavorite: Filme ${movie.id} removido dos favoritos com sucesso")
                                 }
                                 .onFailure { exception ->
-                                    Log.e(TAG, "toggleFavorite: Erro ao remover favorito", exception)
                                 }
                         } else {
-                            Log.d(TAG, "toggleFavorite: Adicionando filme ${movie.id} aos favoritos")
-                            Log.d(TAG, "toggleFavorite: Buscando detalhes do filme ${movie.id}")
                             val detailsResult = getMovieDetailsUseCase(movie.id)
                             detailsResult.onSuccess { movieDetail ->
-                                Log.d(TAG, "toggleFavorite: Detalhes obtidos, adicionando aos favoritos")
                                 addMovieDetailToFavoritesUseCase(movieDetail)
-                                    .onSuccess {
-                                        Log.d(
-                                            TAG,
-                                            "toggleFavorite: Filme ${movie.id} adicionado aos favoritos com detalhes",
-                                        )
-                                    }
+                                    .onSuccess { }
                                     .onFailure { exception ->
-                                        Log.e(TAG, "toggleFavorite: Erro ao adicionar favorito com detalhes", exception)
-                                        Log.d(TAG, "toggleFavorite: Tentando fallback com Movie básico")
                                         val domainMovie = movie.toDomain()
                                         addToFavoritesUseCase(domainMovie)
-                                            .onFailure { fallbackException ->
-                                                Log.e(
-                                                    TAG,
-                                                    "toggleFavorite: Erro ao adicionar favorito (fallback)",
-                                                    fallbackException,
-                                                )
-                                            }
+                                            .onFailure { }
                                     }
                             }.onFailure { exception ->
-                                Log.e(TAG, "toggleFavorite: Erro ao buscar detalhes, usando Movie básico", exception)
-                                Log.d(TAG, "toggleFavorite: Tentando fallback com Movie básico")
                                 val domainMovie = movie.toDomain()
                                 addToFavoritesUseCase(domainMovie)
-                                    .onFailure { fallbackException ->
-                                        Log.e(
-                                            TAG,
-                                            "toggleFavorite: Erro ao adicionar favorito (fallback)",
-                                            fallbackException,
-                                        )
-                                    }
+                                    .onFailure { }
                             }
                         }
                     }.onFailure { exception ->
-                        Log.e(TAG, "toggleFavorite: Erro ao verificar se é favorito", exception)
                     }
-                    Log.d(TAG, "toggleFavorite: Removendo ${movie.id} da lista de loading")
                     loadingFavoriteIds.update { it - movie.id }
-                    Log.d(TAG, "toggleFavorite: loadingFavoriteIds atualizado: ${loadingFavoriteIds.value}")
                     updateFavoriteStates()
-                    Log.d(TAG, "toggleFavorite: Toggle concluído para filme ${movie.id}")
                 } catch (e: Exception) {
-                    Log.e(TAG, "toggleFavorite: Erro inesperado", e)
                     loadingFavoriteIds.update { it - movie.id }
                     updateFavoriteStates()
                 }
@@ -408,43 +332,28 @@ class MovieListViewModel
                     detailsResult.onSuccess { movieDetail ->
                         addMovieDetailToFavoritesUseCase(movieDetail)
                             .onFailure { exception ->
-                                Log.e(TAG, "addToFavorites: Erro ao adicionar favorito com detalhes", exception)
                                 val currentState = _uiState.value
                                 if (currentState is MovieListUiState.Success) {
                                     val movie = currentState.movies.find { it.id == movieId }
                                     if (movie != null) {
                                         val domainMovie = movie.toDomain()
                                         addToFavoritesUseCase(domainMovie)
-                                            .onFailure { fallbackException ->
-                                                Log.e(
-                                                    TAG,
-                                                    "addToFavorites: Erro ao adicionar favorito (fallback)",
-                                                    fallbackException,
-                                                )
-                                            }
+                                            .onFailure { }
                                     }
                                 }
                             }
                     }.onFailure { exception ->
-                        Log.e(TAG, "addToFavorites: Erro ao buscar detalhes do filme $movieId", exception)
                         val currentState = _uiState.value
                         if (currentState is MovieListUiState.Success) {
                             val movie = currentState.movies.find { it.id == movieId }
                             if (movie != null) {
                                 val domainMovie = movie.toDomain()
                                 addToFavoritesUseCase(domainMovie)
-                                    .onFailure { fallbackException ->
-                                        Log.e(
-                                            TAG,
-                                            "addToFavorites: Erro ao adicionar favorito (fallback)",
-                                            fallbackException,
-                                        )
-                                    }
+                                    .onFailure { }
                             }
                         }
                     }
                 } catch (e: Exception) {
-                    Log.e(TAG, "addToFavorites: Erro inesperado", e)
                 }
             }
         }
@@ -456,7 +365,6 @@ class MovieListViewModel
             viewModelScope.launch {
                 removeFromFavoritesUseCase(movieId)
                     .onFailure { exception ->
-                        Log.e(TAG, "removeFromFavorites: Erro ao remover favorito", exception)
                     }
             }
         }

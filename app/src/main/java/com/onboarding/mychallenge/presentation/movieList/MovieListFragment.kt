@@ -2,7 +2,6 @@ package com.onboarding.mychallenge.presentation.movieList
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -17,10 +16,6 @@ import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class MovieListFragment : Fragment() {
-    companion object {
-        private const val TAG = "MovieListFragment"
-    }
-
     private var _binding: FragmentMovieListBinding? = null
     private val binding get() = _binding ?: throw IllegalStateException("Binding is null. Fragment view may have been destroyed.")
     private val viewModel: MovieListViewModel by viewModels()
@@ -132,12 +127,9 @@ class MovieListFragment : Fragment() {
     }
 
     private fun observeUiState() {
-        Log.d(TAG, "observeUiState: Iniciando observação do estado da UI")
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.uiState.collectLatest { state ->
-                Log.d(TAG, "observeUiState: Estado recebido: ${state::class.simpleName}")
                 if (_binding == null) {
-                    Log.w(TAG, "observeUiState: Binding é null, ignorando atualização")
                     return@collectLatest
                 }
                 when (state) {
@@ -147,24 +139,16 @@ class MovieListFragment : Fragment() {
                         hideEmpty()
                     }
                     is MovieListUiState.Success -> {
-                        Log.d(
-                            TAG,
-                            "observeUiState: Success - ${state.movies.size} filmes, isLoadingMore: ${state.isLoadingMore}, canLoadMore: ${state.canLoadMore}",
-                        )
                         hideError()
                         hideEmpty()
                         if (state.isLoadingMore) {
-                            Log.d(TAG, "observeUiState: Carregando mais páginas, atualizando lista")
                             movieAdapter.submitList(state.movies)
                             return@collectLatest
                         }
                         totalMoviesCount = state.movies.size
-                        Log.d(TAG, "observeUiState: Total de filmes: $totalMoviesCount")
                         if (_binding?.shimmerRecyclerView?.visibility == View.VISIBLE) {
                             imagesLoadedCount = 0
-                            Log.d(TAG, "observeUiState: Shimmer visível, resetando contador de imagens")
                         }
-                        Log.d(TAG, "observeUiState: Atualizando adapter com ${state.movies.size} filmes")
                         movieAdapter.submitList(state.movies)
                     }
                     is MovieListUiState.Error -> {

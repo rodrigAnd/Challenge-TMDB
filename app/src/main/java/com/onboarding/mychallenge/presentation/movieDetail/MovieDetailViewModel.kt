@@ -1,5 +1,4 @@
 package com.onboarding.mychallenge.presentation.movieDetail
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.onboarding.mychallenge.domain.usecase.GetMovieDetailsUseCase
@@ -49,10 +48,6 @@ class MovieDetailViewModel
     constructor(
         private val getMovieDetailsUseCase: GetMovieDetailsUseCase,
     ) : ViewModel() {
-        companion object {
-            private const val TAG = "MovieDetailViewModel"
-        }
-
         private val _uiState = MutableStateFlow<MovieDetailUiState>(MovieDetailUiState.Loading)
 
         /**
@@ -71,16 +66,13 @@ class MovieDetailViewModel
          * @param movieId O ID do filme para o qual carregar os detalhes.
          */
         fun loadMovieDetails(movieId: Int) {
-            Log.d(TAG, "loadMovieDetails: Carregando detalhes do filme $movieId")
             viewModelScope.launch {
                 _uiState.value = MovieDetailUiState.Loading
                 getMovieDetailsUseCase(movieId)
                     .onSuccess { movieDetail ->
-                        Log.d(TAG, "loadMovieDetails: Sucesso ao carregar detalhes")
                         _uiState.value = MovieDetailUiState.Success(movieDetail)
                     }
                     .onFailure { exception ->
-                        Log.e(TAG, "loadMovieDetails: Erro - ${exception.message}", exception)
                         _uiState.value =
                             MovieDetailUiState.Error(
                                 exception.message ?: "Erro ao carregar detalhes do filme",

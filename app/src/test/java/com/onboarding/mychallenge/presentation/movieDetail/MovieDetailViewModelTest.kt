@@ -1,15 +1,12 @@
 package com.onboarding.mychallenge.presentation.movieDetail
 
-import android.util.Log
 import app.cash.turbine.test
 import com.onboarding.mychallenge.domain.model.Genre
 import com.onboarding.mychallenge.domain.model.MovieDetail
 import com.onboarding.mychallenge.domain.usecase.GetMovieDetailsUseCase
 import io.mockk.coEvery
 import io.mockk.coVerify
-import io.mockk.every
 import io.mockk.mockk
-import io.mockk.mockkStatic
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -37,11 +34,6 @@ class MovieDetailViewModelTest {
     fun setUp() {
         // Configura o dispatcher principal para ser o nosso dispatcher de teste
         Dispatchers.setMain(testDispatcher)
-
-        // Mocka as chamadas estáticas para android.util.Log para evitar erros
-        mockkStatic(Log::class)
-        every { Log.d(any(), any()) } returns 0
-        every { Log.e(any(), any<String>(), any()) } returns 0
 
         // Cria o mock para o UseCase
         getMovieDetailsUseCase = mockk()

@@ -1,6 +1,5 @@
 package com.onboarding.mychallenge.data.repository
 
-import android.util.Log
 import com.onboarding.mychallenge.data.local.dao.FavoriteMovieDao
 import com.onboarding.mychallenge.data.local.entity.FavoriteMovieEntity
 import com.onboarding.mychallenge.data.remote.api.TmdbApiService
@@ -13,7 +12,6 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.mockkStatic
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -29,18 +27,8 @@ class MovieRepositoryImplTest {
     @Before
     fun setUp() {
         apiService = mockk()
-        favoriteDao = mockk(relaxUnitFun = true) // Ignora retornos Unit
+        favoriteDao = mockk(relaxUnitFun = true)
         repository = MovieRepositoryImpl(apiService, favoriteDao)
-
-        mockkStatic(Log::class)
-
-        // Define que para qualquer chamada a Log.d, e, i, w, v, ele deve retornar 0 (um Int) e não fazer nada.
-        every { Log.d(any(), any()) } returns 0
-        every { Log.e(any(), any()) } returns 0
-        every { Log.e(any(), any<String>(), any()) } returns 0 // Sobrecarga com exceção
-        every { Log.i(any(), any()) } returns 0
-        every { Log.w(any(), any<String>()) } returns 0
-        every { Log.v(any(), any()) } returns 0
     }
 
     //region getPopularMovies

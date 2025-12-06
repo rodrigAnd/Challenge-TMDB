@@ -1,7 +1,6 @@
 package com.onboarding.mychallenge.presentation.movieList
 import android.content.res.ColorStateList
 import android.graphics.Color
-import android.util.Log
 import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.ViewGroup
@@ -19,10 +18,6 @@ class MovieAdapter(
     private val onFavoriteClick: ((MovieViewObject) -> Unit)? = null,
     private val onImageLoaded: (() -> Unit)? = null,
 ) : ListAdapter<MovieViewObject, MovieAdapter.MovieViewHolder>(MovieDiffCallback()) {
-    companion object {
-        private const val TAG = "MovieAdapter"
-    }
-
     override fun onCreateViewHolder(
         parent: ViewGroup,
         viewType: Int,
@@ -41,15 +36,10 @@ class MovieAdapter(
         position: Int,
     ) {
         val movie = getItem(position)
-        Log.d(
-            TAG,
-            "onBindViewHolder: Binding filme na posição $position - ID: ${movie.id}, Title: ${movie.title}, isFavorite: ${movie.isFavorite}, isLoadingFavorite: ${movie.isLoadingFavorite}",
-        )
         holder.bind(movie)
     }
 
     override fun submitList(list: List<MovieViewObject>?) {
-        Log.d(TAG, "submitList: Submetendo lista com ${list?.size ?: 0} filmes")
         super.submitList(list)
     }
 
@@ -128,13 +118,8 @@ class MovieAdapter(
                 }
                 binding.favoriteButton.setOnClickListener {
                     if (!movie.isLoadingFavorite) {
-                        Log.d(
-                            TAG,
-                            "bind: Clique no favorito do filme ${movie.id} - ${movie.title}, isFavorite: ${movie.isFavorite}",
-                        )
                         onFavoriteClick?.invoke(movie)
                     } else {
-                        Log.d(TAG, "bind: Clique ignorado - filme ${movie.id} está em loading")
                     }
                 }
                 root.setOnClickListener {
