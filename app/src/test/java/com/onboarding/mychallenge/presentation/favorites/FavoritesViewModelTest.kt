@@ -11,6 +11,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -19,6 +20,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import kotlin.test.assertIs
 
 @ExperimentalCoroutinesApi
 class FavoritesViewModelTest {
@@ -164,4 +166,67 @@ class FavoritesViewModelTest {
             popularity = 100.0,
         )
     }
+
+    //region Initial Load & General Errors
+    @Test
+    fun `init should emit Loading and then Success when favorites are loaded`() =
+        runTest {
+            // Arrange
+            val movies = listOf(createMockMovie(1, "Inception"))
+
+            viewModel.uiState.test {
+                // 1. O estado inicial é Loading
+                assertEquals(FavoritesUiState.Loading, awaitItem())
+
+                // 2. Simula o banco de dados emitindo a lista
+                favoritesFlow.emit(movies)
+                advanceUntilIdle() // Garante que a coleta e o processamento aconteçam
+
+                // 3. O estado final deve ser Success
+                val successState = awaitItem()
+                assertIs<FavoritesUiState.Success>(successState)
+                assertEquals(1, successState.movies.size)
+                assertEquals("Inception", successState.movies[0].title)
+            }
+        }
+
+    @Test
+    fun `init should emit Error when repository throws exception`() =
+        runTest {
+            // Arrange: Configura o Flow para lançar um erro
+            val error = RuntimeException("Database error")
+            every {
+                movieRepository.getFavoriteMovies()
+            } returns kotlinx.coroutines.flow.flow { throw error }
+            // Assert
+            viewModel.uiState.test {
+                assertEquals(FavoritesUiState.Loading, awaitItem())
+
+                val errorState = awaitItem()
+                assertIs<FavoritesUiState.Error>(errorState)
+                assertEquals("Database error", errorState.message)
+            }
+        }
+    //endregion
+
+    @Test
+    fun `search should return Empty when no movies match query`() =
+        runTest {
+            val movies = listOf(createMockMovie(1, "Inception"))
+
+            viewModel.uiState.test {
+                assertEquals(FavoritesUiState.Loading, awaitItem())
+                favoritesFlow.emit(movies)
+                advanceUntilIdle()
+                awaitItem() // consome o estado Success inicial
+
+                viewModel.updateSearchQuery("Matrix") // Busca por algo que não existe
+                advanceTimeBy(501)
+                advanceUntilIdle()
+
+                // O estado deve se tornar Empty
+                assertEquals(FavoritesUiState.Empty, awaitItem())
+            }
+        }
+    //endregion
 }
