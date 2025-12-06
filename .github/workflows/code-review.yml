@@ -1,0 +1,254 @@
+name: Code Review Automatizado
+
+on:
+  pull_request:
+    branches:
+      - develop
+      - master
+    types: [opened, synchronize, reopened, ready_for_review]
+
+jobs:
+  code-review:
+    name: 🤖 Code Review Bot
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Analisar arquivos modificados
+        uses: actions/github-script@v7
+        id: review
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { data: files } = await github.rest.pulls.listFiles({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number,
+            });
+
+            const kotlinFiles = files.filter(file => 
+              file.filename.endsWith('.kt') && 
+              file.status !== 'removed' &&
+              file.status !== 'deleted'
+            );
+
+            if (kotlinFiles.length === 0) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: '✅ **Code Review**: Nenhum arquivo Kotlin modificado neste PR.'
+              });
+              return;
+            }
+
+            let reviewComments = [];
+            let suggestions = [];
+            let warnings = [];
+            let errors = [];
+
+            for (const file of kotlinFiles) {
+              try {
+                const { data: content } = await github.rest.repos.getContent({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  path: file.filename,
+                  ref: context.payload.pull_request.head.sha,
+                });
+
+                const fileContent = Buffer.from(content.content, 'base64').toString();
+                const lines = fileContent.split('\n');
+                
+                const fileIssues = [];
+
+                // Verificar documentação KDoc
+                const hasPublicClass = /^(public\s+)?(data\s+)?class\s+\w+/.test(fileContent);
+                const hasPublicFunction = /^(public\s+)?fun\s+\w+/.test(fileContent);
+                const hasKDoc = fileContent.includes('/**') || fileContent.includes('*');
+                
+                if ((hasPublicClass || hasPublicFunction) && !hasKDoc) {
+                  fileIssues.push({
+                    type: 'suggestion',
+                    message: '💡 Considere adicionar documentação KDoc para classes e funções públicas'
+                  });
+                }
+
+                // Verificar tratamento de erros em funções suspensas
+                const suspendFunctions = fileContent.match(/suspend\s+fun\s+\w+/g);
+                if (suspendFunctions) {
+                  suspendFunctions.forEach(() => {
+                    if (!fileContent.includes('Result<') && !fileContent.includes('try {') && !fileContent.includes('catch')) {
+                      fileIssues.push({
+                        type: 'warning',
+                        message: '⚠️ Funções suspensas devem ter tratamento de erros adequado (Result<T> ou try-catch)'
+                      });
+                    }
+                  });
+                }
+
+                // Verificar uso de Log sem companion object
+                if (fileContent.includes('Log.') && !fileContent.includes('companion object')) {
+                  fileIssues.push({
+                    type: 'suggestion',
+                    message: '💡 Considere mover a tag de Log para um companion object para melhor performance'
+                  });
+                }
+
+                // Verificar imports não utilizados (básico)
+                const imports = fileContent.match(/^import\s+.*$/gm) || [];
+                const usedImports = imports.filter(imp => {
+                  const importName = imp.split('.').pop().split(' ')[0];
+                  return fileContent.split('\n').some(line => 
+                    line.includes(importName) && !line.startsWith('import')
+                  );
+                });
+
+                // Verificar nomenclatura
+                const className = fileContent.match(/class\s+(\w+)/);
+                if (className && !/^[A-Z]/.test(className[1])) {
+                  fileIssues.push({
+                    type: 'error',
+                    message: `❌ Nome de classe deve começar com maiúscula: ${className[1]}`
+                  });
+                }
+
+                // Verificar funções muito longas (mais de 50 linhas)
+                lines.forEach((line, index) => {
+                  if (line.trim().startsWith('fun ')) {
+                    let functionLines = 0;
+                    let braceCount = 0;
+                    let inFunction = false;
+                    
+                    for (let i = index; i < lines.length; i++) {
+                      const currentLine = lines[i];
+                      braceCount += (currentLine.match(/{/g) || []).length;
+                      braceCount -= (currentLine.match(/}/g) || []).length;
+                      
+                      if (braceCount > 0) inFunction = true;
+                      if (inFunction) functionLines++;
+                      if (inFunction && braceCount === 0) break;
+                    }
+                    
+                    if (functionLines > 50) {
+                      fileIssues.push({
+                        type: 'warning',
+                        message: `⚠️ Função muito longa (${functionLines} linhas). Considere dividir em funções menores.`
+                      });
+                    }
+                  }
+                });
+
+                if (fileIssues.length > 0) {
+                  const errorsList = fileIssues.filter(i => i.type === 'error').map(i => i.message);
+                  const warningsList = fileIssues.filter(i => i.type === 'warning').map(i => i.message);
+                  const suggestionsList = fileIssues.filter(i => i.type === 'suggestion').map(i => i.message);
+
+                  errors.push(...errorsList);
+                  warnings.push(...warningsList);
+                  suggestions.push(...suggestionsList);
+
+                  reviewComments.push({
+                    path: file.filename,
+                    errors: errorsList,
+                    warnings: warningsList,
+                    suggestions: suggestionsList
+                  });
+                }
+              } catch (error) {
+                console.log(`Erro ao analisar ${file.filename}: ${error.message}`);
+              }
+            }
+
+            // Criar comentário no PR
+            let commentBody = '## 🤖 Code Review Automatizado\n\n';
+            
+            if (reviewComments.length === 0) {
+              commentBody += '✅ **Excelente trabalho!** Nenhum problema encontrado no código.\n\n';
+              commentBody += '📊 **Estatísticas:**\n';
+              commentBody += `- Arquivos Kotlin analisados: ${kotlinFiles.length}\n`;
+              commentBody += '- Problemas encontrados: 0\n';
+            } else {
+              commentBody += `📊 **Estatísticas:**\n`;
+              commentBody += `- Arquivos Kotlin analisados: ${kotlinFiles.length}\n`;
+              commentBody += `- Arquivos com sugestões: ${reviewComments.length}\n`;
+              commentBody += `- Erros: ${errors.length}\n`;
+              commentBody += `- Avisos: ${warnings.length}\n`;
+              commentBody += `- Sugestões: ${suggestions.length}\n\n`;
+
+              commentBody += '---\n\n';
+
+              reviewComments.forEach(comment => {
+                commentBody += `### 📄 ${comment.path}\n\n`;
+                
+                if (comment.errors.length > 0) {
+                  commentBody += '**❌ Erros:**\n';
+                  comment.errors.forEach(err => {
+                    commentBody += `- ${err}\n`;
+                  });
+                  commentBody += '\n';
+                }
+
+                if (comment.warnings.length > 0) {
+                  commentBody += '**⚠️ Avisos:**\n';
+                  comment.warnings.forEach(warn => {
+                    commentBody += `- ${warn}\n`;
+                  });
+                  commentBody += '\n';
+                }
+
+                if (comment.suggestions.length > 0) {
+                  commentBody += '**💡 Sugestões:**\n';
+                  comment.suggestions.forEach(sugg => {
+                    commentBody += `- ${sugg}\n`;
+                  });
+                  commentBody += '\n';
+                }
+
+                commentBody += '---\n\n';
+              });
+
+              commentBody += '> 💡 Este é um review automatizado. Por favor, revise as sugestões acima.\n';
+            }
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: commentBody
+            });
+
+            // Criar review com sugestões
+            if (reviewComments.length > 0) {
+              const reviewEvent = errors.length > 0 ? 'REQUEST_CHANGES' : 'COMMENT';
+              
+              await github.rest.pulls.createReview({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: context.issue.number,
+                event: reviewEvent,
+                body: `🤖 **Code Review Automatizado**\n\n` +
+                      `Foram encontrados ${errors.length + warnings.length + suggestions.length} pontos de atenção.\n\n` +
+                      `Por favor, revise os comentários acima.`
+              });
+            } else {
+              await github.rest.pulls.createReview({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: context.issue.number,
+                event: 'APPROVE',
+                body: '✅ **Code Review Automatizado**: Código aprovado! Nenhum problema encontrado.'
+              });
+            }
+
+            core.setOutput('has_issues', reviewComments.length > 0);
+            core.setOutput('errors_count', errors.length);
+            core.setOutput('warnings_count', warnings.length);
+            core.setOutput('suggestions_count', suggestions.length);
+

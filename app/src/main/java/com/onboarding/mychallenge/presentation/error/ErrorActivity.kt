@@ -24,7 +24,8 @@ class ErrorActivity : AppCompatActivity() {
     }
 
     private fun setupErrorContent(errorMessage: String?) {
-        binding.errorMessageTextView.text = errorMessage ?: getString(com.onboarding.mychallenge.R.string.error_loading_movies)
+        binding.errorMessageTextView.text =
+            errorMessage ?: getString(com.onboarding.mychallenge.R.string.error_loading_movies)
     }
 
     private fun setupRetryButton() {
