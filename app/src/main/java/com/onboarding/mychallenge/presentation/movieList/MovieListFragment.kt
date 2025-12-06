@@ -2,7 +2,6 @@ package com.onboarding.mychallenge.presentation.movieList
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -17,13 +16,8 @@ import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class MovieListFragment : Fragment() {
-    companion object {
-        private const val TAG = "MovieListFragment"
-    }
-
     private var _binding: FragmentMovieListBinding? = null
-    private val binding get() =
-        _binding ?: error("Binding is null. Fragment view may have been destroyed.")
+    private val binding get() = _binding ?: throw IllegalStateException("Binding is null. Fragment view may have been destroyed.")
     private val viewModel: MovieListViewModel by viewModels()
     private lateinit var movieAdapter: MovieAdapter
     private lateinit var shimmerAdapter: ShimmerAdapter
@@ -54,11 +48,7 @@ class MovieListFragment : Fragment() {
         movieAdapter =
             MovieAdapter(
                 onItemClick = { movie ->
-                    val intent =
-                        android.content.Intent(
-                            requireContext(),
-                            com.onboarding.mychallenge.presentation.movieDetail.MovieDetailActivity::class.java,
-                        )
+                    val intent = android.content.Intent(requireContext(), com.onboarding.mychallenge.presentation.movieDetail.MovieDetailActivity::class.java)
                     intent.putExtra("movie_id", movie.id)
                     startActivity(intent)
                 },
@@ -120,9 +110,7 @@ class MovieListFragment : Fragment() {
                     start: Int,
                     count: Int,
                     after: Int,
-                ) {
-                    // No action needed before text changes
-                }
+                ) {}
 
                 override fun onTextChanged(
                     s: CharSequence?,
@@ -133,9 +121,7 @@ class MovieListFragment : Fragment() {
                     viewModel.updateSearchQuery(s?.toString() ?: "")
                 }
 
-                override fun afterTextChanged(s: Editable?) {
-                    // No action needed after text changes
-                }
+                override fun afterTextChanged(s: Editable?) {}
             },
         )
     }
@@ -144,67 +130,47 @@ class MovieListFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.uiState.collectLatest { state ->
                 if (_binding == null) {
-                    Log.w(TAG, "observeUiState: Binding é null, ignorando atualização")
                     return@collectLatest
                 }
-                handleUiState(state)
+                when (state) {
+                    is MovieListUiState.Loading -> {
+                        hideShimmer()
+                        hideError()
+                        hideEmpty()
+                    }
+                    is MovieListUiState.Success -> {
+                        hideError()
+                        hideEmpty()
+                        if (state.isLoadingMore) {
+                            movieAdapter.submitList(state.movies)
+                            return@collectLatest
+                        }
+                        totalMoviesCount = state.movies.size
+                        if (_binding?.shimmerRecyclerView?.visibility == View.VISIBLE) {
+                            imagesLoadedCount = 0
+                        }
+                        movieAdapter.submitList(state.movies)
+                    }
+                    is MovieListUiState.Error -> {
+                        hideShimmer()
+                        val isConnectionError =
+                            state.message.contains("conexão", ignoreCase = true) ||
+                                state.message.contains("internet", ignoreCase = true) ||
+                                state.message.contains("conexão com a internet", ignoreCase = true)
+                        if (isConnectionError) {
+                            navigateToErrorConnection()
+                        } else {
+                            navigateToError(state.message)
+                        }
+                    }
+                    is MovieListUiState.Empty -> {
+                        hideShimmer()
+                        hideError()
+                        showEmpty()
+                    }
+                }
             }
         }
-    }
-
-    private fun handleUiState(state: MovieListUiState) {
-        when (state) {
-            is MovieListUiState.Loading -> handleLoadingState()
-            is MovieListUiState.Success -> handleSuccessState(state)
-            is MovieListUiState.Error -> handleErrorState(state)
-            is MovieListUiState.Empty -> handleEmptyState()
-        }
-    }
-
-    private fun handleLoadingState() {
-        hideShimmer()
-        hideError()
-        hideEmpty()
-    }
-
-    private fun handleSuccessState(state: MovieListUiState.Success) {
-        hideError()
-        hideEmpty()
-        if (state.isLoadingMore) {
-            movieAdapter.submitList(state.movies)
-            return
-        }
-        updateMoviesList(state.movies)
-    }
-
-    private fun updateMoviesList(movies: List<MovieViewObject>) {
-        totalMoviesCount = movies.size
-        if (_binding?.shimmerRecyclerView?.visibility == View.VISIBLE) {
-            imagesLoadedCount = 0
-        }
-        movieAdapter.submitList(movies)
-    }
-
-    private fun handleErrorState(state: MovieListUiState.Error) {
-        hideShimmer()
-        val isConnectionError = isConnectionError(state.message)
-        if (isConnectionError) {
-            navigateToErrorConnection()
-        } else {
-            navigateToError(state.message)
-        }
-    }
-
-    private fun isConnectionError(message: String): Boolean {
-        return message.contains("conexão", ignoreCase = true) ||
-            message.contains("internet", ignoreCase = true) ||
-            message.contains("conexão com a internet", ignoreCase = true)
-    }
-
-    private fun handleEmptyState() {
-        hideShimmer()
-        hideError()
-        showEmpty()
     }
 
     private fun hideShimmer() {

@@ -40,11 +40,3 @@
 - Execute localmente: `./gradlew ktlintCheck detekt`
 - Corrija problemas antes de fazer push
 
-### Erro: "Gradle build failed"
-- Verifique se o código compila localmente
-- Execute: `./gradlew clean build`
-
-### Code Review não aparece
-- Verifique se o workflow executou
-- Verifique permissões do GITHUB_TOKEN
-- Veja logs do job "code-review"

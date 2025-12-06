@@ -40,28 +40,28 @@ class AddMovieDetailToFavoritesUseCaseTest {
             assertTrue(result.isFailure)
             coVerify(exactly = 1) { repository.addMovieDetailToFavorites(movieDetail) }
         }
+}
 
-    private fun createMockMovieDetail(
-        id: Int,
-        title: String,
-    ): MovieDetail {
-        return MovieDetail(
-            id = id,
-            title = title,
-            overview = "Overview",
-            posterPath = "/poster.jpg",
-            backdropPath = "/backdrop.jpg",
-            releaseDate = "2024-01-01",
-            voteAverage = 8.5,
-            voteCount = 100,
-            popularity = 100.0,
-            runtime = 120,
-            genres = listOf(Genre(1, "Action")),
-            tagline = "Tagline",
-            budget = 50000000L,
-            revenue = 200000000L,
-            status = "Released",
-            homepage = "https://example.com",
-        )
-    }
+private fun createMockMovieDetail(
+    id: Int,
+    title: String,
+): MovieDetail {
+    return MovieDetail(
+        id = id,
+        title = title,
+        overview = "Overview",
+        posterPath = "/poster.jpg",
+        backdropPath = "/backdrop.jpg",
+        releaseDate = "2024-01-01",
+        voteAverage = 8.5,
+        voteCount = 100,
+        popularity = 100.0,
+        runtime = 120,
+        genres = listOf(Genre(1, "Action")),
+        tagline = "Tagline",
+        budget = 50000000L,
+        revenue = 200000000L,
+        status = "Released",
+        homepage = "https://example.com",
+    )
 }

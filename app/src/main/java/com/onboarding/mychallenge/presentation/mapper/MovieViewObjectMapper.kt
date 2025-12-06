@@ -45,7 +45,6 @@ private fun formatReleaseDate(dateString: String?): String {
         val date = inputFormat.parse(dateString)
         date?.let { outputFormat.format(it) } ?: dateString
     } catch (e: Exception) {
-        android.util.Log.e("MovieViewObjectMapper", "Error formatting date: $dateString", e)
         dateString
     }
 }

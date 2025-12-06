@@ -1,15 +1,10 @@
 package com.onboarding.mychallenge.domain.usecase
-import android.database.sqlite.SQLiteException
 import com.onboarding.mychallenge.domain.repository.MovieRepository
 import javax.inject.Inject
 
 /**
- * UseCase para remover filme dos favoritos.
- *
- * Encapsula a lógica de negócio para desfavoritar filmes, delegando a operação ao repositório.
- * Garante que o ID do filme seja válido.
- *
- * @param repository O repositório de filmes para acessar os dados.
+ * UseCase para remover filme dos favoritos
+ * Encapsula a lógica de negócio para desfavoritar filmes
  */
 class RemoveFromFavoritesUseCase
     @Inject
@@ -17,11 +12,9 @@ class RemoveFromFavoritesUseCase
         private val repository: MovieRepository,
     ) {
         /**
-         * Remove um filme dos favoritos.
-         *
-         * @param movieId O ID do filme a ser removido.
-         * @return Um [Result] indicando sucesso ([Unit]) ou falha ([Throwable]).
-         * @throws IllegalArgumentException se o ID do filme for menor ou igual a 0.
+         * Remove um filme dos favoritos
+         * @param movieId ID do filme a ser removido
+         * @return Result indicando sucesso ou falha
          */
         suspend operator fun invoke(movieId: Int): Result<Unit> {
             return if (movieId <= 0) {
@@ -30,8 +23,6 @@ class RemoveFromFavoritesUseCase
                 try {
                     repository.removeFromFavorites(movieId)
                     Result.success(Unit)
-                } catch (e: SQLiteException) {
-                    Result.failure(e)
                 } catch (e: Exception) {
                     Result.failure(e)
                 }

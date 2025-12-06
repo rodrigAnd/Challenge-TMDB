@@ -10,6 +10,9 @@ import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 
+/**
+ * Converte um objeto [MovieDto] da camada de rede para um objeto [Movie] da camada de domínio.
+ */
 fun MovieDto.toDomain(): Movie {
     return Movie(
         id = id,
@@ -24,6 +27,9 @@ fun MovieDto.toDomain(): Movie {
     )
 }
 
+/**
+ * Converte FavoriteMovieEntity (Room) para Movie (Domain)
+ */
 fun FavoriteMovieEntity.toDomain(): Movie {
     return Movie(
         id = id,
@@ -38,6 +44,9 @@ fun FavoriteMovieEntity.toDomain(): Movie {
     )
 }
 
+/**
+ * Converte FavoriteMovieEntity (Room) para MovieDetail (Domain)
+ */
 fun FavoriteMovieEntity.toMovieDetail(): MovieDetail {
     val genres =
         genresJson?.let { json ->
@@ -50,7 +59,6 @@ fun FavoriteMovieEntity.toMovieDetail(): MovieDetail {
                 val adapter = moshi.adapter<List<Genre>>(listType)
                 adapter.fromJson(json) ?: emptyList()
             } catch (e: Exception) {
-                android.util.Log.e("MovieMapper", "Error parsing genres JSON: $json", e)
                 emptyList()
             }
         } ?: emptyList()
@@ -74,6 +82,9 @@ fun FavoriteMovieEntity.toMovieDetail(): MovieDetail {
     )
 }
 
+/**
+ * Converte Movie (Domain) para FavoriteMovieEntity (Room)
+ */
 fun Movie.toEntity(): FavoriteMovieEntity {
     return FavoriteMovieEntity(
         id = id,
@@ -88,6 +99,9 @@ fun Movie.toEntity(): FavoriteMovieEntity {
     )
 }
 
+/**
+ * Converte MovieDetail (Domain) para FavoriteMovieEntity (Room)
+ */
 fun MovieDetail.toEntity(): FavoriteMovieEntity {
     val genresJson =
         try {
@@ -99,7 +113,6 @@ fun MovieDetail.toEntity(): FavoriteMovieEntity {
             val adapter = moshi.adapter<List<Genre>>(listType)
             adapter.toJson(genres)
         } catch (e: Exception) {
-            android.util.Log.e("MovieMapper", "Error converting genres to JSON", e)
             null
         }
     return FavoriteMovieEntity(
@@ -122,6 +135,9 @@ fun MovieDetail.toEntity(): FavoriteMovieEntity {
     )
 }
 
+/**
+ * Converte MovieDetailDto (API) para MovieDetail (Domain)
+ */
 fun MovieDetailDto.toDomain(): MovieDetail {
     return MovieDetail(
         id = id,
@@ -143,6 +159,9 @@ fun MovieDetailDto.toDomain(): MovieDetail {
     )
 }
 
+/**
+ * Converte GenreDto para Genre
+ */
 fun GenreDto.toDomain(): Genre {
     return Genre(
         id = id,

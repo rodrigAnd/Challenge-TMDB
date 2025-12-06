@@ -1,4 +1,5 @@
 package com.onboarding.mychallenge.data.repository
+
 import com.onboarding.mychallenge.data.local.dao.FavoriteMovieDao
 import com.onboarding.mychallenge.data.local.entity.FavoriteMovieEntity
 import com.onboarding.mychallenge.data.remote.api.TmdbApiService
@@ -24,204 +25,312 @@ class MovieRepositoryImplTest {
     private lateinit var repository: MovieRepositoryImpl
 
     @Before
-    fun setup() {
+    fun setUp() {
         apiService = mockk()
-        favoriteDao = mockk()
+        favoriteDao = mockk(relaxUnitFun = true)
         repository = MovieRepositoryImpl(apiService, favoriteDao)
     }
 
+    //region getPopularMovies
     @Test
-    fun `getPopularMovies should return success when API returns movies`() =
+    fun `getPopularMovies should return success with movie list when API call is successful`() =
         runTest {
+            // Arrange
             val movieDto = createMovieDto(1, "Movie 1")
-            val response =
-                MoviesResponseDto(
-                    page = 1,
-                    results = listOf(movieDto),
-                    totalPages = 10,
-                    totalResults = 100,
-                )
-            coEvery { apiService.getPopularMovies(1) } returns response
+            val response = MoviesResponseDto(1, listOf(movieDto), 10, 100)
+            coEvery { apiService.getPopularMovies(1, "pt-BR") } returns response
+
+            // Act
             val result = repository.getPopularMovies(1)
+
+            // Assert
             assertTrue(result.isSuccess)
-            assertEquals(1, result.getOrNull()?.size)
-            assertEquals("Movie 1", result.getOrNull()?.get(0)?.title)
+            val movies = result.getOrNull()
+            assertEquals(1, movies?.size)
+            assertEquals("Movie 1", movies?.first()?.title)
         }
 
     @Test
-    fun `getPopularMovies should return failure when API throws exception`() =
+    fun `getPopularMovies should return failure when API call throws exception`() =
         runTest {
-            val error = Exception("Network error")
-            coEvery { apiService.getPopularMovies(1) } throws error
+            // Arrange
+            // A exceção que a camada de rede lança (simulada).
+            val apiException = RuntimeException("Network Error")
+            coEvery { apiService.getPopularMovies(1, "pt-BR") } throws apiException
+
+            // Act
             val result = repository.getPopularMovies(1)
+
+            // Assert
+            // 1. Primeiro, confirme que a operação realmente falhou.
             assertTrue(result.isFailure)
+
+            // --- INÍCIO DA CORREÇÃO ---
+            // 2. Obtenha a exceção que o *repositório* de fato retornou.
+            val actualException = result.exceptionOrNull()
+
+            // 3. Verifique se a MENSAGEM da exceção é a que o repositório define em seu tratamento de erro.
+            assertEquals("Erro ao carregar filmes. Tente novamente.", actualException?.message)
+            // --- FIM DA CORREÇÃO ---
+        }
+
+    //endregion
+
+    //region getMovieDetails
+    @Test
+    fun `getMovieDetails should return success with detail when API call is successful`() =
+        runTest {
+            // Arrange
+            val movieDetailDto = createMovieDetailDto(1, "Detailed Movie")
+            coEvery { apiService.getMovieDetails(1, "pt-BR") } returns movieDetailDto
+
+            // Act
+            val result = repository.getMovieDetails(1)
+
+            // Assert
+            assertTrue(result.isSuccess)
+            assertEquals("Detailed Movie", result.getOrNull()?.title)
         }
 
     @Test
-    fun `addMovieDetailToFavorites should save to database`() =
+    fun `getMovieDetails should return failure when API call throws exception`() =
         runTest {
-            val movieDetail = createMovieDetail(1, "Movie 1")
-            coEvery { favoriteDao.insertFavorite(any()) } returns Unit
-            repository.addMovieDetailToFavorites(movieDetail)
-            coVerify(exactly = 1) { favoriteDao.insertFavorite(any()) }
+            // Arrange
+            // A exceção que a camada de rede lança.
+            val apiException = RuntimeException("API Error")
+            coEvery { apiService.getMovieDetails(1, "pt-BR") } throws apiException
+
+            // Act
+            val result = repository.getMovieDetails(1)
+
+            // Assert
+            // 1. Verifica se o resultado é de fato uma falha.
+            assertTrue(result.isFailure)
+
+            // --- INÍCIO DA CORREÇÃO ---
+            // 2. Pega a exceção que o *repositório* criou.
+            val actualException = result.exceptionOrNull()
+
+            // 3. Verifica se a mensagem da exceção é a mensagem personalizada definida no repositório.
+            assertEquals("Erro ao carregar detalhes do filme. Tente novamente.", actualException?.message)
+            // --- FIM DA CORREÇÃO ---
+        }
+
+    //endregion
+
+    //region searchMovies
+    @Test
+    fun `searchMovies should return success when API search is successful`() =
+        runTest {
+            // Arrange
+            val movieDto = createMovieDto(1, "Searched Movie")
+            val response = MoviesResponseDto(1, listOf(movieDto), 1, 1)
+            coEvery { apiService.searchMovies("query", 1, "pt-BR") } returns response
+
+            // Act
+            val result = repository.searchMovies("query", 1)
+
+            // Assert
+            assertTrue(result.isSuccess)
+            assertEquals("Searched Movie", result.getOrNull()?.first()?.title)
         }
 
     @Test
-    fun `removeFromFavorites should delete from database`() =
+    fun `searchMovies should return failure when API search throws exception`() =
         runTest {
-            coEvery { favoriteDao.deleteFavorite(1) } returns Unit
-            repository.removeFromFavorites(1)
-            coVerify(exactly = 1) { favoriteDao.deleteFavorite(1) }
+            // Arrange
+            // A exceção que a camada de rede lança (simulada).
+            val apiException = RuntimeException("Search Error")
+            coEvery { apiService.searchMovies("query", 1, "pt-BR") } throws apiException
+
+            // Act
+            val result = repository.searchMovies("query", 1)
+
+            // Assert
+            // 1. Confirma que a operação realmente resultou em uma falha.
+            assertTrue(result.isFailure)
+
+            // --- INÍCIO DA CORREÇÃO ---
+            // 2. Obtém a exceção que o *repositório* de fato retornou.
+            val actualException = result.exceptionOrNull()
+
+            // 3. Verifica se a MENSAGEM da exceção é a que o repositório define em seu tratamento de erro.
+            assertEquals("Erro ao buscar filmes. Tente novamente.", actualException?.message)
+            // --- FIM DA CORREÇÃO ---
         }
 
+    //region Favorites
     @Test
-    fun `isFavorite should return true when movie is in database`() =
+    fun `getFavoriteMovies should return flow from DAO`() =
         runTest {
-            coEvery { favoriteDao.isFavorite(1) } returns true
-            val result = repository.isFavorite(1)
-            assertTrue(result)
-            coVerify(exactly = 1) { favoriteDao.isFavorite(1) }
-        }
-
-    @Test
-    fun `getFavoriteMovies should return flow of movies`() =
-        runTest {
-            val entity = createFavoriteEntity(1, "Movie 1")
+            // Arrange
+            val entity = createFavoriteEntity(1, "Favorite Movie")
             every { favoriteDao.getAllFavorites() } returns flowOf(listOf(entity))
+
+            // Act
             val flow = repository.getFavoriteMovies()
+
+            // Assert
             flow.collect { movies ->
                 assertEquals(1, movies.size)
-                assertEquals("Movie 1", movies[0].title)
+                assertEquals("Favorite Movie", movies.first().title)
             }
         }
 
     @Test
-    fun `getMovieDetails should return success when API returns details`() =
+    fun `getFavoriteMovieDetails should return success when movie is in DAO`() =
         runTest {
-            val detailDto = createMovieDetailDto(1, "Movie 1")
-            coEvery { apiService.getMovieDetails(1, any()) } returns detailDto
-            val result = repository.getMovieDetails(1)
-            assertTrue(result.isSuccess)
-            assertEquals("Movie 1", result.getOrNull()?.title)
-        }
-
-    @Test
-    fun `getFavoriteMovieDetails should return success when found in database`() =
-        runTest {
-            val entity = createFavoriteEntity(1, "Movie 1")
+            // Arrange
+            val entity = createFavoriteEntity(1, "Favorite Detail")
             coEvery { favoriteDao.getFavoriteById(1) } returns entity
+
+            // Act
             val result = repository.getFavoriteMovieDetails(1)
+
+            // Assert
             assertTrue(result.isSuccess)
-            assertEquals("Movie 1", result.getOrNull()?.title)
+            assertEquals("Favorite Detail", result.getOrNull()?.title)
         }
 
     @Test
-    fun `getFavoriteMovieDetails should return failure when not found`() =
+    fun `getFavoriteMovieDetails should return failure when movie is not in DAO`() =
         runTest {
+            // Arrange
             coEvery { favoriteDao.getFavoriteById(1) } returns null
+
+            // Act
             val result = repository.getFavoriteMovieDetails(1)
+
+            // Assert
             assertTrue(result.isFailure)
         }
 
+    @Test
+    fun `addMovieDetailToFavorites should call DAO insert`() =
+        runTest {
+            // Arrange
+            val movieDetail = createMovieDetail(1, "Movie to Add")
+
+            // Act
+            repository.addMovieDetailToFavorites(movieDetail)
+
+            // Assert
+            coVerify(exactly = 1) { favoriteDao.insertFavorite(any()) }
+        }
+
+    @Test
+    fun `removeFromFavorites should call DAO delete`() =
+        runTest {
+            // Arrange
+            val movieId = 1
+
+            // Act
+            repository.removeFromFavorites(movieId)
+
+            // Assert
+            coVerify(exactly = 1) { favoriteDao.deleteFavorite(movieId) }
+        }
+
+    @Test
+    fun `isFavorite should return success with true when movie exists in DAO`() =
+        runTest {
+            // Arrange
+            coEvery { favoriteDao.isFavorite(1) } returns true
+
+            // Act
+            val result = repository.isFavorite(1)
+
+            // Assert
+            assertTrue(result)
+        }
+
+    @Test
+    fun `isFavorite should return success with false when movie does not exist in DAO`() =
+        runTest {
+            // Arrange
+            coEvery { favoriteDao.isFavorite(1) } returns false
+
+            // Act
+            val result = repository.isFavorite(1)
+
+            // Assert
+            assertEquals(false, result)
+        }
+
+    // --- Funções de Apoio (Helpers) ---
     private fun createMovieDto(
         id: Int,
         title: String,
-    ): MovieDto {
-        return MovieDto(
-            adult = false,
-            backdropPath = "/backdrop.jpg",
-            genreIds = listOf(1, 2),
-            id = id,
-            originalLanguage = "en",
-            originalTitle = title,
-            overview = "Overview",
-            popularity = 100.0,
-            posterPath = "/poster.jpg",
-            releaseDate = "2024-01-01",
-            title = title,
-            video = false,
-            voteAverage = 8.5,
-            voteCount = 100,
-        )
-    }
-
-    private fun createMovieDetail(
-        id: Int,
-        title: String,
-    ): MovieDetail {
-        return MovieDetail(
-            id = id,
-            title = title,
-            overview = "Overview",
-            posterPath = "/poster.jpg",
-            backdropPath = "/backdrop.jpg",
-            releaseDate = "2024-01-01",
-            voteAverage = 8.5,
-            voteCount = 100,
-            popularity = 100.0,
-            runtime = 120,
-            genres = listOf(Genre(1, "Action")),
-            tagline = "Tagline",
-            budget = 50000000L,
-            revenue = 200000000L,
-            status = "Released",
-            homepage = "https://example.com",
-        )
-    }
-
-    private fun createFavoriteEntity(
-        id: Int,
-        title: String,
-    ): FavoriteMovieEntity {
-        return FavoriteMovieEntity(
-            id = id,
-            title = title,
-            overview = "Overview",
-            posterPath = "/poster.jpg",
-            backdropPath = "/backdrop.jpg",
-            releaseDate = "2024-01-01",
-            voteAverage = 8.5,
-            voteCount = 100,
-            popularity = 100.0,
-            runtime = 120,
-            genresJson = """[{"id":1,"name":"Action"}]""",
-            tagline = "Tagline",
-            budget = 50000000L,
-            revenue = 200000000L,
-            status = "Released",
-            homepage = "https://example.com",
-        )
-    }
+    ) = MovieDto(
+        id = id, title = title, originalTitle = title, overview = "Overview", posterPath = "/poster.jpg", backdropPath = "/backdrop.jpg", releaseDate = "2024-01-01", voteAverage = 8.5, voteCount = 100, adult = false,
+        genreIds =
+            listOf(
+                1,
+            ),
+        originalLanguage = "en", popularity = 100.0, video = false,
+    )
 
     private fun createMovieDetailDto(
         id: Int,
         title: String,
-    ): MovieDetailDto {
-        return MovieDetailDto(
-            adult = false,
-            backdropPath = "/backdrop.jpg",
-            budget = 50000000L,
-            genres = emptyList(),
-            homepage = "https://example.com",
-            id = id,
-            imdbId = null,
-            originalLanguage = "en",
-            originalTitle = title,
-            overview = "Overview",
-            popularity = 100.0,
-            posterPath = "/poster.jpg",
-            productionCompanies = emptyList(),
-            productionCountries = emptyList(),
-            releaseDate = "2024-01-01",
-            revenue = 200000000L,
-            runtime = 120,
-            spokenLanguages = emptyList(),
-            status = "Released",
-            tagline = "Tagline",
-            title = title,
-            video = false,
-            voteAverage = 8.5,
-            voteCount = 100,
-        )
-    }
+    ) = MovieDetailDto(
+        id = id,
+        title = title,
+        originalTitle = title,
+        overview = "Overview",
+        posterPath = "/poster.jpg",
+        backdropPath = "/backdrop.jpg",
+        releaseDate = "2024-01-01",
+        voteAverage = 8.5,
+        voteCount = 100,
+        adult = false,
+        originalLanguage = "en",
+        popularity = 100.0,
+        video = false,
+        budget = 1L,
+        genres = emptyList(),
+        homepage = "",
+        imdbId = "id",
+        productionCompanies = emptyList(),
+        productionCountries = emptyList(),
+        revenue = 1L,
+        runtime = 120,
+        spokenLanguages = emptyList(),
+        status = "Released",
+        tagline = "Tagline",
+    )
+
+    private fun createMovieDetail(
+        id: Int,
+        title: String,
+    ) = MovieDetail(
+        id = id, title = title, overview = "Overview", posterPath = "/poster.jpg", backdropPath = "/backdrop.jpg", releaseDate = "2024-01-01", voteAverage = 8.5, voteCount = 100, popularity = 100.0, runtime = 120,
+        genres =
+            listOf(
+                Genre(1, "Action"),
+            ),
+        tagline = "Tagline", budget = 1L, revenue = 1L, status = "Released", homepage = "",
+    )
+
+    private fun createFavoriteEntity(
+        id: Int,
+        title: String,
+    ) = FavoriteMovieEntity(
+        id = id,
+        title = title,
+        overview = "Overview",
+        posterPath = "/poster.jpg",
+        backdropPath = "/backdrop.jpg",
+        releaseDate = "2024-01-01",
+        voteAverage = 8.5,
+        voteCount = 100,
+        popularity = 100.0,
+        runtime = 120,
+        genresJson = "[]",
+        tagline = "Tagline",
+        budget = 1L,
+        revenue = 1L,
+        status = "Released",
+        homepage = "",
+    )
 }

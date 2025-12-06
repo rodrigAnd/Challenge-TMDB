@@ -55,7 +55,7 @@ class IsFavoriteUseCaseTest {
     fun `invoke should return failure when repository throws exception`() =
         runTest {
             val movieId = 1
-            val error = Exception("Database error")
+            val error = android.database.sqlite.SQLiteException("Database error")
             coEvery { repository.isFavorite(movieId) } throws error
             val result = useCase(movieId)
             assertTrue(result.isFailure)

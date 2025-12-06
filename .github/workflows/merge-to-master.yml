@@ -25,12 +25,12 @@ jobs:
         run: |
           BASE_BRANCH="${{ github.event.pull_request.base.ref }}"
           HEAD_BRANCH="${{ github.event.pull_request.head.ref }}"
-          
+
           if [ "$BASE_BRANCH" != "master" ]; then
             echo "❌ Este workflow só deve ser executado para PRs direcionados à branch master"
             exit 1
           fi
-          
+
           if [ "$HEAD_BRANCH" != "develop" ]; then
             echo "❌ ERRO: Este PR não vem da branch develop!"
             echo "   A branch master só aceita merges da develop."
@@ -38,7 +38,7 @@ jobs:
             echo "   Branch esperada: develop"
             exit 1
           fi
-          
+
           echo "✅ Validação de branch OK - PR vem de develop"
 
       - name: Configurar JDK 17
@@ -89,39 +89,39 @@ jobs:
         id: coverage-check
         run: |
           COVERAGE_FILE="app/build/reports/jacoco/jacocoTestReport/jacocoTestReport.xml"
-          
+
           if [ ! -f "$COVERAGE_FILE" ]; then
             echo "❌ Arquivo de cobertura não encontrado!"
             exit 1
           fi
-          
+
           # Instala bc se não estiver disponível
           sudo apt-get update && sudo apt-get install -y bc || true
-          
+
           COVERAGE=$(grep -oP 'type="INSTRUCTION" missed="\K[0-9]+' "$COVERAGE_FILE" | head -1)
           COVERED=$(grep -oP 'type="INSTRUCTION" missed="[0-9]+" covered="\K[0-9]+' "$COVERAGE_FILE" | head -1)
-          
+
           if [ -z "$COVERAGE" ] || [ -z "$COVERED" ]; then
             echo "⚠️ Tentando método alternativo de extração..."
             COVERAGE=$(grep -o 'missed="[0-9]*"' "$COVERAGE_FILE" | head -1 | grep -o '[0-9]*')
             COVERED=$(grep -o 'covered="[0-9]*"' "$COVERAGE_FILE" | head -1 | grep -o '[0-9]*')
           fi
-          
+
           if [ -z "$COVERAGE" ] || [ -z "$COVERED" ]; then
             echo "❌ Não foi possível extrair dados de cobertura do XML"
             cat "$COVERAGE_FILE" | head -50
             exit 1
           fi
-          
+
           TOTAL=$((COVERAGE + COVERED))
-          
+
           if [ "$TOTAL" -eq 0 ]; then
             echo "❌ Nenhuma instrução encontrada no relatório de cobertura"
             exit 1
           fi
-          
+
           PERCENTAGE=$(awk "BEGIN {printf \"%.2f\", ($COVERED / $TOTAL) * 100}")
-          
+
           echo "==========================================="
           echo "📊 Relatório de Cobertura de Testes"
           echo "==========================================="
@@ -129,9 +129,9 @@ jobs:
           echo "Cobertura: $PERCENTAGE%"
           echo "Meta mínima: 90%"
           echo "==========================================="
-          
+
           echo "coverage_percentage=$PERCENTAGE" >> $GITHUB_OUTPUT
-          
+
           if (( $(echo "$PERCENTAGE < 90" | bc -l 2>/dev/null || echo "1") )); then
             echo "❌ Cobertura abaixo do mínimo exigido (90%)"
             echo "::error::Cobertura de testes insuficiente: $PERCENTAGE% (mínimo: 90%)"
@@ -192,7 +192,7 @@ jobs:
               ref: context.payload.pull_request.head.sha,
             });
 
-            const failedChecks = checks.check_runs.filter(c => 
+            const failedChecks = checks.check_runs.filter(c =>
               c.status === 'completed' && c.conclusion === 'failure'
             );
 

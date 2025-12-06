@@ -2,7 +2,6 @@ package com.onboarding.mychallenge.presentation.favorites
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -18,10 +17,6 @@ import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class FavoritesFragment : Fragment() {
-    companion object {
-        private const val TAG = "FavoritesFragment"
-    }
-
     private var _binding: FragmentFavoritesBinding? = null
     private val binding get() = _binding!!
     private val viewModel: FavoritesViewModel by viewModels()
@@ -50,11 +45,7 @@ class FavoritesFragment : Fragment() {
         movieAdapter =
             MovieAdapter(
                 onItemClick = { movie ->
-                    val intent =
-                        android.content.Intent(
-                            requireContext(),
-                            com.onboarding.mychallenge.presentation.movieDetail.MovieDetailActivity::class.java,
-                        )
+                    val intent = android.content.Intent(requireContext(), com.onboarding.mychallenge.presentation.movieDetail.MovieDetailActivity::class.java)
                     intent.putExtra("movie_id", movie.id)
                     startActivity(intent)
                 },
@@ -77,9 +68,7 @@ class FavoritesFragment : Fragment() {
                     start: Int,
                     count: Int,
                     after: Int,
-                ) {
-                    // No action needed before text changes
-                }
+                ) {}
 
                 override fun onTextChanged(
                     s: CharSequence?,
@@ -91,9 +80,7 @@ class FavoritesFragment : Fragment() {
                     viewModel.updateSearchQuery(query)
                 }
 
-                override fun afterTextChanged(s: Editable?) {
-                    // No action needed after text changes
-                }
+                override fun afterTextChanged(s: Editable?) {}
             },
         )
     }
@@ -102,7 +89,6 @@ class FavoritesFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.uiState.collectLatest { state ->
                 if (_binding == null) {
-                    Log.w(TAG, "observeUiState: Binding é null, ignorando atualização")
                     return@collectLatest
                 }
                 when (state) {
@@ -121,11 +107,9 @@ class FavoritesFragment : Fragment() {
                             movieAdapter.submitList(state.movies) {
                             }
                         } catch (e: Exception) {
-                            Log.e(TAG, "observeUiState: Erro ao atualizar lista", e)
                         }
                     }
                     is FavoritesUiState.Error -> {
-                        Log.e(TAG, "observeUiState: Error - ${state.message}")
                         binding.loadingProgressBar.visibility = View.GONE
                         binding.moviesRecyclerView.visibility = View.GONE
                         binding.errorLayout.visibility = View.VISIBLE

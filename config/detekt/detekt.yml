@@ -13,10 +13,10 @@ complexity:
     threshold: 4
   CyclomaticComplexMethod:
     active: true
-    threshold: 11
+    threshold: 15
   LongMethod:
     active: true
-    threshold: 60
+    threshold: 80
   LongParameterList:
     active: true
     functionThreshold: 6

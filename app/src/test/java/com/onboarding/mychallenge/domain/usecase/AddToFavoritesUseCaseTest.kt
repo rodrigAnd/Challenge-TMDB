@@ -34,7 +34,7 @@ class AddToFavoritesUseCaseTest {
     fun `invoke should return failure when repository throws exception`() =
         runTest {
             val movie = createMockMovie(1, "Movie 1")
-            val error = Exception("Database error")
+            val error = android.database.sqlite.SQLiteException("Database error")
             coEvery { repository.addToFavorites(movie) } throws error
             val result = useCase(movie)
             assertTrue(result.isFailure)

@@ -5,10 +5,6 @@ import okhttp3.Response
 class AuthInterceptor(
     private val bearerToken: String,
 ) : Interceptor {
-    companion object {
-        private const val TAG = "AuthInterceptor"
-    }
-
     override fun intercept(chain: Interceptor.Chain): Response {
         val originalRequest = chain.request()
         val newRequest =
@@ -16,7 +12,6 @@ class AuthInterceptor(
                 .header("Authorization", "Bearer $bearerToken")
                 .header("accept", "application/json")
                 .build()
-        val response = chain.proceed(newRequest)
-        return response
+        return chain.proceed(newRequest)
     }
 }

@@ -1,5 +1,4 @@
 package com.onboarding.mychallenge.presentation.movieList
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.onboarding.mychallenge.domain.usecase.AddMovieDetailToFavoritesUseCase
@@ -23,23 +22,11 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
- * Estados possíveis da UI da lista de filmes.
+ * Estado da UI para lista de filmes
  */
 sealed class MovieListUiState {
-    /**
-     * Estado de carregamento inicial ou de recarregamento.
-     */
     data object Loading : MovieListUiState()
 
-    /**
-     * Estado de sucesso, contendo a lista de filmes para exibição.
-     *
-     * @property movies A lista de [MovieViewObject] a serem exibidos.
-     * @property isSearch Indica se a lista atual é resultado de uma pesquisa.
-     * @property currentPage A página atual que está sendo exibida.
-     * @property canLoadMore Indica se há mais páginas de filmes para carregar.
-     * @property isLoadingMore Indica se uma nova página está sendo carregada no momento.
-     */
     data class Success(
         val movies: List<MovieViewObject>,
         val isSearch: Boolean = false,
@@ -48,39 +35,14 @@ sealed class MovieListUiState {
         val isLoadingMore: Boolean = false,
     ) : MovieListUiState()
 
-    /**
-     * Estado de erro, contendo uma mensagem para o usuário.
-     *
-     * @property message A mensagem de erro a ser exibida.
-     */
     data class Error(val message: String) : MovieListUiState()
 
-    /**
-     * Estado de lista vazia, indicando que não há filmes para exibir.
-     */
     data object Empty : MovieListUiState()
 }
 
 /**
- * ViewModel para a lista de filmes.
- *
- * Gerencia o estado da UI para a tela de lista de filmes, incluindo:
- * - Carregamento de filmes populares.
- * - Pesquisa de filmes com debounce.
- * - Paginação.
- * - Gerenciamento de favoritos (adicionar/remover).
- * - Tratamento de estados de carregamento, sucesso, erro e vazio.
- *
- * Implementa Single Source of Truth para o estado da UI e tratamento robusto de erros.
- *
- * @param getPopularMoviesUseCase UseCase para buscar filmes populares.
- * @param searchMoviesUseCase UseCase para buscar filmes por termo de pesquisa.
- * @param addToFavoritesUseCase UseCase para adicionar um filme aos favoritos (modelo básico).
- * @param addMovieDetailToFavoritesUseCase UseCase para adicionar um filme aos favoritos (detalhes completos).
- * @param removeFromFavoritesUseCase UseCase para remover um filme dos favoritos.
- * @param isFavoriteUseCase UseCase para verificar se um filme é favorito.
- * @param getFavoriteMoviesUseCase UseCase para obter a lista de filmes favoritos.
- * @param getMovieDetailsUseCase UseCase para obter detalhes completos de um filme.
+ * ViewModel para a lista de filmes com debounce na pesquisa
+ * Implementa Single Source of Truth e tratamento robusto de erros
  */
 @HiltViewModel
 class MovieListViewModel
@@ -95,25 +57,9 @@ class MovieListViewModel
         private val getFavoriteMoviesUseCase: GetFavoriteMoviesUseCase,
         private val getMovieDetailsUseCase: GetMovieDetailsUseCase,
     ) : ViewModel() {
-        companion object {
-            private const val TAG = "MovieListViewModel"
-        }
-
         private val _uiState = MutableStateFlow<MovieListUiState>(MovieListUiState.Loading)
-
-        /**
-         * O [StateFlow] que representa o estado atual da UI da lista de filmes.
-         * Os coletores devem observar este Flow para reagir às mudanças de estado.
-         */
-        var uiState: StateFlow<MovieListUiState> = _uiState.asStateFlow()
-
+        val uiState: StateFlow<MovieListUiState> = _uiState.asStateFlow()
         private val _searchQuery = MutableStateFlow("")
-
-        /**
-         * O [StateFlow] que representa a query de pesquisa atual.
-         * As atualizações neste Flow são automaticamente "debounced" para evitar
-         * chamadas excessivas à API.
-         */
         val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
         private val favoriteIds = MutableStateFlow<Set<Int>>(emptySet())
         private val loadingFavoriteIds = MutableStateFlow<Set<Int>>(emptySet())
@@ -126,6 +72,10 @@ class MovieListViewModel
             observeFavorites()
         }
 
+        /**
+         * Observa a query de pesquisa com debounce
+         * Só busca quando o usuário para de digitar por 500ms
+         */
         @OptIn(FlowPreview::class)
         private fun observeSearchQuery() {
             viewModelScope.launch {
@@ -146,6 +96,9 @@ class MovieListViewModel
             }
         }
 
+        /**
+         * Observa os favoritos para atualizar o estado isFavorite na lista
+         */
         private fun observeFavorites() {
             viewModelScope.launch {
                 try {
@@ -159,11 +112,13 @@ class MovieListViewModel
                             }
                         }
                 } catch (e: Exception) {
-                    Log.e(TAG, "observeFavorites: Erro ao observar favoritos", e)
                 }
             }
         }
 
+        /**
+         * Atualiza os estados de favorito na lista atual
+         */
         private fun updateFavoriteStates() {
             val currentState = _uiState.value
             if (currentState is MovieListUiState.Success) {
@@ -184,32 +139,20 @@ class MovieListViewModel
                     }
                 if (hasChanged) {
                     _uiState.value = currentState.copy(movies = updatedMovies)
-                } else {
                 }
-            } else {
-                // Estado atual não é Success, ignorando atualização
             }
         }
 
         /**
-         * Atualiza a query de pesquisa.
-         *
-         * A lógica de debounce e a chamada à API de pesquisa serão aplicadas automaticamente
-         * através da observação do [searchQuery].
-         *
-         * @param query A nova string de pesquisa.
+         * Atualiza a query de pesquisa
+         * O debounce será aplicado automaticamente
          */
         fun updateSearchQuery(query: String) {
             _searchQuery.value = query
         }
 
         /**
-         * Carrega filmes populares da API.
-         *
-         * Atualiza o [uiState] para [MovieListUiState.Loading] e, em seguida, para
-         * [MovieListUiState.Success] com os filmes ou [MovieListUiState.Error] em caso de falha.
-         *
-         * @param page O número da página a ser carregada. Padrão é 1.
+         * Carrega filmes populares
          */
         fun loadPopularMovies(page: Int = 1) {
             viewModelScope.launch {
@@ -233,7 +176,6 @@ class MovieListViewModel
                         }
                     }
                     .onFailure { exception ->
-                        Log.e(TAG, "loadPopularMovies: Erro - ${exception.message}", exception)
                         _uiState.update {
                             MovieListUiState.Error(
                                 exception.message ?: "Erro ao carregar filmes populares",
@@ -244,13 +186,7 @@ class MovieListViewModel
         }
 
         /**
-         * Busca filmes da API com base na query de pesquisa.
-         *
-         * Atualiza o [uiState] para [MovieListUiState.Loading] e, em seguida, para
-         * [MovieListUiState.Success] com os filmes ou [MovieListUiState.Error] em caso de falha.
-         *
-         * @param query O termo de busca.
-         * @param page O número da página a ser carregada. Padrão é 1.
+         * Busca filmes por termo
          */
         private fun searchMovies(
             query: String,
@@ -287,10 +223,7 @@ class MovieListViewModel
         }
 
         /**
-         * Carrega a próxima página de filmes, seja para filmes populares ou resultados de pesquisa.
-         *
-         * Verifica o estado atual para evitar carregamentos múltiplos e atualiza o [uiState]
-         * com os novos filmes adicionados à lista existente.
+         * Carrega próxima página (paginação)
          */
         fun loadNextPage() {
             val currentState = _uiState.value
@@ -323,7 +256,6 @@ class MovieListViewModel
                         }
                     }
                     .onFailure { exception ->
-                        Log.e(TAG, "loadNextPage: Erro ao carregar página $nextPage", exception)
                         _uiState.update {
                             currentState.copy(isLoadingMore = false)
                         }
@@ -332,9 +264,7 @@ class MovieListViewModel
         }
 
         /**
-         * Tenta recarregar os filmes com base na query atual (popular ou pesquisa).
-         *
-         * Útil para cenários de "tentar novamente" após um erro.
+         * Retry - tenta carregar novamente
          */
         fun retry() {
             val query = searchQuery.value
@@ -346,93 +276,54 @@ class MovieListViewModel
         }
 
         /**
-         * Alterna o estado de favorito de um filme.
-         *
-         * Adiciona ou remove o filme dos favoritos. Antes de adicionar, busca os detalhes
-         * completos do filme para armazená-los no Room. Durante o processo, o filme
-         * é marcado como [isLoadingFavorite] na UI.
-         *
-         * @param movie O [MovieViewObject] cujo estado de favorito será alternado.
+         * Alterna favorito de um filme
+         * Single Source of Truth: atualiza o banco, a UI observa via Flow
+         * Busca detalhes completos antes de favoritar para salvar no Room
+         * Mostra loading durante o processo
          */
         fun toggleFavorite(movie: MovieViewObject) {
             viewModelScope.launch {
                 try {
-                    markFavoriteAsLoading(movie.id)
+                    loadingFavoriteIds.update { it + movie.id }
+                    updateFavoriteStates()
                     val isFavoriteResult = isFavoriteUseCase(movie.id)
                     isFavoriteResult.onSuccess { isFavorite ->
                         if (isFavorite) {
-                            removeFavorite(movie.id)
+                            removeFromFavoritesUseCase(movie.id)
+                                .onSuccess {
+                                }
+                                .onFailure { exception ->
+                                }
                         } else {
-                            addFavorite(movie)
+                            val detailsResult = getMovieDetailsUseCase(movie.id)
+                            detailsResult.onSuccess { movieDetail ->
+                                addMovieDetailToFavoritesUseCase(movieDetail)
+                                    .onSuccess { }
+                                    .onFailure { exception ->
+                                        val domainMovie = movie.toDomain()
+                                        addToFavoritesUseCase(domainMovie)
+                                            .onFailure { }
+                                    }
+                            }.onFailure { exception ->
+                                val domainMovie = movie.toDomain()
+                                addToFavoritesUseCase(domainMovie)
+                                    .onFailure { }
+                            }
                         }
                     }.onFailure { exception ->
-                        Log.e(TAG, "toggleFavorite: Erro ao verificar se é favorito", exception)
                     }
-                    markFavoriteAsNotLoading(movie.id)
+                    loadingFavoriteIds.update { it - movie.id }
+                    updateFavoriteStates()
                 } catch (e: Exception) {
-                    Log.e(TAG, "toggleFavorite: Erro inesperado", e)
-                    markFavoriteAsNotLoading(movie.id)
+                    loadingFavoriteIds.update { it - movie.id }
+                    updateFavoriteStates()
                 }
             }
-        }
-
-        private fun markFavoriteAsLoading(movieId: Int) {
-            loadingFavoriteIds.update { it + movieId }
-            updateFavoriteStates()
-        }
-
-        private fun markFavoriteAsNotLoading(movieId: Int) {
-            loadingFavoriteIds.update { it - movieId }
-            updateFavoriteStates()
-        }
-
-        private suspend fun removeFavorite(movieId: Int) {
-            removeFromFavoritesUseCase(movieId)
-                .onSuccess {
-                }
-                .onFailure { exception ->
-                    Log.e(TAG, "toggleFavorite: Erro ao remover favorito", exception)
-                }
-        }
-
-        private suspend fun addFavorite(movie: MovieViewObject) {
-            val detailsResult = getMovieDetailsUseCase(movie.id)
-            detailsResult.onSuccess { movieDetail ->
-                addFavoriteWithDetails(movieDetail, movie)
-            }.onFailure { exception ->
-                Log.e(TAG, "toggleFavorite: Erro ao buscar detalhes, usando Movie básico", exception)
-                addFavoriteBasic(movie)
-            }
-        }
-
-        private suspend fun addFavoriteWithDetails(
-            movieDetail: com.onboarding.mychallenge.domain.model.MovieDetail,
-            movie: MovieViewObject,
-        ) {
-            addMovieDetailToFavoritesUseCase(movieDetail)
-                .onSuccess {
-                }
-                .onFailure { exception ->
-                    Log.e(TAG, "toggleFavorite: Erro ao adicionar favorito com detalhes", exception)
-                    addFavoriteBasic(movie)
-                }
-        }
-
-        private suspend fun addFavoriteBasic(movie: MovieViewObject) {
-            val domainMovie = movie.toDomain()
-            addToFavoritesUseCase(domainMovie)
-                .onFailure { fallbackException ->
-                    Log.e(TAG, "toggleFavorite: Erro ao adicionar favorito (fallback)", fallbackException)
-                }
         }
 
         /**
-         * Adiciona um filme aos favoritos pelo seu ID.
-         *
-         * Busca os detalhes completos do filme antes de adicioná-lo ao banco de dados local.
-         * Em caso de falha na obtenção dos detalhes, tenta adicionar o filme com informações básicas.
-         *
-         * @param movieId O ID do filme a ser adicionado aos favoritos.
+         * Adiciona um filme aos favoritos pelo ID
+         * Busca detalhes completos antes de favoritar para salvar no Room
          */
         fun addToFavorites(movieId: Int) {
             viewModelScope.launch {
@@ -441,62 +332,47 @@ class MovieListViewModel
                     detailsResult.onSuccess { movieDetail ->
                         addMovieDetailToFavoritesUseCase(movieDetail)
                             .onFailure { exception ->
-                                Log.e(TAG, "addToFavorites: Erro ao adicionar favorito com detalhes", exception)
                                 val currentState = _uiState.value
                                 if (currentState is MovieListUiState.Success) {
                                     val movie = currentState.movies.find { it.id == movieId }
                                     if (movie != null) {
                                         val domainMovie = movie.toDomain()
                                         addToFavoritesUseCase(domainMovie)
-                                            .onFailure { fallbackException ->
-                                                Log.e(
-                                                    TAG,
-                                                    "addToFavorites: Erro ao adicionar favorito (fallback)",
-                                                    fallbackException,
-                                                )
-                                            }
+                                            .onFailure { }
                                     }
                                 }
                             }
                     }.onFailure { exception ->
-                        Log.e(TAG, "addToFavorites: Erro ao buscar detalhes do filme $movieId", exception)
                         val currentState = _uiState.value
                         if (currentState is MovieListUiState.Success) {
                             val movie = currentState.movies.find { it.id == movieId }
                             if (movie != null) {
                                 val domainMovie = movie.toDomain()
                                 addToFavoritesUseCase(domainMovie)
-                                    .onFailure { fallbackException ->
-                                        Log.e(
-                                            TAG,
-                                            "addToFavorites: Erro ao adicionar favorito (fallback)",
-                                            fallbackException,
-                                        )
-                                    }
+                                    .onFailure { }
                             }
                         }
                     }
                 } catch (e: Exception) {
-                    Log.e(TAG, "addToFavorites: Erro inesperado", e)
                 }
             }
         }
 
         /**
-         * Remove um filme dos favoritos pelo seu ID.
-         *
-         * @param movieId O ID do filme a ser removido dos favoritos.
+         * Remove um filme dos favoritos pelo ID
          */
         fun removeFromFavorites(movieId: Int) {
             viewModelScope.launch {
                 removeFromFavoritesUseCase(movieId)
                     .onFailure { exception ->
-                        Log.e(TAG, "removeFromFavorites: Erro ao remover favorito", exception)
                     }
             }
         }
     }
 
+/**
+ * Extension function para converter MovieViewObject para Domain Model
+ */
 private fun MovieViewObject.toDomain(): com.onboarding.mychallenge.domain.model.Movie {
     return com.onboarding.mychallenge.domain.model.Movie(
         id = id,
