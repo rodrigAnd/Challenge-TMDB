@@ -1,6 +1,9 @@
 package com.onboarding.mychallenge.data.local.converter
 
+import android.util.Log
 import com.onboarding.mychallenge.domain.model.Genre
+import io.mockk.every
+import io.mockk.mockkStatic
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Before
@@ -13,6 +16,12 @@ class GenreListConverterTest {
 
     @Before
     fun setUp() {
+        // Mocka as chamadas estáticas para android.util.Log para evitar o erro "not mocked"
+        mockkStatic(Log::class)
+        // Define que qualquer chamada a Log.e(...) deve ser ignorada e retornar 0 (um Int)
+        every { Log.e(any(), any()) } returns 0
+        every { Log.e(any(), any(), any()) } returns 0 // Sobrecarga com exceção
+
         // Cria uma nova instância do converter antes de cada teste
         converter = GenreListConverter()
     }

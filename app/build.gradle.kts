@@ -4,11 +4,6 @@ plugins {
     alias(libs.plugins.hilt.android)
     alias(libs.plugins.kotlin.kapt)
     id("kotlin-parcelize")
-    // Firebase Crashlytics - descomente quando adicionar google-services.json
-    // alias(libs.plugins.google.services)
-    // alias(libs.plugins.firebase.crashlytics)
-    // JaCoCo temporariamente desabilitado devido a conflito com AGP 8.7.3
-    // id("org.gradle.jacoco")
 }
 
 android {
@@ -17,7 +12,7 @@ android {
 
     defaultConfig {
         applicationId = "com.onboarding.mychallenge"
-        minSdk = 26
+        minSdk = 27
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
