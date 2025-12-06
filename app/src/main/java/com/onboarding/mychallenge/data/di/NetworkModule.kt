@@ -25,16 +25,6 @@ import javax.inject.Singleton
 object NetworkModule {
     private const val BASE_URL = "https://api.themoviedb.org/3/"
 
-    // Token de autenticação da API TMDb (JWT)
-    private const val BEARER_TOKEN_PART1 =
-        "eyJhbGciOiJIUzI1NiJ9." +
-            "eyJhdWQiOiIyNWQ2MzQ5NGU0NDVhZjYwNDM0M2VlMjg0OTQ2MTUyMiIsIm5iZiI6" +
-            "MTY5NDE1MDcyNy41MzIsInN1YiI6IjY0ZmFiMDQ3YTM1YzhlMDBmZmQwYzI4MCIs" +
-            "InNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ"
-    private const val BEARER_TOKEN_PART2 =
-        "vyEV0eKplrHdXf_HFPKg38RN8tMp6ofP59Dnr-rDr2w"
-    private const val BEARER_TOKEN = "$BEARER_TOKEN_PART1.$BEARER_TOKEN_PART2"
-
     /**
      * Fornece uma instância singleton de [Moshi] para serialização/desserialização JSON.
      *
@@ -67,12 +57,19 @@ object NetworkModule {
     /**
      * Fornece uma instância singleton de [AuthInterceptor] para adicionar o token Bearer.
      *
+     * O token é carregado do BuildConfig, que por sua vez lê do local.properties.
+     * Isso garante que o token não seja commitado no código fonte.
+     *
      * @return Uma instância de [AuthInterceptor] com o token Bearer configurado.
      */
     @Provides
     @Singleton
     fun provideAuthInterceptor(): AuthInterceptor {
-        return AuthInterceptor(BEARER_TOKEN)
+        val bearerToken = com.onboarding.mychallenge.BuildConfig.TMDB_BEARER_TOKEN
+        require(bearerToken.isNotEmpty()) {
+            "TMDB_BEARER_TOKEN não configurado. Verifique o arquivo local.properties"
+        }
+        return AuthInterceptor(bearerToken)
     }
 
     /**

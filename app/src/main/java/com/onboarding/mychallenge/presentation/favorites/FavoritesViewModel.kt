@@ -47,7 +47,6 @@ class FavoritesViewModel
                             val isFirst = isFirstEmission
                             if (isFirst) {
                                 isFirstEmission = false
-                            } else {
                             }
                             val queryFlow =
                                 if (isFirst) {
@@ -72,10 +71,7 @@ class FavoritesViewModel
                             }
                         }
                         .distinctUntilChanged { old, new ->
-                            val isEqual = old.size == new.size && old.map { it.id }.toSet() == new.map { it.id }.toSet()
-                            if (!isEqual) {
-                            }
-                            isEqual
+                            old.size == new.size && old.map { it.id }.toSet() == new.map { it.id }.toSet()
                         }
                         .collect { filteredMovies ->
                             try {
@@ -83,7 +79,6 @@ class FavoritesViewModel
                                 if (filteredMovies.isEmpty()) {
                                     if (_uiState.value !is FavoritesUiState.Empty) {
                                         _uiState.value = FavoritesUiState.Empty
-                                    } else {
                                     }
                                 } else {
                                     val viewObjects =
@@ -120,7 +115,6 @@ class FavoritesViewModel
                                             )
                                     if (shouldUpdate) {
                                         _uiState.value = FavoritesUiState.Success(viewObjects)
-                                    } else {
                                     }
                                 }
                             } catch (e: Exception) {
@@ -142,9 +136,6 @@ class FavoritesViewModel
                     updateFavoriteStates()
                 }
             }
-        }
-
-        fun loadFavorites() {
         }
 
         fun updateSearchQuery(query: String) {
@@ -183,9 +174,7 @@ class FavoritesViewModel
                     }
                 if (hasChanged) {
                     _uiState.value = currentState.copy(movies = updatedMovies)
-                } else {
                 }
-            } else {
             }
         }
     }

@@ -1,5 +1,6 @@
 package com.onboarding.mychallenge.domain.usecase
 import com.onboarding.mychallenge.domain.model.Movie
+import com.onboarding.mychallenge.domain.model.PaginatedResult
 import com.onboarding.mychallenge.domain.repository.MovieRepository
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -29,10 +30,20 @@ class GetPopularMoviesUseCaseTest {
                     createMockMovie(1, "Movie 1"),
                     createMockMovie(2, "Movie 2"),
                 )
-            coEvery { repository.getPopularMovies(page) } returns Result.success(movies)
+            val paginatedResult =
+                PaginatedResult(
+                    data = movies,
+                    currentPage = page,
+                    totalPages = 10,
+                    totalResults = 200,
+                )
+            coEvery { repository.getPopularMovies(page) } returns Result.success(paginatedResult)
             val result = useCase(page)
             assertTrue(result.isSuccess)
-            assertEquals(movies, result.getOrNull())
+            val resultData = result.getOrNull()
+            assertEquals(movies, resultData?.data)
+            assertEquals(page, resultData?.currentPage)
+            assertEquals(10, resultData?.totalPages)
             coVerify(exactly = 1) { repository.getPopularMovies(page) }
         }
 
@@ -62,7 +73,14 @@ class GetPopularMoviesUseCaseTest {
     fun `invoke should use default page 1 when not specified`() =
         runTest {
             val movies = listOf(createMockMovie(1, "Movie 1"))
-            coEvery { repository.getPopularMovies(1) } returns Result.success(movies)
+            val paginatedResult =
+                PaginatedResult(
+                    data = movies,
+                    currentPage = 1,
+                    totalPages = 5,
+                    totalResults = 100,
+                )
+            coEvery { repository.getPopularMovies(1) } returns Result.success(paginatedResult)
             val result = useCase()
             assertTrue(result.isSuccess)
             coVerify(exactly = 1) { repository.getPopularMovies(1) }

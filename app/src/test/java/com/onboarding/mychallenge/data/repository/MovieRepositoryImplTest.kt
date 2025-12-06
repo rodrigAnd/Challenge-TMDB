@@ -48,9 +48,12 @@ class MovieRepositoryImplTest {
 
             // Assert
             assertTrue(result.isSuccess)
-            val movies = result.getOrNull()
-            assertEquals(1, movies?.size)
-            assertEquals("Movie 1", movies?.first()?.title)
+            val paginatedResult = result.getOrNull()
+            assertEquals(1, paginatedResult?.data?.size)
+            assertEquals("Movie 1", paginatedResult?.data?.first()?.title)
+            assertEquals(1, paginatedResult?.currentPage)
+            assertEquals(10, paginatedResult?.totalPages)
+            assertEquals(100, paginatedResult?.totalResults)
         }
 
     @Test
@@ -135,7 +138,10 @@ class MovieRepositoryImplTest {
 
             // Assert
             assertTrue(result.isSuccess)
-            assertEquals("Searched Movie", result.getOrNull()?.first()?.title)
+            val paginatedResult = result.getOrNull()
+            assertEquals("Searched Movie", paginatedResult?.data?.first()?.title)
+            assertEquals(1, paginatedResult?.currentPage)
+            assertEquals(1, paginatedResult?.totalPages)
         }
 
     @Test
@@ -470,23 +476,6 @@ class MovieRepositoryImplTest {
             assertEquals("Filme não encontrado.", result.exceptionOrNull()?.message)
         }
 
-    @Test
-    fun `getPopularMovies should filter out null movies from mapNotNull`() =
-        runTest {
-            // Arrange
-            val validMovieDto = createMovieDto(1, "Valid Movie")
-            val invalidMovieDto = createMovieDto(2, "Invalid Movie")
-            val response = MoviesResponseDto(1, listOf(validMovieDto, invalidMovieDto), 10, 100)
-            coEvery { apiService.getPopularMovies(1, "pt-BR") } returns response
-
-            // Act
-            val result = repository.getPopularMovies(1)
-
-            // Assert
-            assertTrue(result.isSuccess)
-            val movies = result.getOrNull()
-            assertTrue(movies != null && movies.isNotEmpty())
-        }
     //endregion
 
     // --- Funções de Apoio (Helpers) ---

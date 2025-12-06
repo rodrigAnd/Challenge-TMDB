@@ -3,6 +3,7 @@ package com.onboarding.mychallenge.presentation.movieList
 import app.cash.turbine.test
 import com.onboarding.mychallenge.domain.model.Movie
 import com.onboarding.mychallenge.domain.model.MovieDetail
+import com.onboarding.mychallenge.domain.model.PaginatedResult
 import com.onboarding.mychallenge.domain.usecase.AddMovieDetailToFavoritesUseCase
 import com.onboarding.mychallenge.domain.usecase.AddToFavoritesUseCase
 import com.onboarding.mychallenge.domain.usecase.GetFavoriteMoviesUseCase
@@ -91,9 +92,10 @@ class MovieListViewModelTest {
         runTest {
             // Arrange
             val movies = listOf(createMovie(1))
+            val paginatedResult = createPaginatedResult(movies, page = 1, totalPages = 10)
             coEvery {
                 getPopularMoviesUseCase(1)
-            } returns Result.success(movies)
+            } returns Result.success(paginatedResult)
 
             // Act
             // A ViewModel é criada e sua lógica de init é executada de forma síncrona.
@@ -120,9 +122,10 @@ class MovieListViewModelTest {
     fun `init should emit Empty when popular movies are empty`() =
         runTest {
             // Arrange
+            val emptyPaginatedResult = createPaginatedResult(emptyList(), page = 1, totalPages = 0)
             coEvery {
                 getPopularMoviesUseCase(1)
-            } returns Result.success(emptyList())
+            } returns Result.success(emptyPaginatedResult)
             // A ViewModel é criada e sua lógica de init é executada imediatamente
             // devido ao UnconfinedTestDispatcher.
             createViewModel()
@@ -177,9 +180,10 @@ class MovieListViewModelTest {
     fun `retry should reload popular movies when not in search mode`() =
         runTest {
             // Arrange
+            val emptyPaginatedResult = createPaginatedResult(emptyList(), page = 1, totalPages = 0)
             coEvery {
                 getPopularMoviesUseCase(1)
-            } returns Result.success(emptyList())
+            } returns Result.success(emptyPaginatedResult)
             createViewModel()
 
             // Act
@@ -195,12 +199,14 @@ class MovieListViewModelTest {
     fun `retry should re-run search when in search mode`() =
         runTest {
             // Arrange
+            val emptyPopularResult = createPaginatedResult(emptyList(), page = 1, totalPages = 0)
             coEvery {
                 getPopularMoviesUseCase(1)
-            } returns Result.success(emptyList())
+            } returns Result.success(emptyPopularResult)
+            val emptySearchResult = createPaginatedResult(emptyList(), page = 1, totalPages = 0)
             coEvery {
                 searchMoviesUseCase(any(), any())
-            } returns Result.success(emptyList())
+            } returns Result.success(emptySearchResult)
             createViewModel()
             viewModel.updateSearchQuery("test")
             advanceTimeBy(501)
@@ -221,13 +227,15 @@ class MovieListViewModelTest {
         runTest {
             // Arrange
             // A carga inicial resulta em um estado 'Empty'.
+            val emptyResult = createPaginatedResult(emptyList(), page = 1, totalPages = 0)
             coEvery {
                 getPopularMoviesUseCase(any())
-            } returns Result.success(emptyList())
+            } returns Result.success(emptyResult)
             val searchResults = listOf(createMovie(1, "Searched Movie"))
+            val searchPaginatedResult = createPaginatedResult(searchResults, page = 1, totalPages = 1)
             coEvery {
                 searchMoviesUseCase("test", 1)
-            } returns Result.success(searchResults)
+            } returns Result.success(searchPaginatedResult)
             createViewModel()
 
             // Act & Assert
@@ -257,12 +265,15 @@ class MovieListViewModelTest {
     fun `clearing search query should reload popular movies`() =
         runTest {
             // Arrange
+            val popularMovies = listOf(createMovie(1, "Popular"))
+            val popularPaginatedResult = createPaginatedResult(popularMovies, page = 1, totalPages = 10)
             coEvery {
                 getPopularMoviesUseCase(any())
-            } returns Result.success(listOf(createMovie(1, "Popular")))
+            } returns Result.success(popularPaginatedResult)
+            val emptyPaginatedResult = createPaginatedResult(emptyList(), page = 1, totalPages = 0)
             coEvery {
                 searchMoviesUseCase(any(), any())
-            } returns Result.success(emptyList())
+            } returns Result.success(emptyPaginatedResult)
             createViewModel()
 
             // Act
@@ -283,12 +294,14 @@ class MovieListViewModelTest {
     fun `loadNextPage should load more popular movies and append`() =
         runTest {
             // Arrange
+            val page1Movies = listOf(createMovie(1, "Page 1"))
+            val page2Movies = listOf(createMovie(2, "Page 2"))
             coEvery {
                 getPopularMoviesUseCase(1)
-            } returns Result.success(listOf(createMovie(1, "Page 1")))
+            } returns Result.success(createPaginatedResult(page1Movies, page = 1, totalPages = 2))
             coEvery {
                 getPopularMoviesUseCase(2)
-            } returns Result.success(listOf(createMovie(2, "Page 2")))
+            } returns Result.success(createPaginatedResult(page2Movies, page = 2, totalPages = 2))
             createViewModel()
 
             // Act & Assert
@@ -326,15 +339,18 @@ class MovieListViewModelTest {
     fun `loadNextPage should load more search results and append`() =
         runTest {
             // Arrange
+            val emptyPaginatedResult = createPaginatedResult(emptyList(), page = 1, totalPages = 0)
             coEvery {
                 getPopularMoviesUseCase(any())
-            } returns Result.success(emptyList())
+            } returns Result.success(emptyPaginatedResult)
+            val searchPage1 = listOf(createMovie(1, "Search P1"))
+            val searchPage2 = listOf(createMovie(2, "Search P2"))
             coEvery {
                 searchMoviesUseCase("test", 1)
-            } returns Result.success(listOf(createMovie(1, "Search P1")))
+            } returns Result.success(createPaginatedResult(searchPage1, page = 1, totalPages = 2))
             coEvery {
                 searchMoviesUseCase("test", 2)
-            } returns Result.success(listOf(createMovie(2, "Search P2")))
+            } returns Result.success(createPaginatedResult(searchPage2, page = 2, totalPages = 2))
             createViewModel()
 
             // Act
@@ -377,9 +393,10 @@ class MovieListViewModelTest {
     fun `loadNextPage should handle failure gracefully`() =
         runTest {
             // Arrange
+            val page1Movies = listOf(createMovie(1))
             coEvery {
                 getPopularMoviesUseCase(1)
-            } returns Result.success(listOf(createMovie(1)))
+            } returns Result.success(createPaginatedResult(page1Movies, page = 1, totalPages = 10))
             // A paginação para a página 2 vai falhar
             coEvery {
                 getPopularMoviesUseCase(2)
@@ -421,15 +438,16 @@ class MovieListViewModelTest {
     fun `loadNextPage should not load if already loading`() =
         runTest {
             // Arrange
+            val page1Movies = listOf(createMovie(1))
             coEvery {
                 getPopularMoviesUseCase(1)
-            } returns Result.success(listOf(createMovie(1)))
+            } returns Result.success(createPaginatedResult(page1Movies, page = 1, totalPages = 10))
             // Simula uma chamada de rede que nunca termina para manter o estado de loading
             coEvery {
                 getPopularMoviesUseCase(2)
             } coAnswers {
                 delay(Long.MAX_VALUE)
-                Result.success(emptyList())
+                Result.success(createPaginatedResult(emptyList(), page = 2, totalPages = 10))
             }
             createViewModel()
             // Garante que a carga inicial termine
@@ -453,13 +471,15 @@ class MovieListViewModelTest {
     fun `loadNextPage should not load if canLoadMore is false`() =
         runTest {
             // Arrange
+            val page1Movies = listOf(createMovie(1))
             coEvery {
                 getPopularMoviesUseCase(1)
-            } returns Result.success(listOf(createMovie(1)))
+            } returns Result.success(createPaginatedResult(page1Movies, page = 1, totalPages = 1))
             // A paginação para a página 2 retorna uma lista vazia, o que deve setar canLoadMore = false
+            val emptyPage2Result = createPaginatedResult(emptyList(), page = 2, totalPages = 1)
             coEvery {
                 getPopularMoviesUseCase(2)
-            } returns Result.success(emptyList())
+            } returns Result.success(emptyPage2Result)
             createViewModel()
             testDispatcher.scheduler.advanceUntilIdle()
 
@@ -489,9 +509,10 @@ class MovieListViewModelTest {
             // Arrange
             val movie = createMovie(1)
             val movieDetail = createMovieDetail(1)
+            val paginatedResult = createPaginatedResult(listOf(movie), page = 1, totalPages = 10)
             coEvery {
                 getPopularMoviesUseCase(1)
-            } returns Result.success(listOf(movie))
+            } returns Result.success(paginatedResult)
             coEvery {
                 getMovieDetailsUseCase(1)
             } returns Result.success(movieDetail)
@@ -521,9 +542,10 @@ class MovieListViewModelTest {
 
             // O UseCase de populares retorna o objeto original com a barra.
             val movieFromApi = createMovie(1)
+            val paginatedResult = createPaginatedResult(listOf(movieFromApi), page = 1, totalPages = 10)
             coEvery {
                 getPopularMoviesUseCase(1)
-            } returns Result.success(listOf(movieFromApi))
+            } returns Result.success(paginatedResult)
             // --- FIM DA CORREÇÃO ---
             coEvery {
                 getMovieDetailsUseCase(1)
@@ -545,9 +567,10 @@ class MovieListViewModelTest {
     fun `addToFavorites does nothing if movie not in current state on fallback`() =
         runTest {
             // Arrange
+            val emptyPaginatedResult = createPaginatedResult(emptyList(), page = 1, totalPages = 0)
             coEvery {
                 getPopularMoviesUseCase(1)
-            } returns Result.success(emptyList())
+            } returns Result.success(emptyPaginatedResult)
             coEvery {
                 getMovieDetailsUseCase(1)
             } returns Result.failure(RuntimeException())
@@ -599,5 +622,17 @@ class MovieListViewModelTest {
         revenue = 1,
         status = "s",
         homepage = "h",
+    )
+
+    private fun createPaginatedResult(
+        movies: List<Movie>,
+        page: Int = 1,
+        totalPages: Int = 10,
+        totalResults: Int = 100,
+    ) = PaginatedResult(
+        data = movies,
+        currentPage = page,
+        totalPages = totalPages,
+        totalResults = totalResults,
     )
 }

@@ -1,5 +1,6 @@
 package com.onboarding.mychallenge.domain.usecase
 import com.onboarding.mychallenge.domain.model.Movie
+import com.onboarding.mychallenge.domain.model.PaginatedResult
 import com.onboarding.mychallenge.domain.repository.MovieRepository
 import javax.inject.Inject
 
@@ -20,11 +21,11 @@ class GetPopularMoviesUseCase
          * Executa a busca de filmes populares.
          *
          * @param page O número da página a ser carregada. Padrão é 1.
-         * @return Um [Result] contendo uma lista de [Movie] em caso de sucesso,
+         * @return Um [Result] contendo um [PaginatedResult] com os filmes e informações de paginação em caso de sucesso,
          *         ou um [IllegalArgumentException] se o número da página for inválido.
          * @throws IllegalArgumentException se o número da página for menor que 1.
          */
-        suspend operator fun invoke(page: Int = 1): Result<List<Movie>> {
+        suspend operator fun invoke(page: Int = 1): Result<PaginatedResult<Movie>> {
             return if (page < 1) {
                 Result.failure(IllegalArgumentException("Page number must be greater than 0"))
             } else {

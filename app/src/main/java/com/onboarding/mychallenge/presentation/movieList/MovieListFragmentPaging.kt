@@ -1,4 +1,5 @@
 package com.onboarding.mychallenge.presentation.movieList
+
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
@@ -8,21 +9,31 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
+import androidx.paging.LoadState
+import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.onboarding.mychallenge.databinding.FragmentMovieListBinding
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
+/**
+ * Fragment para exibir lista de filmes usando Paging 3.
+ *
+ * Utiliza PagingDataAdapter que gerencia automaticamente:
+ * - Carregamento de páginas sob demanda
+ * - Estados de loading e erro
+ * - Cache de dados
+ * - Atualizações diferenciais
+ */
 @AndroidEntryPoint
-class MovieListFragment : Fragment() {
+class MovieListFragmentPaging : Fragment() {
     private var _binding: FragmentMovieListBinding? = null
     private val binding get() = _binding ?: throw IllegalStateException("Binding is null. Fragment view may have been destroyed.")
-    private val viewModel: MovieListViewModel by viewModels()
-    private lateinit var movieAdapter: MovieAdapter
+    private val viewModel: MovieListViewModelPaging by viewModels()
+    private lateinit var movieAdapter: MoviePagingAdapter
+    private lateinit var loadStateAdapter: MovieLoadStateAdapter
     private lateinit var shimmerAdapter: ShimmerAdapter
-    private var imagesLoadedCount: Int = 0
-    private var totalMoviesCount: Int = 0
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -40,15 +51,24 @@ class MovieListFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         setupRecyclerView()
         setupSearch()
-        observeUiState()
-        viewModel.loadPopularMovies()
+        observeMovies()
+        observeFavorites()
+        observeLoadState()
     }
 
     private fun setupRecyclerView() {
+        loadStateAdapter = MovieLoadStateAdapter { movieAdapter.retry() }
+
         movieAdapter =
-            MovieAdapter(
+            MoviePagingAdapter(
+                favoriteIds = emptySet(),
+                loadingFavoriteIds = emptySet(),
                 onItemClick = { movie ->
-                    val intent = android.content.Intent(requireContext(), com.onboarding.mychallenge.presentation.movieDetail.MovieDetailActivity::class.java)
+                    val intent =
+                        android.content.Intent(
+                            requireContext(),
+                            com.onboarding.mychallenge.presentation.movieDetail.MovieDetailActivity::class.java,
+                        )
                     intent.putExtra("movie_id", movie.id)
                     startActivity(intent)
                 },
@@ -60,42 +80,20 @@ class MovieListFragment : Fragment() {
                     }
                 },
                 onImageLoaded = {
-                    imagesLoadedCount++
-                    if (imagesLoadedCount == 1) {
-                        _binding?.shimmerRecyclerView?.visibility = View.GONE
-                    }
+                    _binding?.shimmerRecyclerView?.visibility = View.GONE
                 },
             )
+
         shimmerAdapter = ShimmerAdapter(itemCount = 5)
+
+        // ConcatAdapter combina o adapter principal com o LoadStateAdapter
+        val concatAdapter = ConcatAdapter(movieAdapter, loadStateAdapter)
+
         binding.moviesRecyclerView.apply {
             layoutManager = LinearLayoutManager(requireContext())
-            adapter = movieAdapter
-            addOnScrollListener(
-                object : androidx.recyclerview.widget.RecyclerView.OnScrollListener() {
-                    override fun onScrolled(
-                        recyclerView: androidx.recyclerview.widget.RecyclerView,
-                        dx: Int,
-                        dy: Int,
-                    ) {
-                        super.onScrolled(recyclerView, dx, dy)
-                        if (dy <= 0) return
-                        val layoutManager = recyclerView.layoutManager as LinearLayoutManager
-                        val lastVisibleItemPosition = layoutManager.findLastVisibleItemPosition()
-                        val totalItemCount = layoutManager.itemCount
-                        val currentState = viewModel.uiState.value
-                        if (currentState is MovieListUiState.Success && currentState.isLoadingMore) {
-                            return
-                        }
-                        if (lastVisibleItemPosition >= totalItemCount - 3 &&
-                            currentState is MovieListUiState.Success &&
-                            currentState.canLoadMore
-                        ) {
-                            viewModel.loadNextPage()
-                        }
-                    }
-                },
-            )
+            adapter = concatAdapter
         }
+
         binding.shimmerRecyclerView.apply {
             layoutManager = LinearLayoutManager(requireContext())
             adapter = shimmerAdapter
@@ -111,7 +109,7 @@ class MovieListFragment : Fragment() {
                     count: Int,
                     after: Int,
                 ) {
-                    // Intencionalmente vazio - não há ação necessária antes da mudança de texto
+                    // Intencionalmente vazio
                 }
 
                 override fun onTextChanged(
@@ -124,53 +122,63 @@ class MovieListFragment : Fragment() {
                 }
 
                 override fun afterTextChanged(s: Editable?) {
-                    // Intencionalmente vazio - não há ação necessária após a mudança de texto
+                    // Intencionalmente vazio
                 }
             },
         )
     }
 
-    private fun observeUiState() {
+    private fun observeMovies() {
         viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.uiState.collectLatest { state ->
-                if (_binding == null) {
-                    return@collectLatest
+            viewModel.movies.collectLatest { pagingData ->
+                movieAdapter.submitData(pagingData)
+            }
+        }
+    }
+
+    private fun observeFavorites() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.favoriteIds.collectLatest { favorites ->
+                viewLifecycleOwner.lifecycleScope.launch {
+                    viewModel.loadingFavoriteIds.collectLatest { loading ->
+                        movieAdapter.updateFavorites(favorites, loading)
+                    }
                 }
-                when (state) {
-                    is MovieListUiState.Loading -> {
-                        hideShimmer()
-                        hideError()
-                        hideEmpty()
+            }
+        }
+    }
+
+    private fun observeLoadState() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            movieAdapter.loadStateFlow.collectLatest { loadState ->
+                val isLoading = loadState.refresh is LoadState.Loading
+                val isError = loadState.refresh is LoadState.Error
+
+                if (isLoading) {
+                    hideError()
+                    hideEmpty()
+                } else if (isError) {
+                    hideShimmer()
+                    val error = (loadState.refresh as? LoadState.Error)?.error
+                    val errorMessage = error?.message ?: "Erro ao carregar filmes"
+                    val isConnectionError =
+                        errorMessage.contains("conexão", ignoreCase = true) ||
+                            errorMessage.contains("internet", ignoreCase = true) ||
+                            errorMessage.contains("UnknownHostException", ignoreCase = true)
+
+                    if (isConnectionError) {
+                        navigateToErrorConnection()
+                    } else {
+                        navigateToError(errorMessage)
                     }
-                    is MovieListUiState.Success -> {
-                        hideError()
-                        hideEmpty()
-                        if (state.isLoadingMore) {
-                            movieAdapter.submitList(state.movies)
-                            return@collectLatest
-                        }
-                        totalMoviesCount = state.movies.size
-                        if (_binding?.shimmerRecyclerView?.visibility == View.VISIBLE) {
-                            imagesLoadedCount = 0
-                        }
-                        movieAdapter.submitList(state.movies)
-                    }
-                    is MovieListUiState.Error -> {
-                        hideShimmer()
-                        val isConnectionError =
-                            state.message.contains("conexão", ignoreCase = true) ||
-                                state.message.contains("internet", ignoreCase = true) ||
-                                state.message.contains("conexão com a internet", ignoreCase = true)
-                        if (isConnectionError) {
-                            navigateToErrorConnection()
-                        } else {
-                            navigateToError(state.message)
-                        }
-                    }
-                    is MovieListUiState.Empty -> {
-                        hideShimmer()
-                        hideError()
+                } else {
+                    hideShimmer()
+                    hideError()
+                    // Verifica se a lista está vazia
+                    if (loadState.append.endOfPaginationReached && movieAdapter.itemCount == 0) {
                         showEmpty()
+                    } else {
+                        hideEmpty()
                     }
                 }
             }

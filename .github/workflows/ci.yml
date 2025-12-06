@@ -39,6 +39,12 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
 
+      - name: Setup local.properties with TMDB token
+        run: |
+          echo "TMDB_BEARER_TOKEN=${{ secrets.TMDB_BEARER_TOKEN }}" >> local.properties
+          echo "sdk.dir=$ANDROID_HOME" >> local.properties
+        continue-on-error: true
+
       - name: Run ktlint check
         run: ./gradlew :app:ktlintCheck :app:ktlintTestSourceSetCheck --no-daemon
 
@@ -52,10 +58,11 @@ jobs:
         run: ./gradlew :app:jacocoTestReport --no-daemon
         continue-on-error: true
 
-      # Verificação de cobertura desabilitada inicialmente
-      # Para habilitar, descomente a linha abaixo e ajuste a configuração no build.gradle.kts
+      # Verificação de cobertura mínima desabilitada - deixada como melhoria futura
+      # O relatório continua sendo gerado para acompanhamento
       # - name: Verify code coverage
       #   run: ./gradlew :app:jacocoTestCoverageVerification --no-daemon
+      #   continue-on-error: true
 
       - name: Upload JaCoCo coverage report
         uses: actions/upload-artifact@v4

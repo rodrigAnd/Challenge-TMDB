@@ -1,5 +1,6 @@
 package com.onboarding.mychallenge.domain.usecase
 import com.onboarding.mychallenge.domain.model.Movie
+import com.onboarding.mychallenge.domain.model.PaginatedResult
 import com.onboarding.mychallenge.domain.repository.MovieRepository
 import javax.inject.Inject
 
@@ -21,14 +22,14 @@ class SearchMoviesUseCase
          *
          * @param query O termo de busca. Não pode ser vazio.
          * @param page O número da página a ser carregada. Padrão é 1.
-         * @return Um [Result] contendo uma lista de [Movie] em caso de sucesso,
+         * @return Um [Result] contendo um [PaginatedResult] com os filmes e informações de paginação em caso de sucesso,
          *         ou um [IllegalArgumentException] se a query for vazia ou a página inválida.
          * @throws IllegalArgumentException se a query for vazia ou o número da página for menor que 1.
          */
         suspend operator fun invoke(
             query: String,
             page: Int = 1,
-        ): Result<List<Movie>> {
+        ): Result<PaginatedResult<Movie>> {
             return when {
                 query.isBlank() -> {
                     Result.failure(IllegalArgumentException("Search query cannot be empty"))

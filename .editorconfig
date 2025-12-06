@@ -21,3 +21,4 @@ indent_size = 2
 [*.{xml,json}]
 indent_size = 2
 
+

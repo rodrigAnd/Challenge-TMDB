@@ -3,9 +3,12 @@ import com.onboarding.mychallenge.data.local.dao.FavoriteMovieDao
 import com.onboarding.mychallenge.data.mapper.toDomain
 import com.onboarding.mychallenge.data.mapper.toEntity
 import com.onboarding.mychallenge.data.mapper.toMovieDetail
+import com.onboarding.mychallenge.data.paging.PopularMoviesPagingSource
+import com.onboarding.mychallenge.data.paging.SearchMoviesPagingSource
 import com.onboarding.mychallenge.data.remote.api.TmdbApiService
 import com.onboarding.mychallenge.domain.model.Movie
 import com.onboarding.mychallenge.domain.model.MovieDetail
+import com.onboarding.mychallenge.domain.model.PaginatedResult
 import com.onboarding.mychallenge.domain.repository.MovieRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -21,7 +24,7 @@ class MovieRepositoryImpl
         private val apiService: TmdbApiService,
         private val favoriteDao: FavoriteMovieDao,
     ) : MovieRepository {
-        override suspend fun getPopularMovies(page: Int): Result<List<Movie>> {
+        override suspend fun getPopularMovies(page: Int): Result<PaginatedResult<Movie>> {
             return try {
                 if (page < 1) {
                     return Result.failure(IllegalArgumentException("Page number must be greater than 0"))
@@ -35,7 +38,14 @@ class MovieRepositoryImpl
                             null
                         }
                     }
-                Result.success(movies)
+                val paginatedResult =
+                    PaginatedResult(
+                        data = movies,
+                        currentPage = response.page,
+                        totalPages = response.totalPages,
+                        totalResults = response.totalResults,
+                    )
+                Result.success(paginatedResult)
             } catch (e: java.net.UnknownHostException) {
                 Result.failure(Exception("Sem conexão com a internet. Verifique sua conexão e tente novamente.", e))
             } catch (e: java.net.SocketTimeoutException) {
@@ -58,7 +68,7 @@ class MovieRepositoryImpl
         override suspend fun searchMovies(
             query: String,
             page: Int,
-        ): Result<List<Movie>> {
+        ): Result<PaginatedResult<Movie>> {
             return try {
                 if (query.isBlank()) {
                     return Result.failure(IllegalArgumentException("Search query cannot be empty"))
@@ -75,7 +85,14 @@ class MovieRepositoryImpl
                             null
                         }
                     }
-                Result.success(movies)
+                val paginatedResult =
+                    PaginatedResult(
+                        data = movies,
+                        currentPage = response.page,
+                        totalPages = response.totalPages,
+                        totalResults = response.totalResults,
+                    )
+                Result.success(paginatedResult)
             } catch (e: java.net.UnknownHostException) {
                 Result.failure(Exception("Sem conexão com a internet. Verifique sua conexão e tente novamente.", e))
             } catch (e: java.net.SocketTimeoutException) {
@@ -177,5 +194,24 @@ class MovieRepositoryImpl
             } catch (e: Exception) {
                 Result.failure(Exception("Erro ao carregar detalhes do filme favorito. Tente novamente.", e))
             }
+        }
+
+        /**
+         * Retorna um PagingSource para filmes populares usando Paging 3.
+         *
+         * @return Um [PopularMoviesPagingSource] configurado para carregar filmes populares.
+         */
+        fun getPopularMoviesPagingSource(): PopularMoviesPagingSource {
+            return PopularMoviesPagingSource(apiService)
+        }
+
+        /**
+         * Retorna um PagingSource para busca de filmes usando Paging 3.
+         *
+         * @param query O termo de busca.
+         * @return Um [SearchMoviesPagingSource] configurado para buscar filmes.
+         */
+        fun getSearchMoviesPagingSource(query: String): SearchMoviesPagingSource {
+            return SearchMoviesPagingSource(apiService, query)
         }
     }
