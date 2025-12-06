@@ -3,6 +3,7 @@ import org.gradle.api.tasks.testing.logging.TestLogEvent
 import org.gradle.testing.jacoco.plugins.JacocoTaskExtension
 import org.gradle.testing.jacoco.tasks.JacocoCoverageVerification
 import org.gradle.testing.jacoco.tasks.JacocoReport
+import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
@@ -13,6 +14,19 @@ plugins {
     alias(libs.plugins.ktlint)
     id("kotlin-parcelize")
     id("jacoco")
+}
+
+// Função auxiliar para carregar propriedades do local.properties
+fun getLocalProperty(
+    key: String,
+    defaultValue: String = "",
+): String {
+    val localProperties = Properties()
+    val localPropertiesFile = rootProject.file("local.properties")
+    if (localPropertiesFile.exists()) {
+        localPropertiesFile.inputStream().use { localProperties.load(it) }
+    }
+    return localProperties.getProperty(key, defaultValue)
 }
 
 android {
@@ -27,6 +41,10 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // Carrega o token do local.properties
+        val tmdbBearerToken = getLocalProperty("TMDB_BEARER_TOKEN", "")
+        buildConfigField("String", "TMDB_BEARER_TOKEN", "\"$tmdbBearerToken\"")
     }
 
     buildTypes {
@@ -54,6 +72,7 @@ android {
     }
     buildFeatures {
         viewBinding = true
+        buildConfig = true
     }
     packaging {
         resources {
@@ -95,6 +114,9 @@ dependencies {
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
     kapt(libs.room.compiler)
+
+    // Paging
+    implementation(libs.androidx.paging.runtime)
 
     // Coroutines
     implementation(libs.kotlinx.coroutines.android)
@@ -211,15 +233,15 @@ tasks.register("jacocoTestCoverageVerification", JacocoCoverageVerification::cla
     dependsOn("jacocoTestReport")
     group = "verification"
     description = "Verifies Jacoco code coverage for the debug build."
-    // Desabilitado inicialmente - não falha o build se a cobertura não atingir o mínimo
-    // Para habilitar, descomente as regras abaixo e ajuste o mínimo conforme necessário
+    // Desabilitado - cobertura mínima deixada como melhoria futura
+    // O relatório continua sendo gerado, mas não há verificação de mínimo
     enabled = false
 
     violationRules {
         rule {
             limit {
-                // Mínimo de 70% de cobertura de instruções para aprovação
-                // Descomente quando quiser habilitar a verificação
+                // Mínimo de cobertura deixado como melhoria futura
+                // Descomente e ajuste quando quiser habilitar a verificação
                 // minimum = "0.70".toBigDecimal()
             }
         }
@@ -243,7 +265,8 @@ tasks.register("jacocoTestCoverageVerification", JacocoCoverageVerification::cla
                 )
             limit {
                 counter = "INSTRUCTION"
-                // Descomente quando quiser habilitar a verificação
+                // Mínimo de cobertura deixado como melhoria futura
+                // Descomente e ajuste quando quiser habilitar a verificação
                 // minimum = "0.70".toBigDecimal()
             }
         }

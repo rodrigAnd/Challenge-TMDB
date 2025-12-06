@@ -9,44 +9,43 @@ Aplicativo Android desenvolvido para exibir filmes populares, pesquisar filmes e
 - ✅ **Favoritar Filmes**: Marcar/desmarcar filmes como favoritos com persistência local
 - ✅ **Tela de Favoritos**: Tela dedicada para exibir apenas os filmes favoritos com busca integrada
 - ✅ **Detalhes do Filme**: Visualização completa dos detalhes de cada filme
-- ✅ **Tratamento de Erros**: Telas específicas para erros de conexão e erros genéricos com retry limitado
+- ✅ **Tratamento de Erros**: Telas específicas para erros de conexão e erros genéricos com retry
 - ✅ **Splash Screen**: Tela inicial com logo do aplicativo
 
-## 📸 Screenshots
+## 🚀 Como Executar
 
-### Tela Inicial (Splash Screen)
-![Splash Screen](docs/screenshots/splash_screen.png)
-*Tela inicial do aplicativo com logo e animação de carregamento*
+### Pré-requisitos
 
-### Lista de Filmes Populares
-![Lista de Filmes](docs/screenshots/movie_list.png)
-*Lista paginada de filmes populares com scroll infinito, exibindo título, pôster, avaliação e data de lançamento*
+- Android Studio Hedgehog | 2023.1.1 ou superior
+- JDK 17 ou superior
+- Android SDK com API Level 27+ (Android 8.1+)
+- Conexão com a internet para acessar a API do TMDb
 
-### Pesquisa de Filmes
-![Pesquisa](docs/screenshots/movie_search.png)
-*Resultados de pesquisa em tempo real com debounce de 500ms*
+### Instalação
 
-### Detalhes do Filme
-![Detalhes](docs/screenshots/movie_details.png)
-*Tela completa de detalhes do filme com sinopse, informações técnicas e opção de favoritar*
+1. Clone o repositório:
+```bash
+git clone https://github.com/seu-usuario/MyChallenge.git
+cd MyChallenge
+```
 
-### Lista de Favoritos
-![Favoritos](docs/screenshots/favorites_list.png)
-*Tela dedicada para filmes favoritos com busca integrada*
+2. Abra o projeto no Android Studio
 
-### Favoritos Vazios
-![Favoritos Vazios](docs/screenshots/favorites_empty.png)
-*Mensagem amigável quando não há filmes favoritos*
+3. Sincronize o Gradle (o Android Studio fará isso automaticamente)
 
-### Erro de Conexão
-![Erro de Conexão](docs/screenshots/error_connection.png)
-*Tela específica para erros de conexão com internet, com opção de tentar novamente*
+4. Execute o aplicativo em um dispositivo ou emulador Android
 
-### Erro Genérico
-![Erro Genérico](docs/screenshots/error_generic.png)
-*Tela de erro genérica com retry limitado a 2 tentativas*
+### Configuração da API
 
-> **Nota**: Os screenshots acima são placeholders. Para adicionar screenshots reais, execute o aplicativo e capture as telas mencionadas, salvando-as na pasta `docs/screenshots/` com os nomes indicados.
+O aplicativo utiliza um Bearer Token para autenticação com a API do TMDb. O token deve ser configurado no arquivo `local.properties` (que não é commitado no repositório):
+
+```properties
+TMDB_BEARER_TOKEN=seu_token_aqui
+```
+
+O token é carregado automaticamente pelo BuildConfig durante o build. Se o token não estiver configurado, o aplicativo lançará uma exceção informativa ao iniciar.
+
+**Nota**: O arquivo `local.properties` já está no `.gitignore` para garantir que tokens não sejam commitados acidentalmente.
 
 ## 🏗️ Arquitetura
 
@@ -101,7 +100,7 @@ O projeto utiliza **Clean Architecture** combinada com **MVVM (Model-View-ViewMo
 
 ### Core
 - **Kotlin**: Linguagem de programação
-- **Android SDK**: API Level 24+ (Android 7.0+)
+- **Android SDK**: API Level 27+ (Android 8.1+)
 
 ### Arquitetura & DI
 - **Hilt**: Injeção de dependência
@@ -134,6 +133,11 @@ O projeto utiliza **Clean Architecture** combinada com **MVVM (Model-View-ViewMo
 - **MockK**: Mocking para Kotlin
 - **Turbine**: Testes para Flow
 - **Coroutines Test**: Testes para corrotinas
+- **JaCoCo**: Cobertura de código
+
+### Code Quality
+- **ktlint**: Linter para Kotlin
+- **detekt**: Análise estática de código
 
 ## 📦 Estrutura do Projeto
 
@@ -165,32 +169,6 @@ app/src/main/java/com/onboarding/mychallenge/
     └── splash/                   # Splash Screen
 ```
 
-## 🚀 Como Executar
-
-### Pré-requisitos
-- Android Studio Hedgehog | 2023.1.1 ou superior
-- JDK 17 ou superior
-- Android SDK com API Level 24+
-- Conexão com a internet para acessar a API do TMDb
-
-### Instalação
-
-1. Clone o repositório:
-```bash
-git clone https://github.com/rodrigAnd/Challenge-TMDB.git
-cd Challenge-TMDB
-```
-
-2. Abra o projeto no Android Studio
-
-3. Sincronize o Gradle (o Android Studio fará isso automaticamente)
-
-4. Execute o aplicativo em um dispositivo ou emulador Android
-
-### Configuração da API
-
-O aplicativo utiliza um Bearer Token para autenticação com a API do TMDb. O token está configurado no arquivo `NetworkModule.kt`. Para produção, recomenda-se utilizar variáveis de ambiente ou um arquivo de configuração seguro.
-
 ## 🧪 Testes
 
 O projeto inclui testes unitários para as principais camadas:
@@ -199,18 +177,30 @@ O projeto inclui testes unitários para as principais camadas:
 
 ```bash
 # Todos os testes
-./gradlew test
+./gradlew testDebugUnitTest
 
-# Testes específicos
-./gradlew test --tests "com.onboarding.mychallenge.presentation.*"
+# Gerar relatório de cobertura
+./gradlew jacocoTestReport
+
+# Verificar cobertura mínima (desabilitado - melhoria futura)
+# ./gradlew jacocoTestCoverageVerification
 ```
 
 ### Cobertura de Testes
 
 - ✅ **ViewModels**: Testes para MovieListViewModel, FavoritesViewModel, MovieDetailViewModel
 - ✅ **UseCases**: Testes para todos os UseCases (GetPopularMovies, SearchMovies, AddToFavorites, etc.)
-- ✅ **Repository**: Testes para MovieRepositoryImpl
-- ✅ **Mappers**: Validação de conversão de dados
+- ✅ **Repository**: Testes para MovieRepositoryImpl com casos de erro HTTP, timeout e validações
+- ✅ **Mappers**: Validação de conversão de dados (MovieMapper)
+- ✅ **Interceptors**: Testes para AuthInterceptor
+- ✅ **Adapters**: Testes básicos para ShimmerAdapter
+- ✅ **Models**: Testes para propriedades computadas (MovieDetail)
+
+### Relatórios de Cobertura
+
+Os relatórios JaCoCo são gerados em:
+- HTML: `app/build/reports/jacoco/jacocoTestReport/html/index.html`
+- XML: `app/build/reports/jacoco/jacocoTestReport/jacocoTestReport.xml`
 
 ## 📋 Funcionalidades Detalhadas
 
@@ -219,12 +209,14 @@ O projeto inclui testes unitários para as principais camadas:
 - Carregamento de mais páginas ao chegar no final da lista
 - Exibição de título, pôster, avaliação média e data de lançamento
 - Shimmer effect durante carregamento de imagens
+- Tratamento de erros com mensagens amigáveis
 
 ### Pesquisa de Filmes
 - Campo de busca com debounce de 500ms
 - Busca em tempo real na API
 - Resultados paginados
 - Volta para lista popular quando busca é limpa
+- Tratamento de erros específicos (404 para "não encontrado")
 
 ### Favoritar Filmes
 - Botão de favorito em cada item da lista
@@ -242,38 +234,10 @@ O projeto inclui testes unitários para as principais camadas:
 
 ### Tratamento de Erros
 - **Erro de Conexão**: Tela específica para erros de internet com opção de retry
-- **Erro Genérico**: Tela de erro genérica com retry limitado a 2 tentativas
-- Mensagens amigáveis ao usuário
-- Logs detalhados para debugging
-
-## 🎨 Design
-
-O aplicativo segue as diretrizes do **Material Design 3** com:
-- Paleta de cores personalizada baseada em `#FB8C00`
-- Componentes Material Design (Cards, TextFields, Buttons)
-- Suporte a tema claro e escuro
-- Animações suaves e transições
-- Layout responsivo
-
-## 🔒 Segurança
-
-- Bearer Token para autenticação com API
-- Validação de dados antes de processamento
-- Tratamento seguro de erros sem expor informações sensíveis
-- Validação de entrada do usuário
-
-## 📈 Melhorias Futuras
-
-1. **Cache de Imagens**: Implementar cache local para imagens usando Coil
-2. **Offline First**: Permitir visualização de favoritos offline
-3. **Notificações**: Notificar sobre novos filmes populares
-4. **Compartilhamento**: Compartilhar filmes favoritos
-5. **Filtros**: Filtrar filmes por gênero, ano, avaliação
-6. **Modo Escuro**: Melhorar suporte ao tema escuro
-7. **Acessibilidade**: Melhorar acessibilidade com content descriptions
-8. **CI/CD**: Implementar pipeline de CI/CD com GitHub Actions
-9. **Testes de UI**: Adicionar testes instrumentados com Espresso
-10. **Analytics**: Integrar analytics para rastreamento de uso
+- **Erro Genérico**: Tela de erro genérica com retry limitado
+- Mensagens amigáveis ao usuário em português
+- Tratamento específico para diferentes códigos HTTP (401, 404, 429, 500)
+- Tratamento de UnknownHostException e SocketTimeoutException
 
 ## 📝 Decisões Técnicas e Justificativas
 
@@ -306,68 +270,195 @@ O aplicativo segue as diretrizes do **Material Design 3** com:
 - **UX**: Melhora experiência do usuário evitando buscas desnecessárias
 - **Economia**: Reduz uso de dados e recursos do servidor
 
-## 👨‍💻 Autor
+### Por que Hilt para DI?
+- **Oficial Android**: Solução oficial do Google baseada em Dagger
+- **Simplicidade**: Menos boilerplate que Dagger
+- **Integração**: Integração nativa com Android e ViewModels
+- **Testabilidade**: Facilita criação de testes com mocks
 
-Desenvolvido como parte do processo seletivo.
+## 🔄 CI/CD
 
-## 📊 Status da Entrega
+O projeto utiliza GitHub Actions para automação de CI/CD:
 
-### Conformidade: 97%
+### Workflow Principal
 
-O projeto atende a **todos os requisitos obrigatórios** do desafio. Os 3% restantes referem-se a melhorias opcionais:
+O workflow `.github/workflows/ci.yml` executa:
+1. ✅ Checkout do código
+2. ✅ Setup do JDK 17
+3. ✅ Cache de dependências Gradle
+4. ✅ Verificação de código (ktlint)
+5. ✅ Análise estática (detekt)
+6. ✅ Execução de testes unitários
+7. ✅ Geração de relatório JaCoCo
+8. ✅ Upload do relatório de cobertura
+9. ✅ Build do APK
 
-#### ✅ 100% - Requisitos Obrigatórios Atendidos
-- ✅ Todas as funcionalidades implementadas
-- ✅ Arquitetura moderna e escalável
-- ✅ Testes unitários implementados
-- ✅ Documentação completa
-- ✅ Código limpo e bem estruturado
+### Status
 
-#### ⚠️ 3% - Melhorias Opcionais Pendentes
+- ✅ CI/CD configurado e funcionando
+- ✅ Relatórios de cobertura gerados automaticamente
+- ⏳ Verificação de cobertura mínima desabilitada (melhoria futura)
 
-1. **Documentação KDoc Completa (2%)**
-   - **Status**: Estrutura pronta, comentários ainda presentes
-   - **Impacto**: Baixo - código está bem estruturado e legível
-   - **Justificativa**: Comentários inline ainda presentes em alguns arquivos. A estrutura está pronta para documentação KDoc completa, mas não impede a avaliação do projeto.
+## 🎨 Design
 
-2. **Repositório GitHub Público (2%)**
-   - **Status**: ✅ Concluído
-   - **Repositório**: [https://github.com/rodrigAnd/Challenge-TMDB](https://github.com/rodrigAnd/Challenge-TMDB)
-   - **Justificativa**: Repositório público criado e código publicado com sucesso.
+O aplicativo segue as diretrizes do **Material Design 3** com:
+- Paleta de cores personalizada baseada em `#FB8C00`
+- Componentes Material Design (Cards, TextFields, Buttons)
+- Suporte a tema claro e escuro
+- Animações suaves e transições
+- Layout responsivo
 
-3. **Ajustes Menores em Testes (1%)**
-   - **Status**: Alguns testes podem precisar de ajustes de configuração
-   - **Impacto**: Mínimo - testes estão implementados e funcionais
-   - **Justificativa**: Estrutura de testes completa, possíveis ajustes menores em configuração de ambiente de teste.
+## 🔒 Segurança
 
-### Conclusão
+- Bearer Token para autenticação com API
+- Validação de dados antes de processamento
+- Tratamento seguro de erros sem expor informações sensíveis
+- Validação de entrada do usuário
 
-O projeto está **100% funcional** e **pronto para apresentação**. Os 3% pendentes são melhorias opcionais que não afetam a funcionalidade ou a avaliação do projeto. Todos os requisitos obrigatórios do desafio foram atendidos com qualidade profissional.
+## 📈 Pontos de Melhoria Futura
 
-## 🔗 Links
+Como especialista Android, identifiquei as seguintes melhorias que podem ser implementadas para elevar ainda mais a qualidade do projeto:
 
-- **Repositório GitHub**: [https://github.com/rodrigAnd/Challenge-TMDB](https://github.com/rodrigAnd/Challenge-TMDB)
+### 1. Cobertura de Testes ⭐⭐⭐⭐⭐
 
-## 🔄 CI/CD e GitHub Actions
+**Status Atual**: Testes unitários implementados para camadas principais
 
-Este projeto utiliza GitHub Actions para automação de CI/CD, code review e validações de qualidade.
+**Melhorias Sugeridas**:
+- **Implementar verificação de cobertura mínima**: Atualmente os relatórios são gerados mas não há verificação de mínimo. Recomenda-se habilitar gradualmente até atingir pelo menos 70% de cobertura
+- **Testes de integração**: Adicionar testes que validem a integração entre camadas
+- **Testes instrumentados (UI)**: Implementar testes com Espresso para validar fluxos completos do usuário
+- **Testes de snapshot**: Considerar usar ferramentas como Shot para testes de UI
 
-### Workflows Disponíveis
+**Impacto**: Alto - Melhora confiabilidade e facilita refatoração
 
-- **PR para Develop**: Validação completa com code review automatizado e testes
-- **Merge para Master**: Validação rigorosa com cobertura mínima obrigatória de 90%
-- **Push para Develop**: Validação contínua
+### 2. Migração para Jetpack Compose ⭐⭐⭐⭐⭐
 
-### Requisitos de Cobertura
+**Status Atual**: UI implementada com Views tradicionais (XML + ViewBinding)
 
-- **Develop**: Recomendado 90% (não bloqueia)
-- **Master**: Obrigatório 90% (bloqueia merge se não atingir)
+**Melhorias Sugeridas**:
+- **Migração gradual**: Começar migrando telas simples (Splash, Error) para Compose
+- **Compose Navigation**: Substituir Navigation Component por Navigation Compose
+- **State Hoisting**: Aproveitar melhor o gerenciamento de estado reativo do Compose
+- **Material 3**: Implementar Material Design 3 completo com Compose
+- **Preview**: Aproveitar previews do Compose para desenvolvimento mais rápido
 
-### Documentação Completa
+**Benefícios**:
+- Código mais declarativo e menos boilerplate
+- Melhor performance com recomposição inteligente
+- Desenvolvimento mais rápido com previews
+- Alinhamento com futuro do Android
 
-Consulte [`.github/workflows/README.md`](.github/workflows/README.md) para detalhes completos sobre os workflows.
+**Impacto**: Muito Alto - Modernização da stack e melhor DX
 
-Consulte [`.github/BRANCH_PROTECTION.md`](.github/BRANCH_PROTECTION.md) para configuração de proteções de branch.
+### 3. Ferramentas de Performance ⭐⭐⭐⭐
+
+**Melhorias Sugeridas**:
+- **Baseline Profiles**: Implementar Baseline Profiles para melhorar startup time
+- **App Startup**: Usar App Startup library para inicialização otimizada
+- **Memory Profiling**: Integrar LeakCanary para detecção de memory leaks
+- **Performance Monitoring**: Integrar Firebase Performance Monitoring ou similar
+- **Image Optimization**: Implementar cache de imagens mais agressivo com Coil
+- **Database Indexing**: Adicionar índices no Room para queries mais rápidas
+
+**Impacto**: Alto - Melhora experiência do usuário
+
+### 4. Arquitetura e Padrões ⭐⭐⭐⭐
+
+**Melhorias Sugeridas**:
+- **Repository Pattern Enhancement**: Implementar cache strategy (Network-First, Cache-First)
+- **Error Handling**: Criar sealed classes para tipos de erro mais específicos
+- **Loading States**: Implementar estados de loading mais granulares (Initial, Refreshing, LoadingMore)
+- **Paging 3**: Migrar paginação manual para Paging 3 library
+- **WorkManager**: Implementar sincronização em background para favoritos
+
+**Impacto**: Médio-Alto - Melhora arquitetura e escalabilidade
+
+### 5. Qualidade de Código ⭐⭐⭐⭐
+
+**Melhorias Sugeridas**:
+- **Documentação KDoc**: Completar documentação KDoc em todas as classes públicas
+- **Code Review**: Implementar CodeRabbit ou similar para code review automatizado
+- **Dependency Updates**: Configurar Dependabot para atualizações automáticas
+- **Modularização**: Considerar modularização do projeto (feature modules)
+- **API Versioning**: Implementar versionamento de API para facilitar evolução
+
+**Impacto**: Médio - Melhora manutenibilidade
+
+### 6. UX/UI ⭐⭐⭐
+
+**Melhorias Sugeridas**:
+- **Empty States**: Melhorar estados vazios com ilustrações
+- **Error States**: Melhorar telas de erro com ilustrações e ações mais claras
+- **Pull to Refresh**: Implementar pull-to-refresh na lista de filmes
+- **Swipe Actions**: Implementar swipe para favoritar/desfavoritar
+- **Animations**: Adicionar mais animações e transições suaves
+- **Accessibility**: Melhorar acessibilidade com content descriptions completos
+
+**Impacto**: Médio - Melhora experiência do usuário
+
+### 7. Funcionalidades Adicionais ⭐⭐⭐
+
+**Melhorias Sugeridas**:
+- **Offline Support**: Implementar modo offline completo com cache de dados
+- **Sync Strategy**: Implementar sincronização inteligente de favoritos
+- **Filters**: Adicionar filtros por gênero, ano, avaliação
+- **Sorting**: Implementar ordenação de resultados
+- **Share**: Adicionar compartilhamento de filmes
+- **Deep Links**: Implementar deep links para navegação direta
+
+**Impacto**: Médio - Adiciona valor ao produto
+
+### 8. DevOps e Infraestrutura ⭐⭐⭐
+
+**Melhorias Sugeridas**:
+- **Fastlane**: Implementar Fastlane para automação de builds e releases
+- **Firebase App Distribution**: Configurar distribuição de builds de teste
+- **Crash Reporting**: Integrar Firebase Crashlytics
+- **Analytics**: Implementar analytics para entender uso do app
+- **Feature Flags**: Implementar feature flags para releases graduais
+- **A/B Testing**: Considerar A/B testing para melhorias de UX
+
+**Impacto**: Médio - Melhora processo de desenvolvimento e release
+
+### 9. Segurança ⭐⭐⭐⭐
+
+**Melhorias Sugeridas**:
+- **Secrets Management**: ✅ Tokens movidos para `local.properties` (implementado). Para produção, considerar Android Keystore ou variáveis de ambiente do CI/CD
+- **Certificate Pinning**: Implementar certificate pinning para API
+- **ProGuard/R8**: Configurar ProGuard/R8 para ofuscação em release
+- **Security Headers**: Validar headers de segurança nas requisições
+- **Input Validation**: Reforçar validação de inputs do usuário
+
+**Impacto**: Alto - Melhora segurança do aplicativo
+
+### 10. Internacionalização ⭐⭐
+
+**Melhorias Sugeridas**:
+- **i18n**: Implementar suporte completo a múltiplos idiomas
+- **Localization**: Adicionar strings traduzidas para diferentes idiomas
+- **RTL Support**: Implementar suporte a RTL (Right-to-Left)
+
+**Impacto**: Baixo-Médio - Expande alcance do aplicativo
+
+## 📊 Priorização de Melhorias
+
+### Curto Prazo (1-2 semanas)
+1. ✅ Aumentar cobertura de testes para 70%+
+2. ✅ Implementar LeakCanary
+3. ✅ Completar documentação KDoc
+4. ✅ Melhorar acessibilidade
+
+### Médio Prazo (1-2 meses)
+1. ✅ Migração gradual para Compose
+2. ✅ Implementar Paging 3
+3. ✅ Adicionar Baseline Profiles
+4. ✅ Implementar cache strategy
+
+### Longo Prazo (3+ meses)
+1. ✅ Modularização do projeto
+2. ✅ Implementar modo offline completo
+3. ✅ Adicionar analytics e crash reporting
+4. ✅ Implementar feature flags
 
 ## 📄 Licença
 
@@ -376,4 +467,3 @@ Este projeto foi desenvolvido exclusivamente para fins de avaliação técnica.
 ---
 
 **Nota**: Este aplicativo utiliza a API do TMDb. Certifique-se de respeitar os termos de uso da API ao utilizar este código.
-

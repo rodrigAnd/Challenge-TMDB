@@ -1,6 +1,7 @@
 package com.onboarding.mychallenge.domain.repository
 import com.onboarding.mychallenge.domain.model.Movie
 import com.onboarding.mychallenge.domain.model.MovieDetail
+import com.onboarding.mychallenge.domain.model.PaginatedResult
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -14,21 +15,23 @@ interface MovieRepository {
      * Busca filmes populares com paginação.
      *
      * @param page O número da página a ser carregada. Padrão é 1.
-     * @return Um [Result] contendo uma lista de [Movie] em caso de sucesso, ou um [Throwable] em caso de falha.
+     * @return Um [Result] contendo um [PaginatedResult] com os filmes e informações de paginação em caso de sucesso,
+     *         ou um [Throwable] em caso de falha.
      */
-    suspend fun getPopularMovies(page: Int = 1): Result<List<Movie>>
+    suspend fun getPopularMovies(page: Int = 1): Result<PaginatedResult<Movie>>
 
     /**
      * Busca filmes por um termo de pesquisa com paginação.
      *
      * @param query O termo de busca para encontrar filmes.
      * @param page O número da página a ser carregada. Padrão é 1.
-     * @return Um [Result] contendo uma lista de [Movie] em caso de sucesso, ou um [Throwable] em caso de falha.
+     * @return Um [Result] contendo um [PaginatedResult] com os filmes e informações de paginação em caso de sucesso,
+     *         ou um [Throwable] em caso de falha.
      */
     suspend fun searchMovies(
         query: String,
         page: Int = 1,
-    ): Result<List<Movie>>
+    ): Result<PaginatedResult<Movie>>
 
     /**
      * Adiciona um filme aos favoritos.

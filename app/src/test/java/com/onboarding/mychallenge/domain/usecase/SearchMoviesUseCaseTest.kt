@@ -1,5 +1,6 @@
 package com.onboarding.mychallenge.domain.usecase
 import com.onboarding.mychallenge.domain.model.Movie
+import com.onboarding.mychallenge.domain.model.PaginatedResult
 import com.onboarding.mychallenge.domain.repository.MovieRepository
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -26,10 +27,19 @@ class SearchMoviesUseCaseTest {
             val query = "batman"
             val page = 1
             val movies = listOf(createMockMovie(1, "Batman Begins"))
-            coEvery { repository.searchMovies(query.trim(), page) } returns Result.success(movies)
+            val paginatedResult =
+                PaginatedResult(
+                    data = movies,
+                    currentPage = page,
+                    totalPages = 3,
+                    totalResults = 50,
+                )
+            coEvery { repository.searchMovies(query.trim(), page) } returns Result.success(paginatedResult)
             val result = useCase(query, page)
             assertTrue(result.isSuccess)
-            assertEquals(movies, result.getOrNull())
+            val resultData = result.getOrNull()
+            assertEquals(movies, resultData?.data)
+            assertEquals(page, resultData?.currentPage)
             coVerify(exactly = 1) { repository.searchMovies(query.trim(), page) }
         }
 
@@ -59,7 +69,14 @@ class SearchMoviesUseCaseTest {
         runTest {
             val queryWithSpaces = "  batman  "
             val movies = listOf(createMockMovie(1, "Batman"))
-            coEvery { repository.searchMovies("batman", 1) } returns Result.success(movies)
+            val paginatedResult =
+                PaginatedResult(
+                    data = movies,
+                    currentPage = 1,
+                    totalPages = 1,
+                    totalResults = 1,
+                )
+            coEvery { repository.searchMovies("batman", 1) } returns Result.success(paginatedResult)
             val result = useCase(queryWithSpaces)
             assertTrue(result.isSuccess)
             coVerify(exactly = 1) { repository.searchMovies("batman", 1) }

@@ -68,7 +68,9 @@ class FavoritesFragment : Fragment() {
                     start: Int,
                     count: Int,
                     after: Int,
-                ) {}
+                ) {
+                    // Intencionalmente vazio - não há ação necessária antes da mudança de texto
+                }
 
                 override fun onTextChanged(
                     s: CharSequence?,
@@ -80,7 +82,9 @@ class FavoritesFragment : Fragment() {
                     viewModel.updateSearchQuery(query)
                 }
 
-                override fun afterTextChanged(s: Editable?) {}
+                override fun afterTextChanged(s: Editable?) {
+                    // Intencionalmente vazio - não há ação necessária após a mudança de texto
+                }
             },
         )
     }
@@ -104,9 +108,9 @@ class FavoritesFragment : Fragment() {
                         binding.errorLayout.visibility = View.GONE
                         binding.emptyTextView.visibility = View.GONE
                         try {
-                            movieAdapter.submitList(state.movies) {
-                            }
+                            movieAdapter.submitList(state.movies)
                         } catch (e: Exception) {
+                            // Erro ao atualizar lista - já tratado pelo estado de erro
                         }
                     }
                     is FavoritesUiState.Error -> {

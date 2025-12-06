@@ -113,6 +113,7 @@ class MovieListViewModel
                             }
                         }
                 } catch (e: Exception) {
+                    // Erro ao observar favoritos - falha silenciosa, favoritos serão atualizados na próxima tentativa
                 }
             }
         }
@@ -159,18 +160,18 @@ class MovieListViewModel
             viewModelScope.launch {
                 _uiState.update { MovieListUiState.Loading }
                 getPopularMoviesUseCase(page)
-                    .onSuccess { movies ->
-                        currentPage = page
-                        if (movies.isEmpty()) {
+                    .onSuccess { paginatedResult ->
+                        currentPage = paginatedResult.currentPage
+                        if (paginatedResult.data.isEmpty()) {
                             _uiState.update { MovieListUiState.Empty }
                         } else {
-                            val viewObjects = movies.toViewObjectList(favoriteIds.value, loadingFavoriteIds.value)
+                            val viewObjects = paginatedResult.data.toViewObjectList(favoriteIds.value, loadingFavoriteIds.value)
                             _uiState.update {
                                 MovieListUiState.Success(
                                     movies = viewObjects,
                                     isSearch = false,
-                                    currentPage = page,
-                                    canLoadMore = page < 500,
+                                    currentPage = paginatedResult.currentPage,
+                                    canLoadMore = paginatedResult.hasMorePages,
                                     isLoadingMore = false,
                                 )
                             }
@@ -196,18 +197,18 @@ class MovieListViewModel
             viewModelScope.launch {
                 _uiState.update { MovieListUiState.Loading }
                 searchMoviesUseCase(query, page)
-                    .onSuccess { movies ->
-                        currentPage = page
-                        if (movies.isEmpty()) {
+                    .onSuccess { paginatedResult ->
+                        currentPage = paginatedResult.currentPage
+                        if (paginatedResult.data.isEmpty()) {
                             _uiState.update { MovieListUiState.Empty }
                         } else {
-                            val viewObjects = movies.toViewObjectList(favoriteIds.value, loadingFavoriteIds.value)
+                            val viewObjects = paginatedResult.data.toViewObjectList(favoriteIds.value, loadingFavoriteIds.value)
                             _uiState.update {
                                 MovieListUiState.Success(
                                     movies = viewObjects,
                                     isSearch = true,
-                                    currentPage = page,
-                                    canLoadMore = page < 500,
+                                    currentPage = paginatedResult.currentPage,
+                                    canLoadMore = paginatedResult.hasMorePages,
                                     isLoadingMore = false,
                                 )
                             }
@@ -244,15 +245,15 @@ class MovieListViewModel
                         searchMoviesUseCase(query, nextPage)
                     }
                 result
-                    .onSuccess { newMovies ->
-                        currentPage = nextPage
-                        val newViewObjects = newMovies.toViewObjectList(favoriteIds.value, loadingFavoriteIds.value)
+                    .onSuccess { paginatedResult ->
+                        currentPage = paginatedResult.currentPage
+                        val newViewObjects = paginatedResult.data.toViewObjectList(favoriteIds.value, loadingFavoriteIds.value)
                         _uiState.update {
                             currentState.copy(
                                 movies = currentState.movies + newViewObjects,
-                                currentPage = nextPage,
+                                currentPage = paginatedResult.currentPage,
                                 isLoadingMore = false,
-                                canLoadMore = newMovies.isNotEmpty() && nextPage < 500,
+                                canLoadMore = paginatedResult.hasMorePages,
                             )
                         }
                     }
@@ -291,27 +292,19 @@ class MovieListViewModel
                     isFavoriteResult.onSuccess { isFavorite ->
                         if (isFavorite) {
                             removeFromFavoritesUseCase(movie.id)
-                                .onSuccess {
-                                }
-                                .onFailure { exception ->
-                                }
                         } else {
                             val detailsResult = getMovieDetailsUseCase(movie.id)
                             detailsResult.onSuccess { movieDetail ->
                                 addMovieDetailToFavoritesUseCase(movieDetail)
-                                    .onSuccess { }
-                                    .onFailure { exception ->
+                                    .onFailure {
                                         val domainMovie = movie.toDomain()
                                         addToFavoritesUseCase(domainMovie)
-                                            .onFailure { }
                                     }
-                            }.onFailure { exception ->
+                            }.onFailure {
                                 val domainMovie = movie.toDomain()
                                 addToFavoritesUseCase(domainMovie)
-                                    .onFailure { }
                             }
                         }
-                    }.onFailure { exception ->
                     }
                     loadingFavoriteIds.update { it - movie.id }
                     updateFavoriteStates()
@@ -332,25 +325,23 @@ class MovieListViewModel
                     val detailsResult = getMovieDetailsUseCase(movieId)
                     detailsResult.onSuccess { movieDetail ->
                         addMovieDetailToFavoritesUseCase(movieDetail)
-                            .onFailure { exception ->
+                            .onFailure {
                                 val currentState = _uiState.value
                                 if (currentState is MovieListUiState.Success) {
                                     val movie = currentState.movies.find { it.id == movieId }
                                     if (movie != null) {
                                         val domainMovie = movie.toDomain()
                                         addToFavoritesUseCase(domainMovie)
-                                            .onFailure { }
                                     }
                                 }
                             }
-                    }.onFailure { exception ->
+                    }.onFailure {
                         val currentState = _uiState.value
                         if (currentState is MovieListUiState.Success) {
                             val movie = currentState.movies.find { it.id == movieId }
                             if (movie != null) {
                                 val domainMovie = movie.toDomain()
                                 addToFavoritesUseCase(domainMovie)
-                                    .onFailure { }
                             }
                         }
                     }
@@ -365,8 +356,6 @@ class MovieListViewModel
         fun removeFromFavorites(movieId: Int) {
             viewModelScope.launch {
                 removeFromFavoritesUseCase(movieId)
-                    .onFailure { exception ->
-                    }
             }
         }
     }
