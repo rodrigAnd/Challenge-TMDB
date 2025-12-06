@@ -1,4 +1,4 @@
-package com.onboarding.mychallenge.presentation.movielist
+package com.onboarding.mychallenge.presentation.movieList
 
 import android.util.Log
 import app.cash.turbine.test
