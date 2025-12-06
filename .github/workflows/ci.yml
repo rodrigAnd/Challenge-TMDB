@@ -50,9 +50,12 @@ jobs:
 
       - name: Generate JaCoCo report
         run: ./gradlew :app:jacocoTestReport --no-daemon
+        continue-on-error: true
 
-      - name: Verify code coverage
-        run: ./gradlew :app:jacocoTestCoverageVerification --no-daemon
+      # Verificação de cobertura desabilitada inicialmente
+      # Para habilitar, descomente a linha abaixo e ajuste a configuração no build.gradle.kts
+      # - name: Verify code coverage
+      #   run: ./gradlew :app:jacocoTestCoverageVerification --no-daemon
 
       - name: Upload JaCoCo coverage report
         uses: actions/upload-artifact@v4

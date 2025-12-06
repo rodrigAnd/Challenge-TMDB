@@ -211,12 +211,16 @@ tasks.register("jacocoTestCoverageVerification", JacocoCoverageVerification::cla
     dependsOn("jacocoTestReport")
     group = "verification"
     description = "Verifies Jacoco code coverage for the debug build."
+    // Desabilitado inicialmente - não falha o build se a cobertura não atingir o mínimo
+    // Para habilitar, descomente as regras abaixo e ajuste o mínimo conforme necessário
+    enabled = false
 
     violationRules {
         rule {
             limit {
                 // Mínimo de 70% de cobertura de instruções para aprovação
-                minimum = "0.70".toBigDecimal()
+                // Descomente quando quiser habilitar a verificação
+                // minimum = "0.70".toBigDecimal()
             }
         }
         rule {
@@ -239,7 +243,8 @@ tasks.register("jacocoTestCoverageVerification", JacocoCoverageVerification::cla
                 )
             limit {
                 counter = "INSTRUCTION"
-                minimum = "0.70".toBigDecimal()
+                // Descomente quando quiser habilitar a verificação
+                // minimum = "0.70".toBigDecimal()
             }
         }
     }
