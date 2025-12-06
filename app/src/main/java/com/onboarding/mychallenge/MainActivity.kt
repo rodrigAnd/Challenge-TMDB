@@ -1,5 +1,4 @@
 package com.onboarding.mychallenge
-
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.fragment.NavHostFragment
@@ -30,7 +29,6 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
         setupBottomNavigation()
     }
 
@@ -43,7 +41,6 @@ class MainActivity : AppCompatActivity() {
             supportFragmentManager
                 .findFragmentById(R.id.navHostFragment) as NavHostFragment
         val navController = navHostFragment.navController
-
         binding.bottomNavigationView.setupWithNavController(navController)
     }
 }

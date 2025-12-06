@@ -1,8 +1,6 @@
 package com.onboarding.mychallenge.domain.usecase
 import com.onboarding.mychallenge.domain.model.Movie
 import com.onboarding.mychallenge.domain.repository.MovieRepository
-import io.mockk.coEvery
-import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.flow.flowOf
@@ -66,4 +64,3 @@ class GetFavoriteMoviesUseCaseTest {
         )
     }
 }
-

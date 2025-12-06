@@ -24,7 +24,6 @@ import org.junit.Test
 
 @ExperimentalCoroutinesApi
 class MovieDetailViewModelTest {
-
     // Dispatcher de teste para controlar a execução das corrotinas
     private val testDispatcher = StandardTestDispatcher()
 
@@ -58,141 +57,148 @@ class MovieDetailViewModelTest {
     }
 
     @Test
-    fun `initial state should be Loading`() = runTest {
-        // Assert
-        // Verifica se o estado inicial emitido pela ViewModel é Loading
-        assertEquals(MovieDetailUiState.Loading, viewModel.uiState.value)
-    }
-
-    @Test
-    fun `loadMovieDetails should emit Success state when use case returns success`() = runTest {
-        // Arrange
-        val movieId = 123
-        val mockMovieDetail = createMockMovieDetail(movieId, "Filme de Teste")
-
-        // Configura o mock: quando o use case for chamado, deve retornar sucesso
-        coEvery { getMovieDetailsUseCase(movieId) } returns Result.success(mockMovieDetail)
-
-        // Act & Assert
-        viewModel.uiState.test {
-            // 1. O estado inicial já é Loading, vamos consumi-lo
-            assertEquals(MovieDetailUiState.Loading, awaitItem())
-
-            // 2. Chama a função que queremos testar
-            viewModel.loadMovieDetails(movieId)
-
-            // --- INÍCIO DA CORREÇÃO ---
-            // 3. A ViewModel irá diretamente para o estado de Sucesso.
-            // Não verificamos o Loading intermediário, pois ele é otimizado e não garantido.
-            val successState = awaitItem()
-            assertTrue("O estado deveria ser Success", successState is MovieDetailUiState.Success)
-            assertEquals(mockMovieDetail, (successState as MovieDetailUiState.Success).movieDetail)
-            // --- FIM DA CORREÇÃO ---
-
-            // Garante que não há mais emissões de estado
-            ensureAllEventsConsumed()
+    fun `initial state should be Loading`() =
+        runTest {
+            // Assert
+            // Verifica se o estado inicial emitido pela ViewModel é Loading
+            assertEquals(MovieDetailUiState.Loading, viewModel.uiState.value)
         }
 
-        // Verifica se o use case foi chamado exatamente uma vez com o ID correto
-        coVerify(exactly = 1) { getMovieDetailsUseCase(movieId) }
-    }
-
     @Test
-    fun `loadMovieDetails should emit Error state when use case returns failure`() = runTest {
-        // Arrange
-        val movieId = 456
-        val errorMessage = "Erro de rede simulado"
+    fun `loadMovieDetails should emit Success state when use case returns success`() =
+        runTest {
+            // Arrange
+            val movieId = 123
+            val mockMovieDetail = createMockMovieDetail(movieId, "Filme de Teste")
 
-        // Configura o mock: quando o use case for chamado, deve retornar uma falha
-        coEvery { getMovieDetailsUseCase(movieId) } returns Result.failure(Exception(errorMessage))
+            // Configura o mock: quando o use case for chamado, deve retornar sucesso
+            coEvery { getMovieDetailsUseCase(movieId) } returns Result.success(mockMovieDetail)
 
-        // Act & Assert
-        viewModel.uiState.test {
-            // 1. Consome o estado inicial de Loading
-            assertEquals(MovieDetailUiState.Loading, awaitItem())
+            // Act & Assert
+            viewModel.uiState.test {
+                // 1. O estado inicial já é Loading, vamos consumi-lo
+                assertEquals(MovieDetailUiState.Loading, awaitItem())
 
-            // 2. Chama a função
-            viewModel.loadMovieDetails(movieId)
+                // 2. Chama a função que queremos testar
+                viewModel.loadMovieDetails(movieId)
 
-            // --- INÍCIO DA CORREÇÃO ---
-            // 3. A ViewModel irá diretamente para o estado de Erro.
-            // Não verificamos mais o Loading intermediário.
-            val errorState = awaitItem()
-            assertTrue("O estado deveria ser Error", errorState is MovieDetailUiState.Error)
-            assertEquals(errorMessage, (errorState as MovieDetailUiState.Error).message)
-            // --- FIM DA CORREÇÃO ---
+                // --- INÍCIO DA CORREÇÃO ---
+                // 3. A ViewModel irá diretamente para o estado de Sucesso.
+                // Não verificamos o Loading intermediário, pois ele é otimizado e não garantido.
+                val successState = awaitItem()
+                assertTrue("O estado deveria ser Success", successState is MovieDetailUiState.Success)
+                assertEquals(mockMovieDetail, (successState as MovieDetailUiState.Success).movieDetail)
+                // --- FIM DA CORREÇÃO ---
 
-            // Garante que não há mais emissões
-            ensureAllEventsConsumed()
+                // Garante que não há mais emissões de estado
+                ensureAllEventsConsumed()
+            }
+
+            // Verifica se o use case foi chamado exatamente uma vez com o ID correto
+            coVerify(exactly = 1) { getMovieDetailsUseCase(movieId) }
         }
 
-        // Verifica se o use case foi chamado
-        coVerify(exactly = 1) { getMovieDetailsUseCase(movieId) }
-    }
-
     @Test
-    fun `loadMovieDetails should emit Error state with default message on null exception message`() = runTest {
-        // Arrange
-        val movieId = 789
+    fun `loadMovieDetails should emit Error state when use case returns failure`() =
+        runTest {
+            // Arrange
+            val movieId = 456
+            val errorMessage = "Erro de rede simulado"
 
-        // Configura o mock para retornar uma falha com exceção sem mensagem
-        coEvery { getMovieDetailsUseCase(movieId) } returns Result.failure(Exception(null as String?))
+            // Configura o mock: quando o use case for chamado, deve retornar uma falha
+            coEvery { getMovieDetailsUseCase(movieId) } returns Result.failure(Exception(errorMessage))
 
-        // Act & Assert
-        viewModel.uiState.test {
-            // 1. Consome o estado inicial de Loading
-            assertEquals(MovieDetailUiState.Loading, awaitItem())
+            // Act & Assert
+            viewModel.uiState.test {
+                // 1. Consome o estado inicial de Loading
+                assertEquals(MovieDetailUiState.Loading, awaitItem())
 
-            // 2. Chama a função que queremos testar
-            viewModel.loadMovieDetails(movieId)
+                // 2. Chama a função
+                viewModel.loadMovieDetails(movieId)
 
-            // --- INÍCIO DA CORREÇÃO ---
-            // 3. A ViewModel irá diretamente para o estado de Erro.
-            // Não verificamos o Loading intermediário, pois ele pode ser otimizado.
-            val errorState = awaitItem()
-            assertTrue(errorState is MovieDetailUiState.Error)
-            assertEquals("Erro ao carregar detalhes do filme", (errorState as MovieDetailUiState.Error).message)
+                // --- INÍCIO DA CORREÇÃO ---
+                // 3. A ViewModel irá diretamente para o estado de Erro.
+                // Não verificamos mais o Loading intermediário.
+                val errorState = awaitItem()
+                assertTrue("O estado deveria ser Error", errorState is MovieDetailUiState.Error)
+                assertEquals(errorMessage, (errorState as MovieDetailUiState.Error).message)
+                // --- FIM DA CORREÇÃO ---
 
-            // 4. Garante que não há mais emissões de estado
-            ensureAllEventsConsumed()
-            // --- FIM DA CORREÇÃO ---
+                // Garante que não há mais emissões
+                ensureAllEventsConsumed()
+            }
+
+            // Verifica se o use case foi chamado
+            coVerify(exactly = 1) { getMovieDetailsUseCase(movieId) }
         }
 
-        // Verifica se o use case foi chamado
-        coVerify(exactly = 1) { getMovieDetailsUseCase(movieId) }
-    }
+    @Test
+    fun `loadMovieDetails should emit Error state with default message on null exception message`() =
+        runTest {
+            // Arrange
+            val movieId = 789
 
+            // Configura o mock para retornar uma falha com exceção sem mensagem
+            coEvery { getMovieDetailsUseCase(movieId) } returns Result.failure(Exception(null as String?))
+
+            // Act & Assert
+            viewModel.uiState.test {
+                // 1. Consome o estado inicial de Loading
+                assertEquals(MovieDetailUiState.Loading, awaitItem())
+
+                // 2. Chama a função que queremos testar
+                viewModel.loadMovieDetails(movieId)
+
+                // --- INÍCIO DA CORREÇÃO ---
+                // 3. A ViewModel irá diretamente para o estado de Erro.
+                // Não verificamos o Loading intermediário, pois ele pode ser otimizado.
+                val errorState = awaitItem()
+                assertTrue(errorState is MovieDetailUiState.Error)
+                assertEquals("Erro ao carregar detalhes do filme", (errorState as MovieDetailUiState.Error).message)
+
+                // 4. Garante que não há mais emissões de estado
+                ensureAllEventsConsumed()
+                // --- FIM DA CORREÇÃO ---
+            }
+
+            // Verifica se o use case foi chamado
+            coVerify(exactly = 1) { getMovieDetailsUseCase(movieId) }
+        }
 
     @Test
-    fun `resetState should emit Loading state`() = runTest {
-        // Arrange: Coloca a ViewModel em um estado de Sucesso primeiro para garantir a transição.
-        val mockMovieDetail = createMockMovieDetail(1, "Filme Qualquer")
-        coEvery { getMovieDetailsUseCase(1) } returns Result.success(mockMovieDetail)
-        viewModel.loadMovieDetails(1)
+    fun `resetState should emit Loading state`() =
+        runTest {
+            // Arrange: Coloca a ViewModel em um estado de Sucesso primeiro para garantir a transição.
+            val mockMovieDetail = createMockMovieDetail(1, "Filme Qualquer")
+            coEvery { getMovieDetailsUseCase(1) } returns Result.success(mockMovieDetail)
+            viewModel.loadMovieDetails(1)
 
-        // Garante que a corrotina de loadMovieDetails termine antes de prosseguirmos.
-        // Isso assegura que o estado da ViewModel é 'Success' antes do bloco de teste começar.
-        testDispatcher.scheduler.advanceUntilIdle()
+            // Garante que a corrotina de loadMovieDetails termine antes de prosseguirmos.
+            // Isso assegura que o estado da ViewModel é 'Success' antes do bloco de teste começar.
+            testDispatcher.scheduler.advanceUntilIdle()
 
-        viewModel.uiState.test {
-            // 1. O estado atual já é 'Success'. Vamos consumi-lo.
-            val initialState = awaitItem()
-            assertTrue("O estado inicial deveria ser Success", initialState is MovieDetailUiState.Success)
+            viewModel.uiState.test {
+                // 1. O estado atual já é 'Success'. Vamos consumi-lo.
+                val initialState = awaitItem()
+                assertTrue("O estado inicial deveria ser Success", initialState is MovieDetailUiState.Success)
 
-            // Act: Chama a função que queremos testar.
-            viewModel.resetState()
+                // Act: Chama a função que queremos testar.
+                viewModel.resetState()
 
-            // Assert: Verifica se o novo estado emitido é 'Loading', como esperado.
-            assertEquals(MovieDetailUiState.Loading, awaitItem())
+                // Assert: Verifica se o novo estado emitido é 'Loading', como esperado.
+                assertEquals(MovieDetailUiState.Loading, awaitItem())
 
-            // Garante que não há mais emissões de estado
-            ensureAllEventsConsumed()
+                // Garante que não há mais emissões de estado
+                ensureAllEventsConsumed()
+            }
         }
-    }
 }
 
 // --- Função de Apoio (Helper) ---
-private fun createMockMovieDetail(id: Int, title: String): MovieDetail {
+private fun createMockMovieDetail(
+    id: Int,
+    title: String,
+): MovieDetail {
     return MovieDetail(
         id = id,
         title = title,
@@ -209,6 +215,6 @@ private fun createMockMovieDetail(id: Int, title: String): MovieDetail {
         budget = 100000000L,
         revenue = 500000000L,
         status = "Released",
-        homepage = "http://example.com"
+        homepage = "http://example.com",
     )
 }

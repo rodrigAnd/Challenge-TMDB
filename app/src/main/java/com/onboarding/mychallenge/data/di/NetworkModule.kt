@@ -30,7 +30,7 @@ object NetworkModule {
         "eyJhbGciOiJIUzI1NiJ9." +
             "eyJhdWQiOiIyNWQ2MzQ5NGU0NDVhZjYwNDM0M2VlMjg0OTQ2MTUyMiIsIm5iZiI6" +
             "MTY5NDE1MDcyNy41MzIsInN1YiI6IjY0ZmFiMDQ3YTM1YzhlMDBmZmQwYzI4MCIs" +
-            "InNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ" // JWT token part 1
+            "InNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ"
     private const val BEARER_TOKEN_PART2 =
         "vyEV0eKplrHdXf_HFPKg38RN8tMp6ofP59Dnr-rDr2w"
     private const val BEARER_TOKEN = "$BEARER_TOKEN_PART1.$BEARER_TOKEN_PART2"

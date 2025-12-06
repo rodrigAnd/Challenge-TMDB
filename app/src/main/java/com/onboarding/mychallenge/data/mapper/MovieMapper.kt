@@ -1,5 +1,4 @@
 package com.onboarding.mychallenge.data.mapper
-
 import com.onboarding.mychallenge.data.local.entity.FavoriteMovieEntity
 import com.onboarding.mychallenge.data.remote.dto.GenreDto
 import com.onboarding.mychallenge.data.remote.dto.MovieDetailDto
@@ -12,14 +11,7 @@ import com.squareup.moshi.Types
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 
 /**
- * Mapper para converter entre DTOs, Entities e Models de domínio
- * 
- * Responsabilidade: Converter dados da camada Data para Domain
- * Nunca expor DTOs ou Entities diretamente para outras camadas
- */
-
-/**
- * Converte MovieDto (API) para Movie (Domain)
+ * Converte um objeto [MovieDto] da camada de rede para um objeto [Movie] da camada de domínio.
  */
 fun MovieDto.toDomain(): Movie {
     return Movie(
@@ -31,7 +23,7 @@ fun MovieDto.toDomain(): Movie {
         releaseDate = releaseDate,
         voteAverage = voteAverage,
         voteCount = voteCount,
-        popularity = popularity
+        popularity = popularity,
     )
 }
 
@@ -48,7 +40,7 @@ fun FavoriteMovieEntity.toDomain(): Movie {
         releaseDate = releaseDate,
         voteAverage = voteAverage,
         voteCount = voteCount,
-        popularity = popularity
+        popularity = popularity,
     )
 }
 
@@ -56,19 +48,20 @@ fun FavoriteMovieEntity.toDomain(): Movie {
  * Converte FavoriteMovieEntity (Room) para MovieDetail (Domain)
  */
 fun FavoriteMovieEntity.toMovieDetail(): MovieDetail {
-    val genres = genresJson?.let { json ->
-        try {
-            val moshi = Moshi.Builder()
-                .addLast(KotlinJsonAdapterFactory())
-                .build()
-            val listType = Types.newParameterizedType(List::class.java, Genre::class.java)
-            val adapter = moshi.adapter<List<Genre>>(listType)
-            adapter.fromJson(json) ?: emptyList()
-        } catch (e: Exception) {
-            emptyList()
-        }
-    } ?: emptyList()
-    
+    val genres =
+        genresJson?.let { json ->
+            try {
+                val moshi =
+                    Moshi.Builder()
+                        .addLast(KotlinJsonAdapterFactory())
+                        .build()
+                val listType = Types.newParameterizedType(List::class.java, Genre::class.java)
+                val adapter = moshi.adapter<List<Genre>>(listType)
+                adapter.fromJson(json) ?: emptyList()
+            } catch (e: Exception) {
+                emptyList()
+            }
+        } ?: emptyList()
     return MovieDetail(
         id = id,
         title = title,
@@ -85,7 +78,7 @@ fun FavoriteMovieEntity.toMovieDetail(): MovieDetail {
         budget = budget,
         revenue = revenue,
         status = status ?: "Unknown",
-        homepage = homepage
+        homepage = homepage,
     )
 }
 
@@ -102,7 +95,7 @@ fun Movie.toEntity(): FavoriteMovieEntity {
         releaseDate = releaseDate,
         voteAverage = voteAverage,
         voteCount = voteCount,
-        popularity = popularity
+        popularity = popularity,
     )
 }
 
@@ -110,17 +103,18 @@ fun Movie.toEntity(): FavoriteMovieEntity {
  * Converte MovieDetail (Domain) para FavoriteMovieEntity (Room)
  */
 fun MovieDetail.toEntity(): FavoriteMovieEntity {
-    val genresJson = try {
-        val moshi = Moshi.Builder()
-            .addLast(KotlinJsonAdapterFactory())
-            .build()
-        val listType = Types.newParameterizedType(List::class.java, Genre::class.java)
-        val adapter = moshi.adapter<List<Genre>>(listType)
-        adapter.toJson(genres)
-    } catch (e: Exception) {
-        null
-    }
-    
+    val genresJson =
+        try {
+            val moshi =
+                Moshi.Builder()
+                    .addLast(KotlinJsonAdapterFactory())
+                    .build()
+            val listType = Types.newParameterizedType(List::class.java, Genre::class.java)
+            val adapter = moshi.adapter<List<Genre>>(listType)
+            adapter.toJson(genres)
+        } catch (e: Exception) {
+            null
+        }
     return FavoriteMovieEntity(
         id = id,
         title = title,
@@ -137,7 +131,7 @@ fun MovieDetail.toEntity(): FavoriteMovieEntity {
         budget = budget,
         revenue = revenue,
         status = status,
-        homepage = homepage
+        homepage = homepage,
     )
 }
 
@@ -161,7 +155,7 @@ fun MovieDetailDto.toDomain(): MovieDetail {
         budget = budget,
         revenue = revenue,
         status = status,
-        homepage = homepage
+        homepage = homepage,
     )
 }
 
@@ -171,7 +165,6 @@ fun MovieDetailDto.toDomain(): MovieDetail {
 fun GenreDto.toDomain(): Genre {
     return Genre(
         id = id,
-        name = name
+        name = name,
     )
 }
-

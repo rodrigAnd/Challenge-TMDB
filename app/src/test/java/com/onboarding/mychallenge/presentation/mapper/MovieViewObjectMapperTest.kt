@@ -1,27 +1,26 @@
 package com.onboarding.mychallenge.presentation.mapper
 import com.onboarding.mychallenge.domain.model.Movie
-import com.onboarding.mychallenge.presentation.movieList.MovieViewObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class MovieViewObjectMapperTest {
-
     @Test
     fun `toViewObject should map Movie domain object to MovieViewObject correctly`() {
         // Arrange (Organizar)
-        val movieDomain = Movie(
-            id = 123,
-            title = "Filme de Teste",
-            overview = "Overview",
-            posterPath = "/poster.jpg",
-            backdropPath = "/backdrop.jpg",
-            releaseDate = "2024-07-26",
-            voteAverage = 8.5,
-            voteCount = 100,
-            popularity = 100.0,
-        )
+        val movieDomain =
+            Movie(
+                id = 123,
+                title = "Filme de Teste",
+                overview = "Overview",
+                posterPath = "/poster.jpg",
+                backdropPath = "/backdrop.jpg",
+                releaseDate = "2024-07-26",
+                voteAverage = 8.5,
+                voteCount = 100,
+                popularity = 100.0,
+            )
 
         // Act (Agir)
         val viewObject = movieDomain.toViewObject()
@@ -120,4 +119,3 @@ class MovieViewObjectMapperTest {
         )
     }
 }
-

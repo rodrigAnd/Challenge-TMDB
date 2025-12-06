@@ -1,5 +1,5 @@
 package com.onboarding.mychallenge
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class ExampleUnitTest {

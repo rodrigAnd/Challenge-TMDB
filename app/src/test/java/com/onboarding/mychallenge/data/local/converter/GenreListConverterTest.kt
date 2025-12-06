@@ -10,7 +10,6 @@ import org.junit.Before
 import org.junit.Test
 
 class GenreListConverterTest {
-
     // A instância da classe que vamos testar
     private lateinit var converter: GenreListConverter
 
@@ -30,10 +29,11 @@ class GenreListConverterTest {
     fun `fromGenreList should return a valid JSON string for a non-empty list`() {
         // Arrange (Organizar)
         // 1. Cria uma lista de gêneros de exemplo
-        val genres = listOf(
-            Genre(id = 28, name = "Action"),
-            Genre(id = 12, name = "Adventure")
-        )
+        val genres =
+            listOf(
+                Genre(id = 28, name = "Action"),
+                Genre(id = 12, name = "Adventure"),
+            )
         // 2. Define a string JSON que esperamos como resultado
         val expectedJson = """[{"id":28,"name":"Action"},{"id":12,"name":"Adventure"}]"""
 
@@ -77,10 +77,11 @@ class GenreListConverterTest {
         // 1. A string JSON que simulamos ter vindo do banco de dados
         val jsonString = """[{"id":28,"name":"Action"},{"id":12,"name":"Adventure"}]"""
         // 2. A lista de gêneros que esperamos como resultado
-        val expectedGenres = listOf(
-            Genre(id = 28, name = "Action"),
-            Genre(id = 12, name = "Adventure")
-        )
+        val expectedGenres =
+            listOf(
+                Genre(id = 28, name = "Action"),
+                Genre(id = 12, name = "Adventure"),
+            )
 
         // Act
         // 3. Chama a função de conversão
@@ -103,8 +104,6 @@ class GenreListConverterTest {
         // Assert
         assertEquals(expectedGenres, genresResult)
     }
-
-
 
     @Test
     fun `toGenreList should return null for a null JSON string`() {
@@ -132,4 +131,3 @@ class GenreListConverterTest {
         assertNull("A conversão de JSON inválido deveria resultar em nulo", genresResult)
     }
 }
-

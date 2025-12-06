@@ -3,6 +3,8 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.hilt.android)
     alias(libs.plugins.kotlin.kapt)
+    alias(libs.plugins.detekt)
+    alias(libs.plugins.ktlint)
     id("kotlin-parcelize")
 }
 
@@ -25,7 +27,7 @@ android {
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
+                "proguard-rules.pro",
             )
         }
     }
@@ -35,9 +37,10 @@ android {
     }
     kotlinOptions {
         jvmTarget = "17"
-        freeCompilerArgs += listOf(
-            "-opt-in=kotlin.RequiresOptIn"
-        )
+        freeCompilerArgs +=
+            listOf(
+                "-opt-in=kotlin.RequiresOptIn",
+            )
     }
     buildFeatures {
         viewBinding = true
@@ -94,4 +97,24 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     testImplementation(libs.kotlin.test)
+}
+
+detekt {
+    buildUponDefaultConfig = true
+    allRules = false
+
+    val detektConfigFile = file("$projectDir/../config/detekt/detekt.yml")
+    if (detektConfigFile.exists()) {
+        config.setFrom(detektConfigFile)
+    }
+
+    val baselineFile = file("$projectDir/../config/detekt/baseline.xml")
+    if (baselineFile.exists()) {
+        baseline = baselineFile
+    }
+
+    // Configurar JVM target para evitar erro com Java > 20
+    tasks.withType<io.gitlab.arturbosch.detekt.Detekt>().configureEach {
+        jvmTarget = "17"
+    }
 }
