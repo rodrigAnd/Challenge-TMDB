@@ -2,15 +2,105 @@
 
 Aplicativo Android desenvolvido para exibir filmes populares, pesquisar filmes e gerenciar favoritos utilizando a API do TMDb (The Movie Database).
 
-## 📱 Funcionalidades
+## 📸 Screenshots / Demo
 
-- ✅ **Listagem de Filmes Populares**: Exibe uma lista paginada de filmes populares obtidos da API do TMDb
-- ✅ **Pesquisa de Filmes**: Permite pesquisar filmes específicos com busca em tempo real (debounce de 500ms)
-- ✅ **Favoritar Filmes**: Marcar/desmarcar filmes como favoritos com persistência local
-- ✅ **Tela de Favoritos**: Tela dedicada para exibir apenas os filmes favoritos com busca integrada
-- ✅ **Detalhes do Filme**: Visualização completa dos detalhes de cada filme
-- ✅ **Tratamento de Erros**: Telas específicas para erros de conexão e erros genéricos com retry
-- ✅ **Splash Screen**: Tela inicial com logo do aplicativo
+<!-- Adicione aqui screenshots ou GIFs das telas do aplicativo -->
+<!-- 
+Exemplo:
+![Lista de Filmes](screenshots/movie_list.png)
+![Pesquisa](screenshots/search.png)
+![Favoritos](screenshots/favorites.png)
+![Detalhes](screenshots/movie_detail.png)
+![Tratamento de Erros](screenshots/error.png)
+-->
+
+**Espaço reservado para screenshots/GIFs das telas:**
+- 📱 Tela de Listagem de Filmes Populares
+- 🔍 Tela de Pesquisa de Filmes
+- ⭐ Tela de Favoritos
+- 📄 Tela de Detalhes do Filme
+- ⚠️ Telas de Tratamento de Erros
+- 🎬 Splash Screen
+
+## 📋 Requisitos do Desafio - Checklist
+
+### ✅ Funcionalidades Obrigatórias
+
+- ✅ **Listagem de Filmes Populares**: 
+  - Lista paginada de filmes populares obtidos da API do TMDb
+  - Implementada com **Paging 3** para paginação eficiente
+  - Exibe título, imagem do pôster e avaliação média
+  - Scroll infinito com carregamento automático
+
+- ✅ **Pesquisa de Filmes**: 
+  - Campo de busca para pesquisar filmes específicos
+  - Busca em tempo real na API com debounce de 500ms
+  - Resultados paginados exibidos em tempo real
+  - Volta para lista popular quando busca é limpa
+
+- ✅ **Favoritar Filmes**: 
+  - Usuário pode marcar/desmarcar filmes como favoritos
+  - Filmes favoritos armazenados localmente no dispositivo usando Room
+  - Tela separada para exibir apenas os filmes favoritos
+  - Busca integrada na tela de favoritos
+  - Sincronização automática entre telas via Flow
+
+- ✅ **Tratamento de Erros**: 
+  - Lida com erros de rede (UnknownHostException, SocketTimeoutException)
+  - Exibe mensagens amigáveis ao usuário em português
+  - Telas específicas para diferentes tipos de erro:
+    - Erro de conexão com internet
+    - Erro genérico com retry
+  - Tratamento específico para códigos HTTP (401, 404, 429, 500)
+
+- ✅ **Testes Unitários**: 
+  - Testes para camadas de lógica (ViewModels, UseCases)
+  - Testes para integração com API (Repository)
+  - Cobertura de código com JaCoCo
+  - Relatórios de cobertura gerados automaticamente
+
+### ✅ Requisitos Técnicos
+
+- ✅ **Arquitetura**: 
+  - Clean Architecture + MVVM implementada
+  - Decisões arquiteturais documentadas (ver seção Arquitetura)
+
+- ✅ **Comunicação com API**: 
+  - Retrofit + OkHttp para comunicação HTTP
+  - Suporte à paginação implementado com **Paging 3**
+  - Interceptors para autenticação automática
+
+- ✅ **Persistência Local**: 
+  - Room Database para armazenar filmes favoritos
+  - Flow para observação reativa de dados
+  - Queries type-safe em tempo de compilação
+
+- ✅ **Gerenciamento de Estado**: 
+  - StateFlow para gerenciamento reativo de estado
+  - Coroutines para programação assíncrona
+  - Single Source of Truth para favoritos
+
+- ✅ **Interface do Usuário**: 
+  - Interface responsiva seguindo Material Design 3
+  - Componentes Material Design (Cards, TextFields, Buttons)
+  - Layout adaptável a diferentes tamanhos de tela
+
+- ✅ **Boas Práticas**: 
+  - Código limpo, legível e bem estruturado
+  - Injeção de dependência com Hilt
+  - Código documentado com KDoc
+  - Análise estática com detekt e ktlint
+
+## 📱 Funcionalidades Adicionais Implementadas
+
+Além dos requisitos obrigatórios, foram implementadas funcionalidades extras:
+
+- ✅ **Detalhes do Filme**: Tela completa com informações detalhadas (sinopse, gêneros, orçamento, bilheteria, etc.)
+- ✅ **Splash Screen**: Tela inicial profissional com logo do aplicativo
+- ✅ **Shimmer Effect**: Efeito de loading durante carregamento de imagens
+- ✅ **Estados de Loading**: Gerenciamento automático de estados via Paging 3
+- ✅ **CI/CD**: GitHub Actions configurado para automação
+- ✅ **Code Quality**: ktlint e detekt configurados
 
 ## 🚀 Como Executar
 
@@ -49,7 +139,18 @@ O token é carregado automaticamente pelo BuildConfig durante o build. Se o toke
 
 ## 🏗️ Arquitetura
 
+### Decisão Arquitetural
+
 O projeto utiliza **Clean Architecture** combinada com **MVVM (Model-View-ViewModel)** para garantir separação de responsabilidades, testabilidade e escalabilidade.
+
+**Justificativa da Escolha:**
+- **Separação de Responsabilidades**: Cada camada tem uma responsabilidade única e bem definida
+- **Testabilidade**: Facilita a criação de testes unitários isolados, permitindo mockar dependências facilmente
+- **Manutenibilidade**: Código mais organizado e fácil de entender, facilitando manutenção futura
+- **Escalabilidade**: Facilita adicionar novas funcionalidades sem impactar código existente
+- **Independência de Frameworks**: A camada de domínio não depende de bibliotecas Android, facilitando testes
+
+> 📚 Para uma explicação detalhada das decisões arquiteturais, alternativas consideradas e trade-offs, consulte **[DOCUMENTACAO_TECNICA.md](./DOCUMENTACAO_TECNICA.md)**.
 
 ### Camadas da Arquitetura
 
@@ -115,14 +216,18 @@ O projeto utiliza **Clean Architecture** combinada com **MVVM (Model-View-ViewMo
 - **Shimmer**: Efeito de loading nas imagens
 
 ### Networking
-- **Retrofit**: Cliente HTTP para comunicação com API
-- **OkHttp**: Cliente HTTP base
-- **Moshi**: Serialização JSON
-- **HttpLoggingInterceptor**: Logging de requisições HTTP
+- **Retrofit**: Cliente HTTP type-safe para comunicação com API do TMDb
+- **OkHttp**: Cliente HTTP base com interceptors customizados
+- **Moshi**: Serialização/desserialização JSON otimizada para Kotlin
+- **HttpLoggingInterceptor**: Logging de requisições HTTP para debug
+- **AuthInterceptor**: Interceptor customizado para adicionar Bearer Token automaticamente
+- **Paginação**: Implementada com **Paging 3** para gerenciamento eficiente de dados paginados
 
 ### Persistência
-- **Room**: Banco de dados local
-- **Flow**: Observação reativa de dados
+- **Room**: Banco de dados local para armazenamento de filmes favoritos
+- **Flow**: Observação reativa de dados com atualizações automáticas
+- **DAO (Data Access Objects)**: Queries type-safe em tempo de compilação
+- **Type Converters**: Conversão automática de tipos complexos (List<String>)
 
 ### Assíncrono
 - **Coroutines**: Programação assíncrona
@@ -171,7 +276,12 @@ app/src/main/java/com/onboarding/mychallenge/
 
 ## 🧪 Testes
 
-O projeto inclui testes unitários para as principais camadas:
+### Requisitos Atendidos
+
+✅ **Testes Unitários**: Implementados para camadas de lógica e integração com API
+⏳ **Testes Instrumentados**: Planejados como melhoria futura (ver seção de melhorias)
+
+O projeto inclui testes unitários abrangentes para as principais camadas:
 
 ### Executar Testes
 
@@ -205,11 +315,12 @@ Os relatórios JaCoCo são gerados em:
 ## 📋 Funcionalidades Detalhadas
 
 ### Listagem de Filmes Populares
-- Paginação infinita (scroll infinito)
-- Carregamento de mais páginas ao chegar no final da lista
-- Exibição de título, pôster, avaliação média e data de lançamento
-- Shimmer effect durante carregamento de imagens
-- Tratamento de erros com mensagens amigáveis
+- ✅ **Paginação com Paging 3**: Implementada usando AndroidX Paging 3 library para gerenciamento eficiente de paginação
+- ✅ **Scroll Infinito**: Carregamento automático de mais páginas ao chegar no final da lista
+- ✅ **Exibição Completa**: Título, pôster, avaliação média (⭐), número de votos e data de lançamento
+- ✅ **Shimmer Effect**: Efeito de loading durante carregamento de imagens
+- ✅ **Estados de Loading**: Gerenciamento automático de estados (loading, error, empty) via Paging 3
+- ✅ **Tratamento de Erros**: Mensagens amigáveis ao usuário em português
 
 ### Pesquisa de Filmes
 - Campo de busca com debounce de 500ms
@@ -240,6 +351,52 @@ Os relatórios JaCoCo são gerados em:
 - Tratamento de UnknownHostException e SocketTimeoutException
 
 ## 📝 Decisões Técnicas e Justificativas
+
+> 📚 **Documentação Técnica Completa**: Para uma explicação detalhada de todas as decisões técnicas, alternativas consideradas, trade-offs e referências, consulte o arquivo **[DOCUMENTACAO_TECNICA.md](./DOCUMENTACAO_TECNICA.md)**.
+
+### Requisitos Técnicos Atendidos
+
+#### ✅ Arquitetura
+- **Clean Architecture + MVVM**: Arquitetura moderna e escalável implementada
+- **Separação de Camadas**: Presentation, Domain e Data layers bem definidas
+- **Justificativas**: Documentadas na seção de Arquitetura acima e em detalhes na [DOCUMENTACAO_TECNICA.md](./DOCUMENTACAO_TECNICA.md)
+
+#### ✅ Comunicação com API
+- **Retrofit + OkHttp**: Cliente HTTP type-safe e performático
+- **Paginação**: ✅ **Implementada com Paging 3** - Biblioteca oficial do Android para paginação eficiente
+- **Interceptors**: AuthInterceptor para autenticação automática
+- **Tratamento de Erros**: Tratamento específico para diferentes códigos HTTP
+
+#### ✅ Persistência Local
+- **Room Database**: Solução oficial do Google para persistência local
+- **Flow Reativo**: Atualizações automáticas quando dados mudam
+- **Type Safety**: Queries type-safe em tempo de compilação
+
+#### ✅ Gerenciamento de Estado
+- **StateFlow**: Abordagem moderna e reativa para gerenciamento de estado
+- **Coroutines**: Programação assíncrona nativa do Kotlin
+- **Single Source of Truth**: Favoritos são a única fonte de verdade
+
+#### ✅ Interface do Usuário
+- **Material Design 3**: Segue diretrizes oficiais do Material Design
+- **Responsiva**: Layout adaptável a diferentes tamanhos de tela
+- **Componentes Modernos**: RecyclerView, ViewBinding, Navigation Component
+
+#### ✅ Boas Práticas
+- **Código Limpo**: Código legível, bem estruturado e documentado
+- **Injeção de Dependência**: ✅ **Hilt** implementado para DI
+- **Documentação**: Código documentado com KDoc quando necessário
+- **Code Quality**: ktlint e detekt configurados para garantir qualidade
+
+A documentação técnica inclui:
+- ✅ Explicação detalhada de cada decisão arquitetural
+- ✅ Alternativas consideradas e por que foram descartadas
+- ✅ Trade-offs e justificativas técnicas
+- ✅ Links para documentação oficial e artigos de referência
+- ✅ Exemplos de código e configurações
+- ✅ Melhorias futuras planejadas
+
+### Resumo das Principais Decisões
 
 ### Por que Clean Architecture + MVVM?
 - **Separação de Responsabilidades**: Cada camada tem uma responsabilidade clara
@@ -315,6 +472,63 @@ O aplicativo segue as diretrizes do **Material Design 3** com:
 - Tratamento seguro de erros sem expor informações sensíveis
 - Validação de entrada do usuário
 
+## 💪 Esforço Aplicado
+
+Este projeto foi desenvolvido com foco em **qualidade, arquitetura sólida e boas práticas**. Abaixo estão os principais esforços aplicados:
+
+### Arquitetura e Design
+- ✅ Implementação completa de Clean Architecture com 3 camadas bem definidas
+- ✅ Padrão MVVM com ViewModels e StateFlow para gerenciamento reativo de estado
+- ✅ UseCases para separação de lógica de negócio
+- ✅ Repository Pattern para abstração de fonte de dados
+- ✅ Mappers para conversão entre camadas (DTO → Domain → ViewObject)
+
+### Funcionalidades Implementadas
+- ✅ Listagem paginada de filmes populares com **Paging 3**
+- ✅ Pesquisa em tempo real com debounce (500ms)
+- ✅ Sistema completo de favoritos com persistência local
+- ✅ Tela dedicada de favoritos com busca integrada
+- ✅ Tela de detalhes completa do filme
+- ✅ Tratamento robusto de erros com telas específicas
+- ✅ Splash screen profissional
+
+### Qualidade de Código
+- ✅ Testes unitários abrangentes para ViewModels, UseCases, Repository e Mappers
+- ✅ Cobertura de código com JaCoCo (relatórios gerados automaticamente)
+- ✅ Análise estática com detekt
+- ✅ Formatação automática com ktlint
+- ✅ CI/CD configurado com GitHub Actions
+
+### Segurança
+- ✅ Token da API armazenado de forma segura em `local.properties`
+- ✅ Validação de dados antes de processamento
+- ✅ Tratamento seguro de erros sem expor informações sensíveis
+
+### Performance
+- ✅ Paginação eficiente com Paging 3 (cache automático)
+- ✅ Debounce na pesquisa para reduzir requisições
+- ✅ Cache de imagens com Coil
+- ✅ Carregamento assíncrono com Coroutines
+
+### UX/UI
+- ✅ Material Design 3 implementado
+- ✅ Suporte a tema claro e escuro
+- ✅ Shimmer effect durante carregamento
+- ✅ Estados de loading, error e empty bem definidos
+- ✅ Animações suaves e transições
+
+### Documentação
+- ✅ README completo e detalhado
+- ✅ Documentação técnica completa (DOCUMENTACAO_TECNICA.md)
+- ✅ Código documentado com KDoc
+- ✅ Comentários explicativos em pontos complexos
+
+### Migrações e Melhorias
+- ✅ Migração de paginação manual para **Paging 3**
+- ✅ Correção de lógica de `canLoadMore`
+- ✅ Remoção de blocos de código vazios
+- ✅ Melhoria na estrutura de testes
+
 ## 📈 Pontos de Melhoria Futura
 
 Como especialista Android, identifiquei as seguintes melhorias que podem ser implementadas para elevar ainda mais a qualidade do projeto:
@@ -364,11 +578,12 @@ Como especialista Android, identifiquei as seguintes melhorias que podem ser imp
 
 ### 4. Arquitetura e Padrões ⭐⭐⭐⭐
 
+**Status Atual**: Paging 3 já implementado ✅
+
 **Melhorias Sugeridas**:
 - **Repository Pattern Enhancement**: Implementar cache strategy (Network-First, Cache-First)
 - **Error Handling**: Criar sealed classes para tipos de erro mais específicos
 - **Loading States**: Implementar estados de loading mais granulares (Initial, Refreshing, LoadingMore)
-- **Paging 3**: Migrar paginação manual para Paging 3 library
 - **WorkManager**: Implementar sincronização em background para favoritos
 
 **Impacto**: Médio-Alto - Melhora arquitetura e escalabilidade
@@ -450,7 +665,7 @@ Como especialista Android, identifiquei as seguintes melhorias que podem ser imp
 
 ### Médio Prazo (1-2 meses)
 1. ✅ Migração gradual para Compose
-2. ✅ Implementar Paging 3
+2. ✅ ~~Implementar Paging 3~~ (Já implementado)
 3. ✅ Adicionar Baseline Profiles
 4. ✅ Implementar cache strategy
 
