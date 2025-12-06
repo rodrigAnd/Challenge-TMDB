@@ -10,10 +10,12 @@ import com.onboarding.mychallenge.databinding.ActivityMovieDetailBinding
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+
 @AndroidEntryPoint
 class MovieDetailActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMovieDetailBinding
     private val viewModel: MovieDetailViewModel by viewModels()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMovieDetailBinding.inflate(layoutInflater)
@@ -28,6 +30,7 @@ class MovieDetailActivity : AppCompatActivity() {
         observeUiState()
         viewModel.loadMovieDetails(movieId)
     }
+
     private fun setupToolbar() {
         setSupportActionBar(binding.toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
@@ -36,6 +39,7 @@ class MovieDetailActivity : AppCompatActivity() {
             finish()
         }
     }
+
     private fun observeUiState() {
         lifecycleScope.launch {
             viewModel.uiState.collectLatest { state ->
@@ -54,7 +58,7 @@ class MovieDetailActivity : AppCompatActivity() {
                         Toast.makeText(
                             this@MovieDetailActivity,
                             state.message,
-                            Toast.LENGTH_LONG
+                            Toast.LENGTH_LONG,
                         ).show()
                         finish()
                     }
@@ -62,6 +66,7 @@ class MovieDetailActivity : AppCompatActivity() {
             }
         }
     }
+
     private fun displayMovieDetail(movieDetail: com.onboarding.mychallenge.domain.model.MovieDetail) {
         binding.apply {
             if (movieDetail.backdropUrl.isNotEmpty()) {
@@ -117,6 +122,7 @@ class MovieDetailActivity : AppCompatActivity() {
             detailStatusTextView.text = movieDetail.status
         }
     }
+
     private fun formatCurrency(amount: Long): String {
         return if (amount >= 1_000_000) {
             String.format("$%.1fM", amount / 1_000_000.0)

@@ -1,4 +1,5 @@
 package com.onboarding.mychallenge.data.mapper
+
 import com.onboarding.mychallenge.data.local.entity.FavoriteMovieEntity
 import com.onboarding.mychallenge.data.remote.dto.GenreDto
 import com.onboarding.mychallenge.data.remote.dto.MovieDetailDto
@@ -9,6 +10,17 @@ import com.onboarding.mychallenge.domain.model.MovieDetail
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+
+/**
+ * Mapper para converter entre DTOs, Entities e Models de domínio
+ * 
+ * Responsabilidade: Converter dados da camada Data para Domain
+ * Nunca expor DTOs ou Entities diretamente para outras camadas
+ */
+
+/**
+ * Converte MovieDto (API) para Movie (Domain)
+ */
 fun MovieDto.toDomain(): Movie {
     return Movie(
         id = id,
@@ -22,6 +34,10 @@ fun MovieDto.toDomain(): Movie {
         popularity = popularity
     )
 }
+
+/**
+ * Converte FavoriteMovieEntity (Room) para Movie (Domain)
+ */
 fun FavoriteMovieEntity.toDomain(): Movie {
     return Movie(
         id = id,
@@ -35,6 +51,10 @@ fun FavoriteMovieEntity.toDomain(): Movie {
         popularity = popularity
     )
 }
+
+/**
+ * Converte FavoriteMovieEntity (Room) para MovieDetail (Domain)
+ */
 fun FavoriteMovieEntity.toMovieDetail(): MovieDetail {
     val genres = genresJson?.let { json ->
         try {
@@ -48,6 +68,7 @@ fun FavoriteMovieEntity.toMovieDetail(): MovieDetail {
             emptyList()
         }
     } ?: emptyList()
+    
     return MovieDetail(
         id = id,
         title = title,
@@ -67,6 +88,10 @@ fun FavoriteMovieEntity.toMovieDetail(): MovieDetail {
         homepage = homepage
     )
 }
+
+/**
+ * Converte Movie (Domain) para FavoriteMovieEntity (Room)
+ */
 fun Movie.toEntity(): FavoriteMovieEntity {
     return FavoriteMovieEntity(
         id = id,
@@ -80,6 +105,10 @@ fun Movie.toEntity(): FavoriteMovieEntity {
         popularity = popularity
     )
 }
+
+/**
+ * Converte MovieDetail (Domain) para FavoriteMovieEntity (Room)
+ */
 fun MovieDetail.toEntity(): FavoriteMovieEntity {
     val genresJson = try {
         val moshi = Moshi.Builder()
@@ -91,6 +120,7 @@ fun MovieDetail.toEntity(): FavoriteMovieEntity {
     } catch (e: Exception) {
         null
     }
+    
     return FavoriteMovieEntity(
         id = id,
         title = title,
@@ -110,6 +140,10 @@ fun MovieDetail.toEntity(): FavoriteMovieEntity {
         homepage = homepage
     )
 }
+
+/**
+ * Converte MovieDetailDto (API) para MovieDetail (Domain)
+ */
 fun MovieDetailDto.toDomain(): MovieDetail {
     return MovieDetail(
         id = id,
@@ -130,9 +164,14 @@ fun MovieDetailDto.toDomain(): MovieDetail {
         homepage = homepage
     )
 }
+
+/**
+ * Converte GenreDto para Genre
+ */
 fun GenreDto.toDomain(): Genre {
     return Genre(
         id = id,
         name = name
     )
 }
+

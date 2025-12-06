@@ -20,18 +20,6 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-
-/**
- * ViewModel para a tela de filmes favoritos.
- *
- * Gerencia o estado da UI para a tela de favoritos, incluindo:
- * - Carregamento e observação em tempo real da lista de filmes favoritos.
- * - Pesquisa de filmes dentro da lista de favoritos com debounce.
- * - Remoção de filmes dos favoritos.
- * - Tratamento de estados de carregamento, sucesso, erro e vazio.
- *
- * @param movieRepository O repositório de filmes para acessar os dados de favoritos.
- */
 @HiltViewModel
 class FavoritesViewModel @Inject constructor(
     private val movieRepository: MovieRepository
@@ -40,16 +28,10 @@ class FavoritesViewModel @Inject constructor(
         private const val TAG = "FavoritesViewModel"
         private const val SEARCH_DEBOUNCE_MS = 500L
     }
-
     private val searchQuery = MutableStateFlow("")
     private var isFirstEmission = true
     private val loadingFavoriteIds = MutableStateFlow<Set<Int>>(emptySet())
     private val _uiState = MutableStateFlow<FavoritesUiState>(FavoritesUiState.Loading)
-
-    /**
-     * O [StateFlow] que representa o estado atual da UI da lista de favoritos.
-     * Os coletores devem observar este Flow para reagir às mudanças de estado.
-     */
     val uiState: StateFlow<FavoritesUiState> = _uiState.asStateFlow()
     init {
         Log.d(TAG, "init: Inicializando FavoritesViewModel")
@@ -174,40 +156,15 @@ class FavoritesViewModel @Inject constructor(
         }
         Log.d(TAG, "init: FavoritesViewModel inicializado")
     }
-    /**
-     * Inicia o carregamento dos filmes favoritos.
-     *
-     * Como a observação dos favoritos já é iniciada no `init` da ViewModel,
-     * este método serve principalmente para sinalizar a intenção de carregar
-     * e garantir que o Flow esteja ativo.
-     */
     fun loadFavorites() {
         Log.d(TAG, "loadFavorites: Carregando favoritos")
         Log.d(TAG, "loadFavorites: Flow já está observando, aguardando emissão")
     }
-
-    /**
-     * Atualiza a query de pesquisa para filtrar a lista de favoritos.
-     *
-     * A lógica de debounce e o filtro serão aplicados automaticamente
-     * através da observação do [searchQuery].
-     *
-     * @param query A nova string de pesquisa.
-     */
     fun updateSearchQuery(query: String) {
         Log.d(TAG, "updateSearchQuery: Atualizando query para: '$query'")
         searchQuery.value = query
         Log.d(TAG, "updateSearchQuery: Query atualizada")
     }
-
-    /**
-     * Remove um filme dos favoritos.
-     *
-     * Marca o filme como [isLoadingFavorite] na UI durante o processo de remoção
-     * e atualiza o estado da UI após a conclusão ou em caso de erro.
-     *
-     * @param movieId O ID do filme a ser removido.
-     */
     fun removeFromFavorites(movieId: Int) {
         Log.d(TAG, "removeFromFavorites: Iniciando remoção do filme $movieId")
         viewModelScope.launch {
@@ -259,32 +216,9 @@ class FavoritesViewModel @Inject constructor(
         }
     }
 }
-
-/**
- * Estados possíveis da UI da tela de favoritos.
- */
 sealed class FavoritesUiState {
-    /**
-     * Estado de carregamento inicial ou de recarregamento.
-     */
     data object Loading : FavoritesUiState()
-
-    /**
-     * Estado de sucesso, contendo a lista de filmes favoritos para exibição.
-     *
-     * @property movies A lista de [MovieViewObject] a serem exibidos.
-     */
     data class Success(val movies: List<MovieViewObject>) : FavoritesUiState()
-
-    /**
-     * Estado de erro, contendo uma mensagem para o usuário.
-     *
-     * @property message A mensagem de erro a ser exibida.
-     */
     data class Error(val message: String) : FavoritesUiState()
-
-    /**
-     * Estado de lista vazia, indicando que não há filmes favoritos para exibir.
-     */
     data object Empty : FavoritesUiState()
 }

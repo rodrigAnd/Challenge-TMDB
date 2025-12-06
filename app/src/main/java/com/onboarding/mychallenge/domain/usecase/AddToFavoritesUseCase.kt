@@ -1,23 +1,20 @@
 package com.onboarding.mychallenge.domain.usecase
+
 import com.onboarding.mychallenge.domain.model.Movie
 import com.onboarding.mychallenge.domain.repository.MovieRepository
 import javax.inject.Inject
 
 /**
- * UseCase para adicionar filme aos favoritos.
- *
- * Encapsula a lógica de negócio para favoritar filmes, delegando a operação ao repositório.
- *
- * @param repository O repositório de filmes para acessar os dados.
+ * UseCase para adicionar filme aos favoritos
+ * Encapsula a lógica de negócio para favoritar filmes
  */
 class AddToFavoritesUseCase @Inject constructor(
     private val repository: MovieRepository
 ) {
     /**
-     * Adiciona um filme aos favoritos.
-     *
-     * @param movie O [Movie] a ser adicionado aos favoritos.
-     * @return Um [Result] indicando sucesso ([Unit]) ou falha ([Throwable]).
+     * Adiciona um filme aos favoritos
+     * @param movie Filme a ser adicionado
+     * @return Result indicando sucesso ou falha
      */
     suspend operator fun invoke(movie: Movie): Result<Unit> {
         return try {
@@ -28,3 +25,4 @@ class AddToFavoritesUseCase @Inject constructor(
         }
     }
 }
+

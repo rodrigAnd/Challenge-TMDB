@@ -21,7 +21,7 @@ interface TmdbApiService {
     @GET("movie/popular")
     suspend fun getPopularMovies(
         @Query("page") page: Int = 1,
-        @Query("language") language: String = "pt-BR"
+        @Query("language") language: String = "pt-BR",
     ): MoviesResponseDto
 
     /**
@@ -36,7 +36,7 @@ interface TmdbApiService {
     suspend fun searchMovies(
         @Query("query") query: String,
         @Query("page") page: Int = 1,
-        @Query("language") language: String = "pt-BR"
+        @Query("language") language: String = "pt-BR",
     ): MoviesResponseDto
 
     /**
@@ -49,6 +49,6 @@ interface TmdbApiService {
     @GET("movie/{movie_id}")
     suspend fun getMovieDetails(
         @Path("movie_id") movieId: Int,
-        @Query("language") language: String = "pt-BR"
+        @Query("language") language: String = "pt-BR",
     ): MovieDetailDto
 }

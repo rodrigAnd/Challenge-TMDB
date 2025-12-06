@@ -11,22 +11,24 @@ import javax.inject.Inject
  *
  * @param repository O repositório de filmes para acessar os dados.
  */
-class GetPopularMoviesUseCase @Inject constructor(
-    private val repository: MovieRepository
-) {
-    /**
-     * Executa a busca de filmes populares.
-     *
-     * @param page O número da página a ser carregada. Padrão é 1.
-     * @return Um [Result] contendo uma lista de [Movie] em caso de sucesso,
-     *         ou um [IllegalArgumentException] se o número da página for inválido.
-     * @throws IllegalArgumentException se o número da página for menor que 1.
-     */
-    suspend operator fun invoke(page: Int = 1): Result<List<Movie>> {
-        return if (page < 1) {
-            Result.failure(IllegalArgumentException("Page number must be greater than 0"))
-        } else {
-            repository.getPopularMovies(page)
+class GetPopularMoviesUseCase
+    @Inject
+    constructor(
+        private val repository: MovieRepository,
+    ) {
+        /**
+         * Executa a busca de filmes populares.
+         *
+         * @param page O número da página a ser carregada. Padrão é 1.
+         * @return Um [Result] contendo uma lista de [Movie] em caso de sucesso,
+         *         ou um [IllegalArgumentException] se o número da página for inválido.
+         * @throws IllegalArgumentException se o número da página for menor que 1.
+         */
+        suspend operator fun invoke(page: Int = 1): Result<List<Movie>> {
+            return if (page < 1) {
+                Result.failure(IllegalArgumentException("Page number must be greater than 0"))
+            } else {
+                repository.getPopularMovies(page)
+            }
         }
     }
-}

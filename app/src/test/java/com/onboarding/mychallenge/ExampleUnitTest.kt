@@ -1,6 +1,7 @@
 package com.onboarding.mychallenge
-import org.junit.Test
 import org.junit.Assert.*
+import org.junit.Test
+
 class ExampleUnitTest {
     @Test
     fun addition_isCorrect() {

@@ -39,7 +39,7 @@ data class MovieDetail(
     val budget: Long,
     val revenue: Long,
     val status: String,
-    val homepage: String?
+    val homepage: String?,
 ) {
     /**
      * URL completa da imagem do pôster.
@@ -47,11 +47,12 @@ data class MovieDetail(
      * Retorna uma string vazia se [posterPath] for nulo.
      */
     val posterUrl: String
-        get() = if (posterPath != null) {
-            "https://image.tmdb.org/t/p/w500$posterPath"
-        } else {
-            ""
-        }
+        get() =
+            if (posterPath != null) {
+                "https://image.tmdb.org/t/p/w500$posterPath"
+            } else {
+                ""
+            }
 
     /**
      * URL completa da imagem de backdrop (alta resolução).
@@ -59,11 +60,12 @@ data class MovieDetail(
      * Retorna uma string vazia se [backdropPath] for nulo.
      */
     val backdropUrl: String
-        get() = if (backdropPath != null) {
-            "https://image.tmdb.org/t/p/w1280$backdropPath"
-        } else {
-            ""
-        }
+        get() =
+            if (backdropPath != null) {
+                "https://image.tmdb.org/t/p/w1280$backdropPath"
+            } else {
+                ""
+            }
 
     /**
      * Formata a avaliação para exibição (ex: "8.5").
@@ -77,14 +79,15 @@ data class MovieDetail(
      * Retorna "N/A" se [runtime] for nulo.
      */
     val formattedRuntime: String
-        get() = runtime?.let {
-            val hours = it / 60
-            val minutes = it % 60
-            when {
-                hours > 0 -> "${hours}h ${minutes}min"
-                else -> "${minutes}min"
-            }
-        } ?: "N/A"
+        get() =
+            runtime?.let {
+                val hours = it / 60
+                val minutes = it % 60
+                when {
+                    hours > 0 -> "${hours}h ${minutes}min"
+                    else -> "${minutes}min"
+                }
+            } ?: "N/A"
 
     /**
      * Lista de nomes dos gêneros.
@@ -107,5 +110,5 @@ data class MovieDetail(
  */
 data class Genre(
     val id: Int,
-    val name: String
+    val name: String,
 )
