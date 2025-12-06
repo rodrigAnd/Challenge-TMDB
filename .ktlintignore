@@ -1,0 +1,9 @@
+build/
+.gradle/
+**/generated/
+**/build/
+*.kts
+!build.gradle.kts
+!settings.gradle.kts
+
+

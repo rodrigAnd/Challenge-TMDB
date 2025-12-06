@@ -1,0 +1,45 @@
+name: Análise Estática e Formatação
+
+on:
+  pull_request:
+    branches:
+      - develop
+      - master
+    types: [ opened, synchronize, reopened, ready_for_review ]
+
+jobs:
+  static-analysis:
+    name: 🔬 Análise de Código
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      # É uma boa prática configurar o cache do Gradle para acelerar os builds
+      - name: Configurar Cache do Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Configurar JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Dar permissão de execução para o gradlew
+        run: chmod +x ./gradlew
+
+      - name: Rodar Ktlint
+        run: ./gradlew ktlintCheck
+        # A tarefa ktlintCheck falhará o workflow se houver problemas de formatação.
+
+      - name: Rodar Detekt
+        run: ./gradlew detekt
+        # A tarefa detekt falhará o workflow se encontrar problemas graves de código.

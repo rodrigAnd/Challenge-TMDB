@@ -1,5 +1,4 @@
 package com.onboarding.mychallenge.domain.usecase
-
 import com.onboarding.mychallenge.domain.model.Movie
 import com.onboarding.mychallenge.domain.repository.MovieRepository
 import io.mockk.coEvery
@@ -12,7 +11,6 @@ import org.junit.Before
 import org.junit.Test
 
 class AddToFavoritesUseCaseTest {
-
     private lateinit var repository: MovieRepository
     private lateinit var useCase: AddToFavoritesUseCase
 
@@ -23,36 +21,31 @@ class AddToFavoritesUseCaseTest {
     }
 
     @Test
-    fun `invoke should return success when movie is added`() = runTest {
-        // Given
-        val movie = createMockMovie(1, "Movie 1")
-        coEvery { repository.addToFavorites(movie) } returns Unit
-
-        // When
-        val result = useCase(movie)
-
-        // Then
-        assertTrue(result.isSuccess)
-        coVerify(exactly = 1) { repository.addToFavorites(movie) }
-    }
+    fun `invoke should return success when movie is added`() =
+        runTest {
+            val movie = createMockMovie(1, "Movie 1")
+            coEvery { repository.addToFavorites(movie) } returns Unit
+            val result = useCase(movie)
+            assertTrue(result.isSuccess)
+            coVerify(exactly = 1) { repository.addToFavorites(movie) }
+        }
 
     @Test
-    fun `invoke should return failure when repository throws exception`() = runTest {
-        // Given
-        val movie = createMockMovie(1, "Movie 1")
-        val error = Exception("Database error")
-        coEvery { repository.addToFavorites(movie) } throws error
+    fun `invoke should return failure when repository throws exception`() =
+        runTest {
+            val movie = createMockMovie(1, "Movie 1")
+            val error = android.database.sqlite.SQLiteException("Database error")
+            coEvery { repository.addToFavorites(movie) } throws error
+            val result = useCase(movie)
+            assertTrue(result.isFailure)
+            assertEquals(error, result.exceptionOrNull())
+            coVerify(exactly = 1) { repository.addToFavorites(movie) }
+        }
 
-        // When
-        val result = useCase(movie)
-
-        // Then
-        assertTrue(result.isFailure)
-        assertEquals(error, result.exceptionOrNull())
-        coVerify(exactly = 1) { repository.addToFavorites(movie) }
-    }
-
-    private fun createMockMovie(id: Int, title: String): Movie {
+    private fun createMockMovie(
+        id: Int,
+        title: String,
+    ): Movie {
         return Movie(
             id = id,
             title = title,
@@ -62,8 +55,7 @@ class AddToFavoritesUseCaseTest {
             releaseDate = "2024-01-01",
             voteAverage = 8.5,
             voteCount = 100,
-            popularity = 100.0
+            popularity = 100.0,
         )
     }
 }
-

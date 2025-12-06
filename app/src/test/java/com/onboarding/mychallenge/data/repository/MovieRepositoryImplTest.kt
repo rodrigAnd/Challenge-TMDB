@@ -2,9 +2,6 @@ package com.onboarding.mychallenge.data.repository
 
 import com.onboarding.mychallenge.data.local.dao.FavoriteMovieDao
 import com.onboarding.mychallenge.data.local.entity.FavoriteMovieEntity
-import com.onboarding.mychallenge.data.mapper.toDomain
-import com.onboarding.mychallenge.data.mapper.toEntity
-import com.onboarding.mychallenge.data.mapper.toMovieDetail
 import com.onboarding.mychallenge.data.remote.api.TmdbApiService
 import com.onboarding.mychallenge.data.remote.dto.MovieDetailDto
 import com.onboarding.mychallenge.data.remote.dto.MovieDto
@@ -18,232 +15,558 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.ResponseBody.Companion.toResponseBody
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
 class MovieRepositoryImplTest {
-
     private lateinit var apiService: TmdbApiService
     private lateinit var favoriteDao: FavoriteMovieDao
     private lateinit var repository: MovieRepositoryImpl
 
     @Before
-    fun setup() {
+    fun setUp() {
         apiService = mockk()
-        favoriteDao = mockk()
+        favoriteDao = mockk(relaxUnitFun = true)
         repository = MovieRepositoryImpl(apiService, favoriteDao)
     }
 
+    //region getPopularMovies
     @Test
-    fun `getPopularMovies should return success when API returns movies`() = runTest {
-        // Given
-        val movieDto = createMovieDto(1, "Movie 1")
-        val response = MoviesResponseDto(
-            page = 1,
-            results = listOf(movieDto),
-            totalPages = 10,
-            totalResults = 100
-        )
-        coEvery { apiService.getPopularMovies(1, "pt-BR") } returns response
+    fun `getPopularMovies should return success with movie list when API call is successful`() =
+        runTest {
+            // Arrange
+            val movieDto = createMovieDto(1, "Movie 1")
+            val response = MoviesResponseDto(1, listOf(movieDto), 10, 100)
+            coEvery { apiService.getPopularMovies(1, "pt-BR") } returns response
 
-        // When
-        val result = repository.getPopularMovies(1)
+            // Act
+            val result = repository.getPopularMovies(1)
 
-        // Then
-        assertTrue(result.isSuccess)
-        assertEquals(1, result.getOrNull()?.size)
-        assertEquals("Movie 1", result.getOrNull()?.get(0)?.title)
-    }
-
-    @Test
-    fun `getPopularMovies should return failure when API throws exception`() = runTest {
-        // Given
-        val error = Exception("Network error")
-        coEvery { apiService.getPopularMovies(1, "pt-BR") } throws error
-
-        // When
-        val result = repository.getPopularMovies(1)
-
-        // Then
-        assertTrue(result.isFailure)
-    }
-
-    @Test
-    fun `addMovieDetailToFavorites should save to database`() = runTest {
-        // Given
-        val movieDetail = createMovieDetail(1, "Movie 1")
-        coEvery { favoriteDao.insertFavorite(any()) } returns Unit
-
-        // When
-        repository.addMovieDetailToFavorites(movieDetail)
-
-        // Then
-        coVerify(exactly = 1) { favoriteDao.insertFavorite(any()) }
-    }
-
-    @Test
-    fun `removeFromFavorites should delete from database`() = runTest {
-        // Given
-        coEvery { favoriteDao.deleteFavorite(1) } returns Unit
-
-        // When
-        repository.removeFromFavorites(1)
-
-        // Then
-        coVerify(exactly = 1) { favoriteDao.deleteFavorite(1) }
-    }
-
-    @Test
-    fun `isFavorite should return true when movie is in database`() = runTest {
-        // Given
-        coEvery { favoriteDao.isFavorite(1) } returns true
-
-        // When
-        val result = repository.isFavorite(1)
-
-        // Then
-        assertTrue(result)
-        coVerify(exactly = 1) { favoriteDao.isFavorite(1) }
-    }
-
-    @Test
-    fun `getFavoriteMovies should return flow of movies`() = runTest {
-        // Given
-        val entity = createFavoriteEntity(1, "Movie 1")
-        every { favoriteDao.getAllFavorites() } returns flowOf(listOf(entity))
-
-        // When
-        val flow = repository.getFavoriteMovies()
-
-        // Then
-        flow.collect { movies ->
-            assertEquals(1, movies.size)
-            assertEquals("Movie 1", movies[0].title)
+            // Assert
+            assertTrue(result.isSuccess)
+            val paginatedResult = result.getOrNull()
+            assertEquals(1, paginatedResult?.data?.size)
+            assertEquals("Movie 1", paginatedResult?.data?.first()?.title)
+            assertEquals(1, paginatedResult?.currentPage)
+            assertEquals(10, paginatedResult?.totalPages)
+            assertEquals(100, paginatedResult?.totalResults)
         }
-    }
 
     @Test
-    fun `getMovieDetails should return success when API returns details`() = runTest {
-        // Given
-        val detailDto = createMovieDetailDto(1, "Movie 1")
-        coEvery { apiService.getMovieDetails(1, "pt-BR") } returns detailDto
+    fun `getPopularMovies should return failure when API call throws exception`() =
+        runTest {
+            // Arrange
+            // A exceção que a camada de rede lança (simulada).
+            val apiException = RuntimeException("Network Error")
+            coEvery { apiService.getPopularMovies(1, "pt-BR") } throws apiException
 
-        // When
-        val result = repository.getMovieDetails(1)
+            // Act
+            val result = repository.getPopularMovies(1)
 
-        // Then
-        assertTrue(result.isSuccess)
-        assertEquals("Movie 1", result.getOrNull()?.title)
-    }
+            // Assert
+            // 1. Primeiro, confirme que a operação realmente falhou.
+            assertTrue(result.isFailure)
+
+            // --- INÍCIO DA CORREÇÃO ---
+            // 2. Obtenha a exceção que o *repositório* de fato retornou.
+            val actualException = result.exceptionOrNull()
+
+            // 3. Verifique se a MENSAGEM da exceção é a que o repositório define em seu tratamento de erro.
+            assertEquals("Erro ao carregar filmes. Tente novamente.", actualException?.message)
+            // --- FIM DA CORREÇÃO ---
+        }
+
+    //endregion
+
+    //region getMovieDetails
+    @Test
+    fun `getMovieDetails should return success with detail when API call is successful`() =
+        runTest {
+            // Arrange
+            val movieDetailDto = createMovieDetailDto(1, "Detailed Movie")
+            coEvery { apiService.getMovieDetails(1, "pt-BR") } returns movieDetailDto
+
+            // Act
+            val result = repository.getMovieDetails(1)
+
+            // Assert
+            assertTrue(result.isSuccess)
+            assertEquals("Detailed Movie", result.getOrNull()?.title)
+        }
 
     @Test
-    fun `getFavoriteMovieDetails should return success when found in database`() = runTest {
-        // Given
-        val entity = createFavoriteEntity(1, "Movie 1")
-        coEvery { favoriteDao.getFavoriteById(1) } returns entity
+    fun `getMovieDetails should return failure when API call throws exception`() =
+        runTest {
+            // Arrange
+            // A exceção que a camada de rede lança.
+            val apiException = RuntimeException("API Error")
+            coEvery { apiService.getMovieDetails(1, "pt-BR") } throws apiException
 
-        // When
-        val result = repository.getFavoriteMovieDetails(1)
+            // Act
+            val result = repository.getMovieDetails(1)
 
-        // Then
-        assertTrue(result.isSuccess)
-        assertEquals("Movie 1", result.getOrNull()?.title)
-    }
+            // Assert
+            // 1. Verifica se o resultado é de fato uma falha.
+            assertTrue(result.isFailure)
+
+            // --- INÍCIO DA CORREÇÃO ---
+            // 2. Pega a exceção que o *repositório* criou.
+            val actualException = result.exceptionOrNull()
+
+            // 3. Verifica se a mensagem da exceção é a mensagem personalizada definida no repositório.
+            assertEquals("Erro ao carregar detalhes do filme. Tente novamente.", actualException?.message)
+            // --- FIM DA CORREÇÃO ---
+        }
+
+    //endregion
+
+    //region searchMovies
+    @Test
+    fun `searchMovies should return success when API search is successful`() =
+        runTest {
+            // Arrange
+            val movieDto = createMovieDto(1, "Searched Movie")
+            val response = MoviesResponseDto(1, listOf(movieDto), 1, 1)
+            coEvery { apiService.searchMovies("query", 1, "pt-BR") } returns response
+
+            // Act
+            val result = repository.searchMovies("query", 1)
+
+            // Assert
+            assertTrue(result.isSuccess)
+            val paginatedResult = result.getOrNull()
+            assertEquals("Searched Movie", paginatedResult?.data?.first()?.title)
+            assertEquals(1, paginatedResult?.currentPage)
+            assertEquals(1, paginatedResult?.totalPages)
+        }
 
     @Test
-    fun `getFavoriteMovieDetails should return failure when not found`() = runTest {
-        // Given
-        coEvery { favoriteDao.getFavoriteById(1) } returns null
+    fun `searchMovies should return failure when API search throws exception`() =
+        runTest {
+            // Arrange
+            // A exceção que a camada de rede lança (simulada).
+            val apiException = RuntimeException("Search Error")
+            coEvery { apiService.searchMovies("query", 1, "pt-BR") } throws apiException
 
-        // When
-        val result = repository.getFavoriteMovieDetails(1)
+            // Act
+            val result = repository.searchMovies("query", 1)
 
-        // Then
-        assertTrue(result.isFailure)
-    }
+            // Assert
+            // 1. Confirma que a operação realmente resultou em uma falha.
+            assertTrue(result.isFailure)
 
-    private fun createMovieDto(id: Int, title: String): MovieDto {
-        return MovieDto(
-            adult = false,
-            backdropPath = "/backdrop.jpg",
-            genreIds = listOf(1, 2),
-            id = id,
-            originalLanguage = "en",
-            originalTitle = title,
-            overview = "Overview",
-            popularity = 100.0,
-            posterPath = "/poster.jpg",
-            releaseDate = "2024-01-01",
-            title = title,
-            video = false,
-            voteAverage = 8.5,
-            voteCount = 100
-        )
-    }
+            // --- INÍCIO DA CORREÇÃO ---
+            // 2. Obtém a exceção que o *repositório* de fato retornou.
+            val actualException = result.exceptionOrNull()
 
-    private fun createMovieDetail(id: Int, title: String): MovieDetail {
-        return MovieDetail(
-            id = id,
-            title = title,
-            overview = "Overview",
-            posterPath = "/poster.jpg",
-            backdropPath = "/backdrop.jpg",
-            releaseDate = "2024-01-01",
-            voteAverage = 8.5,
-            voteCount = 100,
-            popularity = 100.0,
-            runtime = 120,
-            genres = listOf(Genre(1, "Action")),
-            tagline = "Tagline",
-            budget = 50000000L,
-            revenue = 200000000L,
-            status = "Released",
-            homepage = "https://example.com"
-        )
-    }
+            // 3. Verifica se a MENSAGEM da exceção é a que o repositório define em seu tratamento de erro.
+            assertEquals("Erro ao buscar filmes. Tente novamente.", actualException?.message)
+            // --- FIM DA CORREÇÃO ---
+        }
 
-    private fun createFavoriteEntity(id: Int, title: String): FavoriteMovieEntity {
-        return FavoriteMovieEntity(
-            id = id,
-            title = title,
-            overview = "Overview",
-            posterPath = "/poster.jpg",
-            backdropPath = "/backdrop.jpg",
-            releaseDate = "2024-01-01",
-            voteAverage = 8.5,
-            voteCount = 100,
-            popularity = 100.0,
-            runtime = 120,
-            genresJson = """[{"id":1,"name":"Action"}]""",
-            tagline = "Tagline",
-            budget = 50000000L,
-            revenue = 200000000L,
-            status = "Released",
-            homepage = "https://example.com"
-        )
-    }
+    //region Favorites
+    @Test
+    fun `getFavoriteMovies should return flow from DAO`() =
+        runTest {
+            // Arrange
+            val entity = createFavoriteEntity(1, "Favorite Movie")
+            every { favoriteDao.getAllFavorites() } returns flowOf(listOf(entity))
 
-    private fun createMovieDetailDto(id: Int, title: String): MovieDetailDto {
-        return MovieDetailDto(
-            id = id,
-            title = title,
-            overview = "Overview",
-            posterPath = "/poster.jpg",
-            backdropPath = "/backdrop.jpg",
-            releaseDate = "2024-01-01",
-            voteAverage = 8.5,
-            voteCount = 100,
-            popularity = 100.0,
-            runtime = 120,
-            genres = emptyList(),
-            tagline = "Tagline",
-            budget = 50000000L,
-            revenue = 200000000L,
-            status = "Released",
-            homepage = "https://example.com"
-        )
-    }
+            // Act
+            val flow = repository.getFavoriteMovies()
+
+            // Assert
+            flow.collect { movies ->
+                assertEquals(1, movies.size)
+                assertEquals("Favorite Movie", movies.first().title)
+            }
+        }
+
+    @Test
+    fun `getFavoriteMovieDetails should return success when movie is in DAO`() =
+        runTest {
+            // Arrange
+            val entity = createFavoriteEntity(1, "Favorite Detail")
+            coEvery { favoriteDao.getFavoriteById(1) } returns entity
+
+            // Act
+            val result = repository.getFavoriteMovieDetails(1)
+
+            // Assert
+            assertTrue(result.isSuccess)
+            assertEquals("Favorite Detail", result.getOrNull()?.title)
+        }
+
+    @Test
+    fun `getFavoriteMovieDetails should return failure when movie is not in DAO`() =
+        runTest {
+            // Arrange
+            coEvery { favoriteDao.getFavoriteById(1) } returns null
+
+            // Act
+            val result = repository.getFavoriteMovieDetails(1)
+
+            // Assert
+            assertTrue(result.isFailure)
+        }
+
+    @Test
+    fun `addMovieDetailToFavorites should call DAO insert`() =
+        runTest {
+            // Arrange
+            val movieDetail = createMovieDetail(1, "Movie to Add")
+
+            // Act
+            repository.addMovieDetailToFavorites(movieDetail)
+
+            // Assert
+            coVerify(exactly = 1) { favoriteDao.insertFavorite(any()) }
+        }
+
+    @Test
+    fun `removeFromFavorites should call DAO delete`() =
+        runTest {
+            // Arrange
+            val movieId = 1
+
+            // Act
+            repository.removeFromFavorites(movieId)
+
+            // Assert
+            coVerify(exactly = 1) { favoriteDao.deleteFavorite(movieId) }
+        }
+
+    @Test
+    fun `isFavorite should return success with true when movie exists in DAO`() =
+        runTest {
+            // Arrange
+            coEvery { favoriteDao.isFavorite(1) } returns true
+
+            // Act
+            val result = repository.isFavorite(1)
+
+            // Assert
+            assertTrue(result)
+        }
+
+    @Test
+    fun `isFavorite should return success with false when movie does not exist in DAO`() =
+        runTest {
+            // Arrange
+            coEvery { favoriteDao.isFavorite(1) } returns false
+
+            // Act
+            val result = repository.isFavorite(1)
+
+            // Assert
+            assertEquals(false, result)
+        }
+
+    @Test
+    fun `addToFavorites should call DAO insert`() =
+        runTest {
+            // Arrange
+            val movie = createMovie(1, "Movie to Add")
+
+            // Act
+            repository.addToFavorites(movie)
+
+            // Assert
+            coVerify(exactly = 1) { favoriteDao.insertFavorite(any()) }
+        }
+
+    //region Error Handling Tests
+    @Test
+    fun `getPopularMovies should return failure when page is less than 1`() =
+        runTest {
+            // Act
+            val result = repository.getPopularMovies(0)
+
+            // Assert
+            assertTrue(result.isFailure)
+            assertTrue(result.exceptionOrNull() is IllegalArgumentException)
+        }
+
+    @Test
+    fun `getPopularMovies should handle UnknownHostException`() =
+        runTest {
+            // Arrange
+            coEvery { apiService.getPopularMovies(1, "pt-BR") } throws java.net.UnknownHostException("No internet")
+
+            // Act
+            val result = repository.getPopularMovies(1)
+
+            // Assert
+            assertTrue(result.isFailure)
+            assertEquals("Sem conexão com a internet. Verifique sua conexão e tente novamente.", result.exceptionOrNull()?.message)
+        }
+
+    @Test
+    fun `getPopularMovies should handle SocketTimeoutException`() =
+        runTest {
+            // Arrange
+            coEvery { apiService.getPopularMovies(1, "pt-BR") } throws java.net.SocketTimeoutException("Timeout")
+
+            // Act
+            val result = repository.getPopularMovies(1)
+
+            // Assert
+            assertTrue(result.isFailure)
+            assertEquals("Tempo de espera esgotado. Tente novamente.", result.exceptionOrNull()?.message)
+        }
+
+    @Test
+    fun `getPopularMovies should handle HttpException 401`() =
+        runTest {
+            // Arrange
+            val responseBody = "".toResponseBody("application/json".toMediaType())
+            val httpException = retrofit2.HttpException(retrofit2.Response.error<Any>(401, responseBody))
+            coEvery { apiService.getPopularMovies(1, "pt-BR") } throws httpException
+
+            // Act
+            val result = repository.getPopularMovies(1)
+
+            // Assert
+            assertTrue(result.isFailure)
+            assertEquals("Não autorizado. Verifique suas credenciais.", result.exceptionOrNull()?.message)
+        }
+
+    @Test
+    fun `getPopularMovies should handle HttpException 404`() =
+        runTest {
+            // Arrange
+            val responseBody = "".toResponseBody("application/json".toMediaType())
+            val httpException = retrofit2.HttpException(retrofit2.Response.error<Any>(404, responseBody))
+            coEvery { apiService.getPopularMovies(1, "pt-BR") } throws httpException
+
+            // Act
+            val result = repository.getPopularMovies(1)
+
+            // Assert
+            assertTrue(result.isFailure)
+            assertEquals("Recurso não encontrado.", result.exceptionOrNull()?.message)
+        }
+
+    @Test
+    fun `getPopularMovies should handle HttpException 429`() =
+        runTest {
+            // Arrange
+            val responseBody = "".toResponseBody("application/json".toMediaType())
+            val httpException = retrofit2.HttpException(retrofit2.Response.error<Any>(429, responseBody))
+            coEvery { apiService.getPopularMovies(1, "pt-BR") } throws httpException
+
+            // Act
+            val result = repository.getPopularMovies(1)
+
+            // Assert
+            assertTrue(result.isFailure)
+            assertEquals("Muitas requisições. Aguarde um momento e tente novamente.", result.exceptionOrNull()?.message)
+        }
+
+    @Test
+    fun `getPopularMovies should handle HttpException 500`() =
+        runTest {
+            // Arrange
+            val responseBody = "".toResponseBody("application/json".toMediaType())
+            val httpException = retrofit2.HttpException(retrofit2.Response.error<Any>(500, responseBody))
+            coEvery { apiService.getPopularMovies(1, "pt-BR") } throws httpException
+
+            // Act
+            val result = repository.getPopularMovies(1)
+
+            // Assert
+            assertTrue(result.isFailure)
+            assertEquals("Erro no servidor. Tente novamente mais tarde.", result.exceptionOrNull()?.message)
+        }
+
+    @Test
+    fun `searchMovies should return failure when query is blank`() =
+        runTest {
+            // Act
+            val result = repository.searchMovies("", 1)
+
+            // Assert
+            assertTrue(result.isFailure)
+            assertTrue(result.exceptionOrNull() is IllegalArgumentException)
+        }
+
+    @Test
+    fun `searchMovies should return failure when page is less than 1`() =
+        runTest {
+            // Act
+            val result = repository.searchMovies("query", 0)
+
+            // Assert
+            assertTrue(result.isFailure)
+            assertTrue(result.exceptionOrNull() is IllegalArgumentException)
+        }
+
+    @Test
+    fun `searchMovies should handle UnknownHostException`() =
+        runTest {
+            // Arrange
+            coEvery { apiService.searchMovies("query", 1, "pt-BR") } throws java.net.UnknownHostException("No internet")
+
+            // Act
+            val result = repository.searchMovies("query", 1)
+
+            // Assert
+            assertTrue(result.isFailure)
+            assertEquals("Sem conexão com a internet. Verifique sua conexão e tente novamente.", result.exceptionOrNull()?.message)
+        }
+
+    @Test
+    fun `searchMovies should handle HttpException 404`() =
+        runTest {
+            // Arrange
+            val responseBody = "".toResponseBody("application/json".toMediaType())
+            val httpException = retrofit2.HttpException(retrofit2.Response.error<Any>(404, responseBody))
+            coEvery { apiService.searchMovies("query", 1, "pt-BR") } throws httpException
+
+            // Act
+            val result = repository.searchMovies("query", 1)
+
+            // Assert
+            assertTrue(result.isFailure)
+            assertEquals("Nenhum resultado encontrado para 'query'.", result.exceptionOrNull()?.message)
+        }
+
+    @Test
+    fun `getMovieDetails should return failure when movieId is less than or equal to 0`() =
+        runTest {
+            // Act
+            val result = repository.getMovieDetails(0)
+
+            // Assert
+            assertTrue(result.isFailure)
+            assertTrue(result.exceptionOrNull() is IllegalArgumentException)
+        }
+
+    @Test
+    fun `getMovieDetails should handle UnknownHostException`() =
+        runTest {
+            // Arrange
+            coEvery { apiService.getMovieDetails(1, "pt-BR") } throws java.net.UnknownHostException("No internet")
+
+            // Act
+            val result = repository.getMovieDetails(1)
+
+            // Assert
+            assertTrue(result.isFailure)
+            assertEquals("Sem conexão com a internet. Verifique sua conexão e tente novamente.", result.exceptionOrNull()?.message)
+        }
+
+    @Test
+    fun `getMovieDetails should handle HttpException 404`() =
+        runTest {
+            // Arrange
+            val responseBody = "".toResponseBody("application/json".toMediaType())
+            val httpException = retrofit2.HttpException(retrofit2.Response.error<Any>(404, responseBody))
+            coEvery { apiService.getMovieDetails(1, "pt-BR") } throws httpException
+
+            // Act
+            val result = repository.getMovieDetails(1)
+
+            // Assert
+            assertTrue(result.isFailure)
+            assertEquals("Filme não encontrado.", result.exceptionOrNull()?.message)
+        }
+
+    //endregion
+
+    // --- Funções de Apoio (Helpers) ---
+    private fun createMovieDto(
+        id: Int,
+        title: String,
+    ) = MovieDto(
+        id = id, title = title, originalTitle = title, overview = "Overview", posterPath = "/poster.jpg", backdropPath = "/backdrop.jpg", releaseDate = "2024-01-01", voteAverage = 8.5, voteCount = 100, adult = false,
+        genreIds =
+            listOf(
+                1,
+            ),
+        originalLanguage = "en", popularity = 100.0, video = false,
+    )
+
+    private fun createMovieDetailDto(
+        id: Int,
+        title: String,
+    ) = MovieDetailDto(
+        id = id,
+        title = title,
+        originalTitle = title,
+        overview = "Overview",
+        posterPath = "/poster.jpg",
+        backdropPath = "/backdrop.jpg",
+        releaseDate = "2024-01-01",
+        voteAverage = 8.5,
+        voteCount = 100,
+        adult = false,
+        originalLanguage = "en",
+        popularity = 100.0,
+        video = false,
+        budget = 1L,
+        genres = emptyList(),
+        homepage = "",
+        imdbId = "id",
+        productionCompanies = emptyList(),
+        productionCountries = emptyList(),
+        revenue = 1L,
+        runtime = 120,
+        spokenLanguages = emptyList(),
+        status = "Released",
+        tagline = "Tagline",
+    )
+
+    private fun createMovieDetail(
+        id: Int,
+        title: String,
+    ) = MovieDetail(
+        id = id, title = title, overview = "Overview", posterPath = "/poster.jpg", backdropPath = "/backdrop.jpg", releaseDate = "2024-01-01", voteAverage = 8.5, voteCount = 100, popularity = 100.0, runtime = 120,
+        genres =
+            listOf(
+                Genre(1, "Action"),
+            ),
+        tagline = "Tagline", budget = 1L, revenue = 1L, status = "Released", homepage = "",
+    )
+
+    private fun createFavoriteEntity(
+        id: Int,
+        title: String,
+    ) = FavoriteMovieEntity(
+        id = id,
+        title = title,
+        overview = "Overview",
+        posterPath = "/poster.jpg",
+        backdropPath = "/backdrop.jpg",
+        releaseDate = "2024-01-01",
+        voteAverage = 8.5,
+        voteCount = 100,
+        popularity = 100.0,
+        runtime = 120,
+        genresJson = "[]",
+        tagline = "Tagline",
+        budget = 1L,
+        revenue = 1L,
+        status = "Released",
+        homepage = "",
+    )
+
+    private fun createMovie(
+        id: Int,
+        title: String,
+    ) = Movie(
+        id = id,
+        title = title,
+        overview = "Overview",
+        posterPath = "/poster.jpg",
+        backdropPath = "/backdrop.jpg",
+        releaseDate = "2024-01-01",
+        voteAverage = 8.5,
+        voteCount = 100,
+        popularity = 100.0,
+    )
 }

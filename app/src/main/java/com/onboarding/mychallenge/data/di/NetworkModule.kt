@@ -1,5 +1,4 @@
 package com.onboarding.mychallenge.data.di
-
 import com.onboarding.mychallenge.data.remote.api.TmdbApiService
 import com.onboarding.mychallenge.data.remote.interceptor.AuthInterceptor
 import com.squareup.moshi.Moshi
@@ -16,24 +15,20 @@ import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 
 /**
- * Módulo Hilt para configuração da camada de rede.
- * 
- * Fornece as dependências necessárias para comunicação com a API do TMDb,
- * incluindo configuração do Retrofit, OkHttp, Moshi e interceptores.
+ * Módulo Hilt para configuração e fornecimento de dependências de rede.
+ *
+ * Este módulo instala suas dependências no [SingletonComponent], garantindo
+ * que as instâncias fornecidas sejam de escopo de aplicação (Singleton).
  */
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
-    
     private const val BASE_URL = "https://api.themoviedb.org/3/"
-    private const val BEARER_TOKEN = "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyNWQ2MzQ5NGU0NDVhZjYwNDM0M2VlMjg0OTQ2MTUyMiIsIm5iZiI6MTY5NDE1MDcyNy41MzIsInN1YiI6IjY0ZmFiMDQ3YTM1YzhlMDBmZmQwYzI4MCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.vyEV0eKplrHdXf_HFPKg38RN8tMp6ofP59Dnr-rDr2w"
-    
+
     /**
-     * Fornece uma instância do Moshi para serialização/desserialização JSON.
-     * 
-     * Configura o Moshi com suporte a classes Kotlin usando [KotlinJsonAdapterFactory].
-     * 
-     * @return Instância configurada do [Moshi].
+     * Fornece uma instância singleton de [Moshi] para serialização/desserialização JSON.
+     *
+     * @return Uma instância de [Moshi] configurada com [KotlinJsonAdapterFactory].
      */
     @Provides
     @Singleton
@@ -42,13 +37,14 @@ object NetworkModule {
             .add(KotlinJsonAdapterFactory())
             .build()
     }
-    
+
     /**
-     * Fornece um interceptor de logging HTTP para debug.
-     * 
-     * Configurado para logar o corpo completo das requisições e respostas HTTP.
-     * 
-     * @return Instância configurada do [HttpLoggingInterceptor].
+     * Fornece uma instância singleton de [HttpLoggingInterceptor] para log de requisições HTTP.
+     *
+     * O nível de log é definido como [HttpLoggingInterceptor.Level.BODY] para incluir
+     * cabeçalhos e corpos de requisição/resposta.
+     *
+     * @return Uma instância de [HttpLoggingInterceptor].
      */
     @Provides
     @Singleton
@@ -57,61 +53,59 @@ object NetworkModule {
             level = HttpLoggingInterceptor.Level.BODY
         }
     }
-    
+
     /**
-     * Fornece um interceptor de autenticação para adicionar o Bearer token.
-     * 
-     * Cria uma instância do [AuthInterceptor] com o token de autenticação
-     * necessário para acessar a API do TMDb.
-     * 
-     * @return Instância do [AuthInterceptor] configurada com o token.
+     * Fornece uma instância singleton de [AuthInterceptor] para adicionar o token Bearer.
+     *
+     * O token é carregado do BuildConfig, que por sua vez lê do local.properties.
+     * Isso garante que o token não seja commitado no código fonte.
+     *
+     * @return Uma instância de [AuthInterceptor] com o token Bearer configurado.
      */
     @Provides
     @Singleton
     fun provideAuthInterceptor(): AuthInterceptor {
-        return AuthInterceptor(BEARER_TOKEN)
+        val bearerToken = com.onboarding.mychallenge.BuildConfig.TMDB_BEARER_TOKEN
+        require(bearerToken.isNotEmpty()) {
+            "TMDB_BEARER_TOKEN não configurado. Verifique o arquivo local.properties"
+        }
+        return AuthInterceptor(bearerToken)
     }
-    
+
     /**
-     * Fornece uma instância do OkHttpClient configurada.
-     * 
-     * Configura o cliente HTTP com interceptores de autenticação e logging,
-     * além de timeouts para conexão, leitura e escrita.
-     * 
-     * @param loggingInterceptor Interceptor para logging de requisições HTTP.
-     * @param authInterceptor Interceptor para adicionar autenticação Bearer token.
-     * @return Instância configurada do [OkHttpClient].
+     * Fornece uma instância singleton de [OkHttpClient] configurada com interceptores e timeouts.
+     *
+     * @param loggingInterceptor O interceptor para log de requisições.
+     * @param authInterceptor O interceptor para adicionar o token de autenticação.
+     * @return Uma instância de [OkHttpClient].
      */
     @Provides
     @Singleton
     fun provideOkHttpClient(
         loggingInterceptor: HttpLoggingInterceptor,
-        authInterceptor: AuthInterceptor
+        authInterceptor: AuthInterceptor,
     ): OkHttpClient {
         return OkHttpClient.Builder()
-            .addInterceptor(authInterceptor) // Adiciona Bearer token
-            .addInterceptor(loggingInterceptor) // Logging para debug
+            .addInterceptor(authInterceptor)
+            .addInterceptor(loggingInterceptor)
             .connectTimeout(30, TimeUnit.SECONDS)
             .readTimeout(30, TimeUnit.SECONDS)
             .writeTimeout(30, TimeUnit.SECONDS)
             .build()
     }
-    
+
     /**
-     * Fornece uma instância do Retrofit configurada.
-     * 
-     * Configura o Retrofit com a URL base da API do TMDb, cliente OkHttp
-     * e conversor Moshi para serialização JSON.
-     * 
-     * @param okHttpClient Cliente HTTP configurado.
-     * @param moshi Instância do Moshi para conversão JSON.
-     * @return Instância configurada do [Retrofit].
+     * Fornece uma instância singleton de [Retrofit] para comunicação com a API.
+     *
+     * @param okHttpClient O cliente HTTP configurado.
+     * @param moshi A instância de Moshi para conversão JSON.
+     * @return Uma instância de [Retrofit].
      */
     @Provides
     @Singleton
     fun provideRetrofit(
         okHttpClient: OkHttpClient,
-        moshi: Moshi
+        moshi: Moshi,
     ): Retrofit {
         return Retrofit.Builder()
             .baseUrl(BASE_URL)
@@ -119,14 +113,12 @@ object NetworkModule {
             .addConverterFactory(MoshiConverterFactory.create(moshi))
             .build()
     }
-    
+
     /**
-     * Fornece uma instância do serviço da API do TMDb.
-     * 
-     * Cria uma implementação da interface [TmdbApiService] usando o Retrofit.
-     * 
-     * @param retrofit Instância do Retrofit configurada.
-     * @return Implementação do [TmdbApiService].
+     * Fornece uma instância singleton de [TmdbApiService] para interagir com a API do TMDb.
+     *
+     * @param retrofit A instância de Retrofit configurada.
+     * @return Uma implementação de [TmdbApiService].
      */
     @Provides
     @Singleton
@@ -134,4 +126,3 @@ object NetworkModule {
         return retrofit.create(TmdbApiService::class.java)
     }
 }
-

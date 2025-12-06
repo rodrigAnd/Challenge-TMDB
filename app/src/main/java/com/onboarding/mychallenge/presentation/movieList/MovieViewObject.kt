@@ -1,27 +1,26 @@
 package com.onboarding.mychallenge.presentation.movieList
 
+import java.text.SimpleDateFormat
+import java.util.Locale
+
 /**
- * ViewObject para representar um filme na UI.
- * 
- * Otimizado para exibição na tela de lista de filmes, contendo apenas os dados
- * necessários para renderização e estado da UI. Esta classe é usada para separar
- * os modelos de domínio da camada de apresentação.
- * 
- * @property id Identificador único do filme.
- * @property title Título do filme.
- * @property overview Sinopse ou descrição do filme.
- * @property posterUrl URL completa da imagem do pôster.
- * @property backdropUrl URL completa da imagem de fundo.
- * @property releaseDate Data de lançamento no formato YYYY-MM-DD (pode ser null).
- * @property formattedReleaseDate Data de lançamento formatada para exibição.
- * @property rating Média de avaliações (0.0 a 10.0).
- * @property formattedRating Avaliação formatada para exibição (ex: "8.5").
- * @property voteCount Número total de avaliações recebidas.
- * @property popularity Pontuação de popularidade do filme.
- * @property isFavorite Indica se o filme está nos favoritos (padrão: false).
- * @property isLoadingFavorite Indica se está processando uma operação de favorito (padrão: false).
- * 
- * @constructor Cria uma nova instância de [MovieViewObject] com os parâmetros especificados.
+ * Representa um objeto de filme pronto para ser exibido na UI (View).
+ *
+ * Esta classe é responsável por conter não apenas os dados brutos,
+ * mas também as versões formatadas desses dados (como datas e avaliações),
+ * garantindo que a lógica de apresentação fique isolada do domínio.
+ *
+ * @property id O identificador único do filme.
+ * @property title O título do filme.
+ * @property overview A sinopse do filme.
+ * @property posterUrl A URL completa para a imagem do pôster.
+ * @property backdropUrl A URL completa para a imagem de fundo.
+ * @property releaseDate A data de lançamento original (formato "YYYY-MM-DD").
+ * @property voteAverage A média de votos bruta (ex: 8.567).
+ * @property voteCount O número total de votos.
+ * @property popularity A popularidade do filme.
+ * @property isFavorite Indica se o filme está marcado como favorito.
+ * @property isLoadingFavorite Indica se uma operação de favoritar está em andamento para este filme.
  */
 data class MovieViewObject(
     val id: Int,
@@ -30,37 +29,56 @@ data class MovieViewObject(
     val posterUrl: String,
     val backdropUrl: String,
     val releaseDate: String?,
-    val formattedReleaseDate: String,
-    val rating: Double,
-    val formattedRating: String,
+    val voteAverage: Double,
     val voteCount: Int,
     val popularity: Double,
     val isFavorite: Boolean = false,
-    val isLoadingFavorite: Boolean = false // Indica se está processando favorito
+    val isLoadingFavorite: Boolean = false,
 ) {
     /**
-     * Ano de lançamento extraído da data.
-     * 
-     * Extrai os primeiros 4 caracteres de [releaseDate] para obter o ano.
-     * Retorna "N/A" se [releaseDate] for null.
-     * 
-     * @return String com o ano de lançamento ou "N/A".
+     * Formata a avaliação para exibição, arredondando para uma casa decimal (ex: "8.6").
+     *
+     * Usa Locale.US para garantir que o separador decimal seja sempre um PONTO (.),
+     * evitando inconsistências entre diferentes configurações de sistema (local vs. CI/CD).
+     */
+    val formattedRating: String
+        get() = String.format(Locale.US, "%.1f", voteAverage)
+
+    /**
+     * Formata a data de lançamento para o padrão brasileiro (dd/MM/yyyy).
+     *
+     * Retorna "Data não disponível" se a data original for nula, vazia ou inválida.
+     */
+    val formattedReleaseDate: String
+        get() {
+            if (releaseDate.isNullOrBlank()) {
+                return "Data não disponível"
+            }
+            return try {
+                val parser = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+                val formatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+                formatter.format(parser.parse(releaseDate)!!)
+            } catch (e: Exception) {
+                releaseDate // Retorna a data original se o parsing falhar
+            }
+        }
+
+    /**
+     * Extrai apenas o ano da data de lançamento.
+     *
+     * Retorna "N/A" se a data não estiver disponível.
      */
     val releaseYear: String
         get() = releaseDate?.take(4) ?: "N/A"
-    
+
     /**
-     * Indica se o filme possui uma URL de pôster válida.
-     * 
-     * @return `true` se [posterUrl] não estiver vazia, `false` caso contrário.
+     * Indica se existe uma URL de pôster válida.
      */
     val hasPoster: Boolean
         get() = posterUrl.isNotEmpty()
-    
+
     /**
-     * Indica se o filme possui uma URL de backdrop válida.
-     * 
-     * @return `true` se [backdropUrl] não estiver vazia, `false` caso contrário.
+     * Indica se existe uma URL de backdrop válida.
      */
     val hasBackdrop: Boolean
         get() = backdropUrl.isNotEmpty()

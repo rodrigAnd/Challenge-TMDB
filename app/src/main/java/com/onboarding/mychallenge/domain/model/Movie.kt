@@ -2,21 +2,19 @@ package com.onboarding.mychallenge.domain.model
 
 /**
  * Modelo de domínio para representar um filme.
- * 
- * Esta classe encapsula as informações básicas de um filme obtidas da API do TMDb,
- * incluindo dados de identificação, informações de mídia e métricas de avaliação.
- * 
- * @property id Identificador único do filme.
- * @property title Título do filme.
- * @property overview Sinopse ou descrição do filme.
- * @property posterPath Caminho relativo da imagem do pôster (pode ser null).
- * @property backdropPath Caminho relativo da imagem de fundo (pode ser null).
- * @property releaseDate Data de lançamento do filme no formato YYYY-MM-DD (pode ser null).
- * @property voteAverage Média de avaliações (0.0 a 10.0).
- * @property voteCount Número total de avaliações recebidas.
- * @property popularity Pontuação de popularidade do filme.
- * 
- * @constructor Cria uma nova instância de [Movie] com os parâmetros especificados.
+ *
+ * Esta classe contém os dados essenciais de um filme, independentemente
+ * da sua origem (API ou banco de dados local).
+ *
+ * @property id O identificador único do filme.
+ * @property title O título do filme.
+ * @property overview A sinopse ou descrição breve do filme.
+ * @property posterPath O caminho relativo para a imagem do pôster do filme. Pode ser nulo.
+ * @property backdropPath O caminho relativo para a imagem de fundo do filme. Pode ser nulo.
+ * @property releaseDate A data de lançamento do filme no formato "YYYY-MM-DD". Pode ser nulo.
+ * @property voteAverage A média de votos do filme.
+ * @property voteCount O número total de votos recebidos pelo filme.
+ * @property popularity A popularidade do filme.
  */
 data class Movie(
     val id: Int,
@@ -27,46 +25,37 @@ data class Movie(
     val releaseDate: String?,
     val voteAverage: Double,
     val voteCount: Int,
-    val popularity: Double
+    val popularity: Double,
 ) {
     /**
      * URL completa da imagem do pôster.
-     * 
-     * Constrói a URL completa usando o caminho base do TMDb e o tamanho w500.
-     * Retorna uma string vazia se [posterPath] for null.
-     * 
-     * @return URL completa da imagem do pôster ou string vazia.
+     *
+     * Retorna uma string vazia se [posterPath] for nulo.
      */
     val posterUrl: String
-        get() = if (posterPath != null) {
-            "https://image.tmdb.org/t/p/w500$posterPath"
-        } else {
-            ""
-        }
-    
+        get() =
+            if (posterPath != null) {
+                "https://image.tmdb.org/t/p/w500$posterPath"
+            } else {
+                ""
+            }
+
     /**
      * URL completa da imagem de backdrop.
-     * 
-     * Constrói a URL completa usando o caminho base do TMDb e o tamanho w1280.
-     * Retorna uma string vazia se [backdropPath] for null.
-     * 
-     * @return URL completa da imagem de backdrop ou string vazia.
+     *
+     * Retorna uma string vazia se [backdropPath] for nulo.
      */
     val backdropUrl: String
-        get() = if (backdropPath != null) {
-            "https://image.tmdb.org/t/p/w1280$backdropPath"
-        } else {
-            ""
-        }
-    
+        get() =
+            if (backdropPath != null) {
+                "https://image.tmdb.org/t/p/w1280$backdropPath"
+            } else {
+                ""
+            }
+
     /**
-     * Formata a avaliação média para exibição.
-     * 
-     * Converte [voteAverage] para uma string formatada com uma casa decimal.
-     * 
-     * @return String formatada da avaliação (ex: "8.5").
+     * Formata a avaliação para exibição (ex: "8.5").
      */
     val formattedRating: String
         get() = String.format("%.1f", voteAverage)
 }
-
