@@ -26,10 +26,6 @@ turbine = "1.0.0"
 coroutinesTest = "1.7.3"
 shimmer = "0.5.0"
 navigation = "2.8.2"
-ktlint = "12.1.0"
-detekt = "1.23.1"
-firebaseBom = "33.7.0"
-googleServices = "4.4.2"
 kotlinTest = "1.9.24"
 
 

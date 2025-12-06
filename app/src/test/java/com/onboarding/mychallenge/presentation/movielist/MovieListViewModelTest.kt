@@ -12,8 +12,6 @@ import com.onboarding.mychallenge.domain.usecase.GetPopularMoviesUseCase
 import com.onboarding.mychallenge.domain.usecase.IsFavoriteUseCase
 import com.onboarding.mychallenge.domain.usecase.RemoveFromFavoritesUseCase
 import com.onboarding.mychallenge.domain.usecase.SearchMoviesUseCase
-import com.onboarding.mychallenge.presentation.movieList.MovieListUiState
-import com.onboarding.mychallenge.presentation.movieList.MovieListViewModel
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
