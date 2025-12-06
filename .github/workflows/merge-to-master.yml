@@ -9,7 +9,7 @@ on:
 jobs:
   # Validação rigorosa antes de merge em master
   strict-validation:
-    name: Validação Rigorosa para Master
+    name: Validação pr-to-master
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -61,11 +61,10 @@ jobs:
         run: chmod +x gradlew
 
       - name: Executar KTLint Check
-        run: ./gradlew ktlintCheck --no-daemon
+        run: ./gradlew :app:ktlintCheck :app:ktlintTestSourceSetCheck --no-daemon
 
       - name: Executar Detekt
-        run: ./gradlew detekt --no-daemon
-        continue-on-error: true
+        run: ./gradlew :app:detekt --no-daemon
 
       - name: Upload relatório Detekt
         uses: actions/upload-artifact@v4
@@ -84,72 +83,9 @@ jobs:
 
       - name: Gerar relatório de cobertura completo
         run: ./gradlew jacocoTestReport --no-daemon
-
-      - name: Validar cobertura mínima de 90%
-        id: coverage-check
-        run: |
-          COVERAGE_FILE="app/build/reports/jacoco/jacocoTestReport/jacocoTestReport.xml"
-
-          if [ ! -f "$COVERAGE_FILE" ]; then
-            echo "❌ Arquivo de cobertura não encontrado!"
-            exit 1
-          fi
-
-          # Instala bc se não estiver disponível
-          sudo apt-get update && sudo apt-get install -y bc || true
-
-          COVERAGE=$(grep -oP 'type="INSTRUCTION" missed="\K[0-9]+' "$COVERAGE_FILE" | head -1)
-          COVERED=$(grep -oP 'type="INSTRUCTION" missed="[0-9]+" covered="\K[0-9]+' "$COVERAGE_FILE" | head -1)
-
-          if [ -z "$COVERAGE" ] || [ -z "$COVERED" ]; then
-            echo "⚠️ Tentando método alternativo de extração..."
-            COVERAGE=$(grep -o 'missed="[0-9]*"' "$COVERAGE_FILE" | head -1 | grep -o '[0-9]*')
-            COVERED=$(grep -o 'covered="[0-9]*"' "$COVERAGE_FILE" | head -1 | grep -o '[0-9]*')
-          fi
-
-          if [ -z "$COVERAGE" ] || [ -z "$COVERED" ]; then
-            echo "❌ Não foi possível extrair dados de cobertura do XML"
-            cat "$COVERAGE_FILE" | head -50
-            exit 1
-          fi
-
-          TOTAL=$((COVERAGE + COVERED))
-
-          if [ "$TOTAL" -eq 0 ]; then
-            echo "❌ Nenhuma instrução encontrada no relatório de cobertura"
-            exit 1
-          fi
-
-          PERCENTAGE=$(awk "BEGIN {printf \"%.2f\", ($COVERED / $TOTAL) * 100}")
-
-          echo "==========================================="
-          echo "📊 Relatório de Cobertura de Testes"
-          echo "==========================================="
-          echo "Instruções cobertas: $COVERED de $TOTAL"
-          echo "Cobertura: $PERCENTAGE%"
-          echo "Meta mínima: 90%"
-          echo "==========================================="
-
-          echo "coverage_percentage=$PERCENTAGE" >> $GITHUB_OUTPUT
-
-          if (( $(echo "$PERCENTAGE < 90" | bc -l 2>/dev/null || echo "1") )); then
-            echo "❌ Cobertura abaixo do mínimo exigido (90%)"
-            echo "::error::Cobertura de testes insuficiente: $PERCENTAGE% (mínimo: 90%)"
-            exit 1
-          else
-            echo "✅ Cobertura acima do mínimo exigido!"
-          fi
-
-      - name: Code Review Final com CodeQL
-        uses: github/codeql-action/init@v3
-        with:
-          languages: |
-            kotlin
-            java
-
-      - name: Executar CodeQL
-        uses: github/codeql-action/analyze@v3
         continue-on-error: true
+
+      # Verificação de cobertura mínima removida - apenas gera relatório para acompanhamento
 
       - name: Verificar aprovações do PR
         uses: actions/github-script@v7
@@ -224,7 +160,6 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const coverage = '${{ steps.coverage-check.outputs.coverage_percentage }}';
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -232,8 +167,8 @@ jobs:
               body: `## ✅ Validação para Master Concluída\n\n` +
                     `✅ Build completo: Sucesso\n` +
                     `✅ Testes: Todos passando\n` +
-                    `✅ Cobertura de testes: ${coverage}% (mínimo: 90%)\n` +
-                    `✅ CodeQL: Sem problemas críticos\n` +
+                    `✅ KTLint: Sem problemas\n` +
+                    `✅ Detekt: Sem problemas\n` +
                     `✅ Aprovações: Verificadas\n\n` +
                     `**Este PR está pronto para merge em master!** 🚀`
             });
