@@ -70,7 +70,7 @@ class MovieDetailTest {
         val result = movieDetail.formattedRating
 
         // Assert
-        assertEquals("8,6", result)
+        assertEquals("8.6", result)
     }
 
     @Test

@@ -1,6 +1,7 @@
 package com.onboarding.mychallenge.presentation.movieList
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.onboarding.mychallenge.domain.model.Movie
 import com.onboarding.mychallenge.domain.usecase.AddMovieDetailToFavoritesUseCase
 import com.onboarding.mychallenge.domain.usecase.AddToFavoritesUseCase
 import com.onboarding.mychallenge.domain.usecase.GetFavoriteMoviesUseCase
@@ -373,15 +374,15 @@ class MovieListViewModel
 /**
  * Extension function para converter MovieViewObject para Domain Model
  */
-private fun MovieViewObject.toDomain(): com.onboarding.mychallenge.domain.model.Movie {
-    return com.onboarding.mychallenge.domain.model.Movie(
+private fun MovieViewObject.toDomain(): Movie {
+    return Movie(
         id = id,
         title = title,
         overview = overview,
         posterPath = posterUrl.substringAfterLast("/").takeIf { posterUrl.isNotEmpty() },
         backdropPath = backdropUrl.substringAfterLast("/").takeIf { backdropUrl.isNotEmpty() },
         releaseDate = releaseDate,
-        voteAverage = rating,
+        voteAverage = voteAverage,
         voteCount = voteCount,
         popularity = popularity,
     )
