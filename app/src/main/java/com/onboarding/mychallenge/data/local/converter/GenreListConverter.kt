@@ -1,19 +1,15 @@
 package com.onboarding.mychallenge.data.local.converter
-
 import androidx.room.TypeConverter
 import com.onboarding.mychallenge.domain.model.Genre
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 
-/**
- * TypeConverter para converter List<Genre> para JSON e vice-versa
- */
 class GenreListConverter {
-    private val moshi = Moshi.Builder()
-        .addLast(KotlinJsonAdapterFactory())
-        .build()
-    
+    private val moshi =
+        Moshi.Builder()
+            .addLast(KotlinJsonAdapterFactory())
+            .build()
     private val listType = Types.newParameterizedType(List::class.java, Genre::class.java)
     private val adapter = moshi.adapter<List<Genre>>(listType)
 
@@ -28,6 +24,7 @@ class GenreListConverter {
             try {
                 adapter.fromJson(it)
             } catch (e: Exception) {
+                android.util.Log.e("GenreListConverter", "Error parsing genres JSON", e)
                 null
             }
         }

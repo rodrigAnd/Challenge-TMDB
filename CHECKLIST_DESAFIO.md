@@ -86,7 +86,7 @@
 
 ### ✅ Repositório
 - [x] Código em repositório (local)
-- [x] Repositório público no GitHub (pendente - precisa criar)
+- [ ] ⚠️ Repositório público no GitHub (pendente - precisa criar)
 
 ### ✅ README.md
 - [x] Instruções para rodar o projeto
