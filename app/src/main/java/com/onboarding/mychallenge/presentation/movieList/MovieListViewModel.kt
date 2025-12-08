@@ -202,7 +202,8 @@ class MovieListViewModel
                         if (paginatedResult.data.isEmpty()) {
                             _uiState.update { MovieListUiState.Empty }
                         } else {
-                            val viewObjects = paginatedResult.data.toViewObjectList(favoriteIds.value, loadingFavoriteIds.value)
+                            val viewObjects =
+                                paginatedResult.data.toViewObjectList(favoriteIds.value, loadingFavoriteIds.value)
                             _uiState.update {
                                 MovieListUiState.Success(
                                     movies = viewObjects,
@@ -247,7 +248,8 @@ class MovieListViewModel
                 result
                     .onSuccess { paginatedResult ->
                         currentPage = paginatedResult.currentPage
-                        val newViewObjects = paginatedResult.data.toViewObjectList(favoriteIds.value, loadingFavoriteIds.value)
+                        val newViewObjects =
+                            paginatedResult.data.toViewObjectList(favoriteIds.value, loadingFavoriteIds.value)
                         _uiState.update {
                             currentState.copy(
                                 movies = currentState.movies + newViewObjects,

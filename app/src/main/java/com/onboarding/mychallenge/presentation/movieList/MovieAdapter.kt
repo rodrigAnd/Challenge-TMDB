@@ -119,7 +119,6 @@ class MovieAdapter(
                 binding.favoriteButton.setOnClickListener {
                     if (!movie.isLoadingFavorite) {
                         onFavoriteClick?.invoke(movie)
-                    } else {
                     }
                 }
                 root.setOnClickListener {
