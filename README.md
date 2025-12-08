@@ -7,20 +7,21 @@ Aplicativo Android desenvolvido para exibir filmes populares, pesquisar filmes e
 <!-- Adicione aqui screenshots ou GIFs das telas do aplicativo -->
 <!-- 
 Exemplo:
-![Lista de Filmes](screenshots/movie_list.png)
-![Pesquisa](screenshots/search.png)
-![Favoritos](screenshots/favorites.png)
-![Detalhes](screenshots/movie_detail.png)
-![Tratamento de Erros](screenshots/error.png)
+![📱 Tela de Listagem de Filmes Populares](screenshots/Screenshot_20251208_134446.png)
+![🔍 Tela de Pesquisa de Filmes](screenshots/Screenshot_20251208_172328.png)
+![⭐ Tela de Favoritos](screenshots/Screenshot_20251208_172300.png)
+![📄 Tela de Detalhes do Filme](screenshots/Screenshot_20251208_173102.png)
+![⚠️ Telas de Tratamento de Erros](screenshots/Screenshot_20251208_172723.png)
+![🎬 Splash Screen](screenshots/Screenshot_20251208_134717.png)
 -->
 
 **Espaço reservado para screenshots/GIFs das telas:**
-- 📱 Tela de Listagem de Filmes Populares
-- 🔍 Tela de Pesquisa de Filmes
-- ⭐ Tela de Favoritos
-- 📄 Tela de Detalhes do Filme
-- ⚠️ Telas de Tratamento de Erros
-- 🎬 Splash Screen
+![📱 Tela de Listagem de Filmes Populares](screenshots/Screenshot_20251208_134446.png)
+![🔍 Tela de Pesquisa de Filmes](screenshots/Screenshot_20251208_172328.png)
+![⭐ Tela de Favoritos](screenshots/Screenshot_20251208_172300.png)
+![📄 Tela de Detalhes do Filme](screenshots/Screenshot_20251208_173102.png)
+![⚠️ Telas de Tratamento de Erros](screenshots/Screenshot_20251208_172723.png)
+![🎬 Splash Screen](screenshots/Screenshot_20251208_134717.png)
 
 ## 📋 Requisitos do Desafio - Checklist
 
