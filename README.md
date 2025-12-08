@@ -16,14 +16,42 @@ Exemplo:
 -->
 
 **Espaço reservado para screenshots/GIFs das telas:** 
-<div>
-<img src="screenshots/Screenshot_20251208_134717.png" alt="🎬 Splash Screen" width="350">
-<img src="screenshots/Screenshot_20251208_134446.png" alt="📱 Tela de Listagem de Filmes Populares" width="350">
-<img src="screenshots/Screenshot_20251208_172300.png" alt="⭐ Tela de Favoritos" width="350">
-<img src="screenshots/Screenshot_20251208_173102.png" alt="📄 Tela de Detalhes do Filme" width="350">
-<img src="screenshots/Screenshot_20251208_172328.png" alt="🔍 Tela de Pesquisa de Filmes"width="350">
-<img src="screenshots/Screenshot_20251208_172723.png" alt="⚠️ Telas de Tratamento de Erros" width="350">
-</div>
+<table align="center">
+  <tr>
+    <td align="center">
+      <img src="screenshots/Screenshot_20251208_134717.png" width="280">
+      <br>
+      <sub>🎬 Splash Screen</sub>
+    </td>
+    <td align="center">
+      <img src="screenshots/Screenshot_20251208_134446.png" width="280">
+      <br>
+      <sub>📱 Listagem de Filmes</sub>
+    </td>
+    <td align="center">
+      <img src="screenshots/Screenshot_20251208_172300.png" width="280">
+      <br>
+      <sub>⭐ Tela de Favoritos</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <img src="screenshots/Screenshot_20251208_173102.png" width="280">
+      <br>
+      <sub>📄 Detalhes do Filme</sub>
+    </td>
+    <td align="center">
+      <img src="screenshots/Screenshot_20251208_172328.png" width="280">
+      <br>
+      <sub>🔍 Pesquisa de Filmes</sub>
+    </td>
+    <td align="center">
+      <img src="screenshots/Screenshot_20251208_172723.png" width="280">
+      <br>
+      <sub>⚠️ Tratamento de Erros</sub>
+    </td>
+  </tr>
+</table>
 
 ## 📋 Requisitos do Desafio - Checklist
 
