@@ -15,13 +15,55 @@ Exemplo:
 ![🎬 Splash Screen](screenshots/Screenshot_20251208_134717.png)
 -->
 
-**Espaço reservado para screenshots/GIFs das telas:**
-![📱 Tela de Listagem de Filmes Populares](screenshots/Screenshot_20251208_134446.png)
-![🔍 Tela de Pesquisa de Filmes](screenshots/Screenshot_20251208_172328.png)
-![⭐ Tela de Favoritos](screenshots/Screenshot_20251208_172300.png)
-![📄 Tela de Detalhes do Filme](screenshots/Screenshot_20251208_173102.png)
-![⚠️ Telas de Tratamento de Erros](screenshots/Screenshot_20251208_172723.png)
-![🎬 Splash Screen](screenshots/Screenshot_20251208_134717.png)
+**Espaço reservado para screenshots/GIFs das telas:** 
+<table align="center">
+  <tr>
+    <td align="center">
+      <kbd>
+        <img src="screenshots/Screenshot_20251208_134717.png" width="280">
+      </kbd>
+      <br>
+      <sub>🎬 Splash Screen</sub>
+    </td>
+    <td align="center">
+      <kbd>
+        <img src="screenshots/Screenshot_20251208_134446.png" width="280">
+      </kbd>
+      <br>
+      <sub>📱 Listagem de Filmes</sub>
+    </td>
+    <td align="center">
+      <kbd>
+        <img src="screenshots/Screenshot_20251208_172300.png" width="280">
+      </kbd>
+      <br>
+      <sub>⭐ Tela de Favoritos</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <kbd>
+        <img src="screenshots/Screenshot_20251208_173102.png" width="280">
+      </kbd>
+      <br>
+      <sub>📄 Detalhes do Filme</sub>
+    </td>
+    <td align="center">
+      <kbd>
+        <img src="screenshots/Screenshot_20251208_172328.png" width="280">
+      </kbd>
+      <br>
+      <sub>🔍 Pesquisa de Filmes</sub>
+    </td>
+    <td align="center">
+      <kbd>
+        <img src="screenshots/Screenshot_20251208_172723.png" width="280">
+      </kbd>
+      <br>
+      <sub>⚠️ Tratamento de Erros</sub>
+    </td>
+  </tr>
+</table>
 
 ## 📋 Requisitos do Desafio - Checklist
 
@@ -579,8 +621,6 @@ Como especialista Android, identifiquei as seguintes melhorias que podem ser imp
 
 ### 4. Arquitetura e Padrões ⭐⭐⭐⭐
 
-**Status Atual**: Paging 3 já implementado ✅
-
 **Melhorias Sugeridas**:
 - **Repository Pattern Enhancement**: Implementar cache strategy (Network-First, Cache-First)
 - **Error Handling**: Criar sealed classes para tipos de erro mais específicos
@@ -666,9 +706,8 @@ Como especialista Android, identifiquei as seguintes melhorias que podem ser imp
 
 ### Médio Prazo (1-2 meses)
 1. ✅ Migração gradual para Compose
-2. ✅ ~~Implementar Paging 3~~ (Já implementado)
-3. ✅ Adicionar Baseline Profiles
-4. ✅ Implementar cache strategy
+2. ✅ Adicionar Baseline Profiles
+3. ✅ Implementar cache strategy
 
 ### Longo Prazo (3+ meses)
 1. ✅ Modularização do projeto
