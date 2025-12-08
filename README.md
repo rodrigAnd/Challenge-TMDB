@@ -574,7 +574,7 @@ Este projeto foi desenvolvido com foco em **qualidade, arquitetura sólida e boa
 
 ## 📈 Pontos de Melhoria Futura
 
-Como especialista Android, identifiquei as seguintes melhorias que podem ser implementadas para elevar ainda mais a qualidade do projeto:
+Como desenvolvedor Android, identifiquei as seguintes melhorias que podem ser implementadas para elevar ainda mais a qualidade do projeto:
 
 ### 1. Cobertura de Testes ⭐⭐⭐⭐⭐
 
