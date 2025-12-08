@@ -961,3 +961,4 @@ Cada decisão foi tomada considerando:
 
 **Última atualização**: Dezembro 2024
 
+

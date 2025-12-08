@@ -73,6 +73,7 @@ data class MovieDetail(
      */
     val formattedRating: String
         get() = String.format(Locale.US, "%.1f", voteAverage)
+
     /**
      * Formata o runtime em horas e minutos (ex: "2h 30min").
      *

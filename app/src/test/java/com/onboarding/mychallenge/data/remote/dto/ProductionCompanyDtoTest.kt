@@ -82,7 +82,6 @@ class ProductionCompanyDtoTest {
 
     @Test
     fun `SpokenLanguageDto should be parsed correctly from JSON`() {
-
         val jsonString =
             """
             |{
