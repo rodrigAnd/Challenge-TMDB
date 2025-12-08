@@ -26,13 +26,10 @@ import kotlin.test.assertIs
 class FavoritesViewModelTest {
     private val testDispatcher = StandardTestDispatcher()
 
-    // Mock para o repositório
     private lateinit var movieRepository: MovieRepository
 
-    // A instância da ViewModel que vamos testar
     private lateinit var viewModel: FavoritesViewModel
 
-    // Usamos um SharedFlow para simular o Flow do Room, que pode ser atualizado
     private lateinit var favoritesFlow: MutableSharedFlow<List<Movie>>
 
     @Before
@@ -44,7 +41,6 @@ class FavoritesViewModelTest {
         every { movieRepository.getFavoriteMovies() } returns favoritesFlow
         coEvery { movieRepository.removeFromFavorites(any()) } returns Unit
 
-        // ViewModel é criada aqui, e já começa a coletar o favoritesFlow
         viewModel = FavoritesViewModel(movieRepository)
     }
 
@@ -65,7 +61,6 @@ class FavoritesViewModelTest {
                 // O primeiro estado é Loading
                 assertEquals(FavoritesUiState.Loading, awaitItem())
 
-                // O segundo estado deve ser Success com os filmes
                 val successState = awaitItem()
                 assertTrue(successState is FavoritesUiState.Success)
                 assertEquals(1, (successState as FavoritesUiState.Success).movies.size)
@@ -99,16 +94,12 @@ class FavoritesViewModelTest {
 
             // Act & Assert
             viewModel.uiState.test {
-                // 1. Consome o estado inicial (Loading -> Success)
                 assertEquals(FavoritesUiState.Loading, awaitItem())
                 assertEquals(2, (awaitItem() as FavoritesUiState.Success).movies.size)
 
-                // 2. Atualiza a query de busca
                 viewModel.updateSearchQuery("Incep")
-                // 3. Avança o tempo do dispatcher para passar do debounce
                 advanceTimeBy(501)
 
-                // 4. Verifica o resultado filtrado
                 val filteredState = awaitItem()
                 assertTrue(filteredState is FavoritesUiState.Success)
                 assertEquals(1, (filteredState as FavoritesUiState.Success).movies.size)
@@ -129,27 +120,22 @@ class FavoritesViewModelTest {
 
             // Act & Assert
             viewModel.uiState.test {
-                // Consome estados iniciais
                 awaitItem() // Loading
                 awaitItem() // Success com 2 filmes
 
-                // Simula uma busca
                 viewModel.updateSearchQuery("Incep")
                 advanceTimeBy(501)
                 awaitItem() // Success com 1 filme (filtrado)
 
-                // Limpa a busca
                 viewModel.updateSearchQuery("")
                 advanceTimeBy(501)
 
-                // Verifica se a lista completa voltou
                 val fullListState = awaitItem()
                 assertTrue(fullListState is FavoritesUiState.Success)
                 assertEquals(2, (fullListState as FavoritesUiState.Success).movies.size)
             }
         }
 
-    // --- Função de Apoio (Helper) ---
     private fun createMockMovie(
         id: Int,
         title: String,
@@ -167,7 +153,6 @@ class FavoritesViewModelTest {
         )
     }
 
-    //region Initial Load & General Errors
     @Test
     fun `init should emit Loading and then Success when favorites are loaded`() =
         runTest {
@@ -175,14 +160,11 @@ class FavoritesViewModelTest {
             val movies = listOf(createMockMovie(1, "Inception"))
 
             viewModel.uiState.test {
-                // 1. O estado inicial é Loading
                 assertEquals(FavoritesUiState.Loading, awaitItem())
 
-                // 2. Simula o banco de dados emitindo a lista
                 favoritesFlow.emit(movies)
                 advanceUntilIdle() // Garante que a coleta e o processamento aconteçam
 
-                // 3. O estado final deve ser Success
                 val successState = awaitItem()
                 assertIs<FavoritesUiState.Success>(successState)
                 assertEquals(1, successState.movies.size)
@@ -193,7 +175,7 @@ class FavoritesViewModelTest {
     @Test
     fun `init should emit Error when repository throws exception`() =
         runTest {
-            // Arrange: Configura o Flow para lançar um erro
+            // Arrange
             val error = RuntimeException("Database error")
             every {
                 movieRepository.getFavoriteMovies()
@@ -207,7 +189,6 @@ class FavoritesViewModelTest {
                 assertEquals("Database error", errorState.message)
             }
         }
-    //endregion
 
     @Test
     fun `search should return Empty when no movies match query`() =
@@ -218,15 +199,13 @@ class FavoritesViewModelTest {
                 assertEquals(FavoritesUiState.Loading, awaitItem())
                 favoritesFlow.emit(movies)
                 advanceUntilIdle()
-                awaitItem() // consome o estado Success inicial
+                awaitItem()
 
-                viewModel.updateSearchQuery("Matrix") // Busca por algo que não existe
+                viewModel.updateSearchQuery("Matrix")
                 advanceTimeBy(501)
                 advanceUntilIdle()
 
-                // O estado deve se tornar Empty
                 assertEquals(FavoritesUiState.Empty, awaitItem())
             }
         }
-    //endregion
 }

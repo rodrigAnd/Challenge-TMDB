@@ -8,7 +8,7 @@ import org.junit.Test
 class MovieViewObjectMapperTest {
     @Test
     fun `toViewObject should map Movie domain object to MovieViewObject correctly`() {
-        // Arrange (Organizar)
+        //
         val movieDomain =
             Movie(
                 id = 123,
@@ -22,10 +22,10 @@ class MovieViewObjectMapperTest {
                 popularity = 100.0,
             )
 
-        // Act (Agir)
+        // Act
         val viewObject = movieDomain.toViewObject()
 
-        // Assert (Verificar)
+        // Assert
         assertEquals(123, viewObject.id)
         assertEquals("Filme de Teste", viewObject.title)
         assertEquals("Overview", viewObject.overview)
