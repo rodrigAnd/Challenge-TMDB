@@ -34,7 +34,6 @@ class MovieRepositoryImplTest {
         repository = MovieRepositoryImpl(apiService, favoriteDao)
     }
 
-    //region getPopularMovies
     @Test
     fun `getPopularMovies should return success with movie list when API call is successful`() =
         runTest {
@@ -60,7 +59,6 @@ class MovieRepositoryImplTest {
     fun `getPopularMovies should return failure when API call throws exception`() =
         runTest {
             // Arrange
-            // A exceção que a camada de rede lança (simulada).
             val apiException = RuntimeException("Network Error")
             coEvery { apiService.getPopularMovies(1, "pt-BR") } throws apiException
 
@@ -68,21 +66,13 @@ class MovieRepositoryImplTest {
             val result = repository.getPopularMovies(1)
 
             // Assert
-            // 1. Primeiro, confirme que a operação realmente falhou.
             assertTrue(result.isFailure)
 
-            // --- INÍCIO DA CORREÇÃO ---
-            // 2. Obtenha a exceção que o *repositório* de fato retornou.
             val actualException = result.exceptionOrNull()
 
-            // 3. Verifique se a MENSAGEM da exceção é a que o repositório define em seu tratamento de erro.
             assertEquals("Erro ao carregar filmes. Tente novamente.", actualException?.message)
-            // --- FIM DA CORREÇÃO ---
         }
 
-    //endregion
-
-    //region getMovieDetails
     @Test
     fun `getMovieDetails should return success with detail when API call is successful`() =
         runTest {
@@ -102,7 +92,6 @@ class MovieRepositoryImplTest {
     fun `getMovieDetails should return failure when API call throws exception`() =
         runTest {
             // Arrange
-            // A exceção que a camada de rede lança.
             val apiException = RuntimeException("API Error")
             coEvery { apiService.getMovieDetails(1, "pt-BR") } throws apiException
 
@@ -110,21 +99,13 @@ class MovieRepositoryImplTest {
             val result = repository.getMovieDetails(1)
 
             // Assert
-            // 1. Verifica se o resultado é de fato uma falha.
             assertTrue(result.isFailure)
 
-            // --- INÍCIO DA CORREÇÃO ---
-            // 2. Pega a exceção que o *repositório* criou.
             val actualException = result.exceptionOrNull()
 
-            // 3. Verifica se a mensagem da exceção é a mensagem personalizada definida no repositório.
             assertEquals("Erro ao carregar detalhes do filme. Tente novamente.", actualException?.message)
-            // --- FIM DA CORREÇÃO ---
         }
 
-    //endregion
-
-    //region searchMovies
     @Test
     fun `searchMovies should return success when API search is successful`() =
         runTest {
@@ -148,7 +129,6 @@ class MovieRepositoryImplTest {
     fun `searchMovies should return failure when API search throws exception`() =
         runTest {
             // Arrange
-            // A exceção que a camada de rede lança (simulada).
             val apiException = RuntimeException("Search Error")
             coEvery { apiService.searchMovies("query", 1, "pt-BR") } throws apiException
 
@@ -156,16 +136,11 @@ class MovieRepositoryImplTest {
             val result = repository.searchMovies("query", 1)
 
             // Assert
-            // 1. Confirma que a operação realmente resultou em uma falha.
             assertTrue(result.isFailure)
 
-            // --- INÍCIO DA CORREÇÃO ---
-            // 2. Obtém a exceção que o *repositório* de fato retornou.
             val actualException = result.exceptionOrNull()
 
-            // 3. Verifica se a MENSAGEM da exceção é a que o repositório define em seu tratamento de erro.
             assertEquals("Erro ao buscar filmes. Tente novamente.", actualException?.message)
-            // --- FIM DA CORREÇÃO ---
         }
 
     //region Favorites
@@ -279,7 +254,6 @@ class MovieRepositoryImplTest {
             coVerify(exactly = 1) { favoriteDao.insertFavorite(any()) }
         }
 
-    //region Error Handling Tests
     @Test
     fun `getPopularMovies should return failure when page is less than 1`() =
         runTest {
@@ -476,9 +450,6 @@ class MovieRepositoryImplTest {
             assertEquals("Filme não encontrado.", result.exceptionOrNull()?.message)
         }
 
-    //endregion
-
-    // --- Funções de Apoio (Helpers) ---
     private fun createMovieDto(
         id: Int,
         title: String,

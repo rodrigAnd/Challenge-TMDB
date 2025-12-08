@@ -37,7 +37,6 @@ import kotlin.test.assertIs
 class MovieListViewModelTest {
     private val testDispatcher = UnconfinedTestDispatcher()
 
-    // Mocks para todos os UseCases
     private lateinit var getPopularMoviesUseCase: GetPopularMoviesUseCase
     private lateinit var searchMoviesUseCase: SearchMoviesUseCase
     private lateinit var addToFavoritesUseCase: AddToFavoritesUseCase
@@ -53,7 +52,6 @@ class MovieListViewModelTest {
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
 
-        // Inicialização dos mocks
         getPopularMoviesUseCase = mockk()
         searchMoviesUseCase = mockk()
         addToFavoritesUseCase = mockk(relaxUnitFun = true)
@@ -63,7 +61,6 @@ class MovieListViewModelTest {
         getFavoriteMoviesUseCase = mockk()
         getMovieDetailsUseCase = mockk()
 
-        // Comportamento padrão para o flow de favoritos para evitar NPE nos testes
         every { getFavoriteMoviesUseCase() } returns flowOf(emptyList())
     }
 
@@ -86,7 +83,6 @@ class MovieListViewModelTest {
         Dispatchers.resetMain()
     }
 
-    //region Initial Load & Retry
     @Test
     fun `init should load popular movies and emit Success`() =
         runTest {
@@ -98,23 +94,16 @@ class MovieListViewModelTest {
             } returns Result.success(paginatedResult)
 
             // Act
-            // A ViewModel é criada e sua lógica de init é executada de forma síncrona.
             createViewModel()
 
             // Assert
             viewModel.uiState.test {
-                // --- INÍCIO DA CORREÇÃO ---
-                // O primeiro estado que a Turbine coleta já é o estado final, 'Success',
-                // porque a transição Loading -> Success aconteceu instantaneamente.
                 val finalState = awaitItem()
 
-                // Verificamos se o estado final é de fato 'Success' com os dados corretos.
                 assertIs<MovieListUiState.Success>(finalState)
                 assertEquals(1, finalState.movies.size)
 
-                // Garante que não há mais emissões inesperadas.
                 cancelAndIgnoreRemainingEvents()
-                // --- FIM DA CORREÇÃO ---
             }
         }
 
@@ -126,24 +115,16 @@ class MovieListViewModelTest {
             coEvery {
                 getPopularMoviesUseCase(1)
             } returns Result.success(emptyPaginatedResult)
-            // A ViewModel é criada e sua lógica de init é executada imediatamente
-            // devido ao UnconfinedTestDispatcher.
+
             createViewModel()
 
             // Assert
             viewModel.uiState.test {
-                // --- INÍCIO DA CORREÇÃO ---
-                // O primeiro estado que a Turbine coleta já é o estado final, 'Empty',
-                // porque as transições Loading -> Empty acontecem de forma síncrona e
-                // o StateFlow otimiza a emissão do estado 'Loading' intermediário.
                 val finalState = awaitItem()
 
-                // Verificamos se o estado final é de fato 'Empty'.
                 assertEquals(MovieListUiState.Empty, finalState)
 
-                // Garante que não há mais emissões inesperadas.
                 cancelAndIgnoreRemainingEvents()
-                // --- FIM DA CORREÇÃO ---
             }
         }
 
@@ -156,23 +137,16 @@ class MovieListViewModelTest {
                 getPopularMoviesUseCase(1)
             } returns Result.failure(error)
             // Act
-            // A ViewModel é criada e sua lógica de init é executada de forma síncrona.
             createViewModel()
 
             // Assert
             viewModel.uiState.test {
-                // --- INÍCIO DA CORREÇÃO ---
-                // O primeiro estado que a Turbine coleta já é o estado final, 'Error',
-                // porque a transição Loading -> Error aconteceu instantaneamente.
                 val finalState = awaitItem()
 
-                // Verificamos se o estado final é de fato 'Error' com a mensagem correta.
                 assertIs<MovieListUiState.Error>(finalState)
                 assertEquals("Network Error", finalState.message)
 
-                // Garante que não há mais emissões inesperadas.
                 cancelAndIgnoreRemainingEvents()
-                // --- FIM DA CORREÇÃO ---
             }
         }
 
