@@ -19,34 +19,46 @@ Exemplo:
 <table align="center">
   <tr>
     <td align="center">
-      <img src="screenshots/Screenshot_20251208_134717.png" width="280">
+      <kbd>
+        <img src="screenshots/Screenshot_20251208_134717.png" width="280">
+      </kbd>
       <br>
       <sub>🎬 Splash Screen</sub>
     </td>
     <td align="center">
-      <img src="screenshots/Screenshot_20251208_134446.png" width="280">
+      <kbd>
+        <img src="screenshots/Screenshot_20251208_134446.png" width="280">
+      </kbd>
       <br>
       <sub>📱 Listagem de Filmes</sub>
     </td>
     <td align="center">
-      <img src="screenshots/Screenshot_20251208_172300.png" width="280">
+      <kbd>
+        <img src="screenshots/Screenshot_20251208_172300.png" width="280">
+      </kbd>
       <br>
       <sub>⭐ Tela de Favoritos</sub>
     </td>
   </tr>
   <tr>
     <td align="center">
-      <img src="screenshots/Screenshot_20251208_173102.png" width="280">
+      <kbd>
+        <img src="screenshots/Screenshot_20251208_173102.png" width="280">
+      </kbd>
       <br>
       <sub>📄 Detalhes do Filme</sub>
     </td>
     <td align="center">
-      <img src="screenshots/Screenshot_20251208_172328.png" width="280">
+      <kbd>
+        <img src="screenshots/Screenshot_20251208_172328.png" width="280">
+      </kbd>
       <br>
       <sub>🔍 Pesquisa de Filmes</sub>
     </td>
     <td align="center">
-      <img src="screenshots/Screenshot_20251208_172723.png" width="280">
+      <kbd>
+        <img src="screenshots/Screenshot_20251208_172723.png" width="280">
+      </kbd>
       <br>
       <sub>⚠️ Tratamento de Erros</sub>
     </td>
